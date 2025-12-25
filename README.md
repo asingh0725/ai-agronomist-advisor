@@ -1,9 +1,9 @@
-# 🌱 AI Agronomist Advisor
+# AI Agronomist Advisor
 *A full-stack AI system for generating crop-specific recommendations from soil test data.*
 
 ---
 
-## 🌟 Overview
+## Overview
 
 **AI Agronomist Advisor** is an in-progress full-stack application designed to help agronomists and crop advisors turn soil test data into actionable, structured recommendations.
 
@@ -18,8 +18,20 @@ The system will use:
 This project aims to demonstrate modern **AI product engineering** patterns, combining domain knowledge with robust, reliable AI workflows.
 
 ---
+## Agent-Oriented AI Design
 
-## 🏗️ Repository Structure
+The AI layer is implemented using explicit agent roles rather than a single monolithic prompt.
+
+Agents include:
+- Recommendation Agent (generates structured outputs)
+- Retrieval Critic Agent (assesses context quality)
+- Output Audit Agent (enforces schema + citations)
+
+Each agent operates under strict input/output schemas and cannot perform actions outside its defined role.
+
+---
+
+## Repository Structure
 
 - /frontend       – Next.js client (planned)
 - /backend        – NestJS API + recommendation + retrieval services (planned)
@@ -30,7 +42,7 @@ This structure will expand as features are implemented.
 
 ---
 
-## 🧩 Feature Stories (GitHub Issues)
+## Feature Stories (GitHub Issues)
 
 Development is tracked using **GitHub Issues** following feature-story style specs with acceptance criteria.
 
@@ -51,13 +63,13 @@ Planned issues include:
 - **Chore: Create Initial Architecture Diagram (v0.1)**  
   - [x] Issue [#5](https://github.com/asingh0725/ai-agronomist-advisor/issues/5)
 
-## 🧱 Architecture
+## Architecture
 
 ![Architecture Diagram](docs/architecture-diagram.png)
 
 ---
 
-## 🚧 Current Status
+## Current Status
 
 The project is in its **initial setup** phase.
 
@@ -74,7 +86,7 @@ Progress will be tracked publicly through Issues and linked Pull Requests.
 
 ---
 
-## 🎯 Project Goals
+## Project Goals
 
 - Build an AI system capable of generating **accurate, structured agricultural recommendations**  
 - Implement practical **retrieval-augmented generation** grounded in domain data  
@@ -83,7 +95,7 @@ Progress will be tracked publicly through Issues and linked Pull Requests.
 
 ---
 
-## 🧰 Tech Stack (Planned)
+## Tech Stack (Planned)
 
 ### **Frontend**
 - Next.js  
