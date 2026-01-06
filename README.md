@@ -2221,105 +2221,80 @@ const userHistory = await getUserHistory(userId, {
 
 ---
 
+---
+
 ## Development Roadmap
 
-### Phase 1: Foundation (Weeks 1-2)
+### Overview
 
-- [ ] Initialize Next.js 14 project with TypeScript
-- [ ] Configure Tailwind CSS + shadcn/ui
-- [ ] Set up Supabase project (database, auth, storage)
-- [ ] Implement Prisma schema and migrations
-- [ ] Configure Cloudflare R2 bucket
-- [ ] Basic page scaffolding (landing, auth, dashboard shell)
-- [ ] PWA manifest and service worker setup
-- [ ] Environment configuration
-- [ ] CI/CD pipeline (GitHub Actions → Vercel)
+**Timeline:** 4 weeks (12 sessions at 3 sessions/week)
 
-### Phase 2: Data Ingestion Pipeline (Weeks 3-4)
+**Approach:** AI-assisted development with focused, high-output sessions. Each session targets a complete vertical slice of functionality.
 
-- [ ] Build scraper modules for university extensions
-- [ ] Build scraper modules for product manufacturers
-- [ ] Document parser (PDF, HTML → structured content)
-- [ ] Image extraction pipeline
-- [ ] Chunking strategy implementation
-- [ ] Text embedding generation (OpenAI)
-- [ ] Image embedding generation (CLIP)
-- [ ] pgvector upsert with metadata
-- [ ] Build initial knowledge base (~2000 chunks)
-- [ ] Scheduled ingestion jobs (GitHub Actions)
+### Week 1: Foundation
 
-### Phase 3: Multi-Modal Input Flow (Weeks 5-6)
+| Session | Focus | Deliverables |
+|---------|-------|--------------|
+| **1** | Project Setup | Next.js 14 scaffold, Tailwind + shadcn/ui, folder structure, TypeScript config, PWA manifest, basic layout components |
+| **2** | Database + Auth | Prisma schema, Supabase connection, auth pages (login/signup/callback), protected route middleware, user profile table |
+| **3** | Core UI Shell | App layout (sidebar, header, mobile nav), dashboard page, landing page, settings pages, dark mode |
 
-- [ ] User profile setup flow (location, crops, farm size)
-- [ ] Image upload component (drag-drop + camera)
-- [ ] Description input with guidance
-- [ ] Lab report form (structured fields)
-- [ ] Input method selection UI
-- [ ] Vision analysis integration (Claude 3.5 Sonnet)
-- [ ] Input normalization layer
-- [ ] Input validation (Zod schemas)
+**Milestone:** Deployable shell with working auth, navigable but empty.
 
-### Phase 4: RAG + Recommendation Engine (Weeks 7-8)
+### Week 2: Input + Ingestion
 
-- [ ] Query embedding generation
-- [ ] Text similarity search (pgvector)
-- [ ] Image similarity search (pgvector)
-- [ ] Retrieval critic agent implementation
-- [ ] Context assembly with source tracking
-- [ ] Recommendation agent prompt engineering
-- [ ] Output audit agent implementation
-- [ ] Zod validation + retry logic
-- [ ] Recommendation storage and retrieval
+| Session | Focus | Deliverables |
+|---------|-------|--------------|
+| **4** | Diagnose Flow UI | Input method picker, image upload component (drag-drop + camera), description input, lab report form, crop/location selectors |
+| **5** | Ingestion Pipeline (Part 1) | Scrapers for university extensions, PDF parser, HTML parser, chunking logic, R2 upload for images |
+| **6** | Ingestion Pipeline (Part 2) | Embedding generation (text + image), pgvector upsert, product scraper, source metadata tracking |
 
-### Phase 5: Product Database & Pricing (Weeks 9-10)
+**Milestone:** User can upload images and describe issues. Knowledge base populated with real data (~500-1000 chunks).
 
-- [ ] Product schema and database tables
-- [ ] Product scraper modules
-- [ ] Price update scheduling
-- [ ] Product matching algorithm
-- [ ] Product search API
-- [ ] Product comparison API
-- [ ] Product detail pages
-- [ ] Comparison view UI
-- [ ] Purchase link generation
+### Week 3: AI + Products
 
-### Phase 6: Feedback Loop System (Weeks 11-12)
+| Session | Focus | Deliverables |
+|---------|-------|--------------|
+| **7** | RAG + Recommendation Engine | Vector search API, context assembly, recommendation agent prompt, Claude integration, Zod validation + retry logic |
+| **8** | Results UI + Sources | Recommendation detail page, diagnosis display, action items, confidence indicator, sources panel, citation linking |
+| **9** | Products System | Product schema, product search API, product detail page, price display, comparison view, purchase links |
 
-- [ ] Quick feedback component (thumbs up/down)
-- [ ] Detailed feedback form
-- [ ] Feedback storage
-- [ ] Outcome reporting flow
-- [ ] Follow-up notification system
-- [ ] Feedback analysis pipeline (weekly job)
-- [ ] Failure pattern clustering
-- [ ] Retrieval gap detection
-- [ ] Prompt versioning system
+**Milestone:** Full flow operational — upload → diagnosis → recommendations → products.
 
-### Phase 7: Transparency & Polish (Weeks 13-14)
+### Week 4: Polish + Launch
 
-- [ ] Sources panel (context viewer)
-- [ ] Confidence indicators
-- [ ] Source quality badges
-- [ ] Citation linking (inline → sources)
-- [ ] User history page
-- [ ] Settings pages (profile, preferences)
-- [ ] Mobile responsiveness audit
-- [ ] Offline capability implementation
-- [ ] PWA install prompts
-- [ ] Performance optimization
+| Session | Focus | Deliverables |
+|---------|-------|--------------|
+| **10** | Feedback Loop | Quick feedback component, detailed feedback form, outcome reporter, feedback storage, user feedback history page |
+| **11** | PWA + Offline | Service worker implementation, caching strategies, install prompt, offline indicator, background sync |
+| **12** | Launch Prep | Bug fixes, error handling audit, loading/empty states, rate limiting, final UI polish, beta deployment |
 
-### Phase 8: Launch Prep (Weeks 15-16)
+**Milestone:** Production-ready MVP deployed with beta users.
 
-- [ ] Security audit
-- [ ] Auth flow testing
-- [ ] Rate limiting implementation
-- [ ] Error handling audit
-- [ ] Analytics setup (Vercel Analytics)
-- [ ] Cost monitoring dashboard
-- [ ] User documentation
-- [ ] Beta testing (10-20 users)
-- [ ] Bug fixes from beta
-- [ ] Production deployment
+### Visual Timeline
+```
+WEEK 1                 WEEK 2                 WEEK 3                 WEEK 4
+──────────────────────────────────────────────────────────────────────────────
+│ S1: Setup      │ S4: Input UI     │ S7: RAG Engine   │ S10: Feedback   │
+│ S2: DB + Auth  │ S5: Ingestion 1  │ S8: Results UI   │ S11: PWA        │
+│ S3: UI Shell   │ S6: Ingestion 2  │ S9: Products     │ S12: Launch     │
+──────────────────────────────────────────────────────────────────────────────
+        ↓                  ↓                  ↓                  ↓
+   [Deployable       [Knowledge        [Full flow         [Production
+    shell]            base live]        working]           MVP]
+```
+
+### Post-MVP Enhancements
+
+After the initial 4-week MVP, potential enhancements include:
+
+- [ ] Additional scrapers to expand knowledge base coverage
+- [ ] Prompt tuning based on user feedback analysis
+- [ ] User history influencing new recommendations
+- [ ] Advanced filtering and search in product comparison
+- [ ] Notification system for seasonal reminders
+- [ ] Admin dashboard for feedback monitoring
+- [ ] A/B testing framework for prompt versions
 
 ---
 
