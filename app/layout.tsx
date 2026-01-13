@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     "Diagnose crop issues. Get actionable recommendations. Find the right products.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
-    capable: true,
     statusBarStyle: "default",
     title: "AI Agronomist",
   },
