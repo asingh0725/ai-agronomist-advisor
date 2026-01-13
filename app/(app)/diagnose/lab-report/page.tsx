@@ -46,27 +46,27 @@ export default function LabReportPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
 
-  const form = useForm<LabReportInput>({
+  const form = useForm({
     resolver: zodResolver(labReportSchema),
     defaultValues: {
       labName: '',
       testDate: '',
       sampleId: '',
-      ph: undefined,
-      organicMatter: undefined,
-      nitrogen: undefined,
-      phosphorus: undefined,
-      potassium: undefined,
-      calcium: undefined,
-      magnesium: undefined,
-      sulfur: undefined,
-      zinc: undefined,
-      manganese: undefined,
-      iron: undefined,
-      copper: undefined,
-      boron: undefined,
-      cec: undefined,
-      baseSaturation: undefined,
+      ph: '',
+      organicMatter: '',
+      nitrogen: '',
+      phosphorus: '',
+      potassium: '',
+      calcium: '',
+      magnesium: '',
+      sulfur: '',
+      zinc: '',
+      manganese: '',
+      iron: '',
+      copper: '',
+      boron: '',
+      cec: '',
+      baseSaturation: '',
       crop: '',
       locationState: '',
       locationCountry: 'US',
@@ -97,8 +97,8 @@ export default function LabReportPage() {
     fetchProfile()
   }, [form])
 
-  async function onSubmit(data: LabReportInput) {
-    // Check if at least one nutrient value is provided
+  async function onSubmit(data: any) {
+    // Check if at least one nutrient value is provided (not empty string)
     const hasNutrientValue = [
       data.ph,
       data.organicMatter,
@@ -115,7 +115,7 @@ export default function LabReportPage() {
       data.boron,
       data.cec,
       data.baseSaturation,
-    ].some(value => value !== undefined)
+    ].some(value => value !== undefined && value !== '')
 
     if (!hasNutrientValue) {
       toast.error('Please enter at least one nutrient value')
@@ -125,8 +125,28 @@ export default function LabReportPage() {
     setIsLoading(true)
 
     try {
+      // Convert string numbers to actual numbers for API submission
+      const numericData = {
+        ...data,
+        ph: data.ph ? parseFloat(data.ph) : undefined,
+        organicMatter: data.organicMatter ? parseFloat(data.organicMatter) : undefined,
+        nitrogen: data.nitrogen ? parseFloat(data.nitrogen) : undefined,
+        phosphorus: data.phosphorus ? parseFloat(data.phosphorus) : undefined,
+        potassium: data.potassium ? parseFloat(data.potassium) : undefined,
+        calcium: data.calcium ? parseFloat(data.calcium) : undefined,
+        magnesium: data.magnesium ? parseFloat(data.magnesium) : undefined,
+        sulfur: data.sulfur ? parseFloat(data.sulfur) : undefined,
+        zinc: data.zinc ? parseFloat(data.zinc) : undefined,
+        manganese: data.manganese ? parseFloat(data.manganese) : undefined,
+        iron: data.iron ? parseFloat(data.iron) : undefined,
+        copper: data.copper ? parseFloat(data.copper) : undefined,
+        boron: data.boron ? parseFloat(data.boron) : undefined,
+        cec: data.cec ? parseFloat(data.cec) : undefined,
+        baseSaturation: data.baseSaturation ? parseFloat(data.baseSaturation) : undefined,
+      }
+
       // Log the form data
-      console.log('Lab Report Submission:', data)
+      console.log('Lab Report Submission:', numericData)
 
       toast.success('Lab report submitted! (Demo mode)')
 
@@ -187,7 +207,7 @@ export default function LabReportPage() {
                 {/* Basic Info */}
                 <AccordionItem value="basic-info">
                   <AccordionTrigger>Basic Information</AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-4">
+                  <AccordionContent className="space-y-4 pt-4 px-1">
                     <FormField
                       control={form.control}
                       name="labName"
@@ -235,7 +255,7 @@ export default function LabReportPage() {
                 {/* Macronutrients */}
                 <AccordionItem value="macronutrients">
                   <AccordionTrigger>Macronutrients</AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-4">
+                  <AccordionContent className="space-y-4 pt-4 px-1">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -318,7 +338,7 @@ export default function LabReportPage() {
                 {/* Secondary Nutrients */}
                 <AccordionItem value="secondary-nutrients">
                   <AccordionTrigger>Secondary Nutrients</AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-4">
+                  <AccordionContent className="space-y-4 pt-4 px-1">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -371,7 +391,7 @@ export default function LabReportPage() {
                 {/* Micronutrients */}
                 <AccordionItem value="micronutrients">
                   <AccordionTrigger>Micronutrients</AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-4">
+                  <AccordionContent className="space-y-4 pt-4 px-1">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -454,7 +474,7 @@ export default function LabReportPage() {
                 {/* Other */}
                 <AccordionItem value="other">
                   <AccordionTrigger>Other Properties</AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-4">
+                  <AccordionContent className="space-y-4 pt-4 px-1">
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
