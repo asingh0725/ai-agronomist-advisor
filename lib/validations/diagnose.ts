@@ -18,3 +18,58 @@ export const photoDiagnoseSchema = z.object({
 })
 
 export type PhotoDiagnoseInput = z.infer<typeof photoDiagnoseSchema>
+
+// Helper for optional string number fields with validation
+const optionalStringNumber = (min = 0, max?: number) => {
+  let schema = z.string().refine(
+    (val) => {
+      if (val === '') return true
+      const num = parseFloat(val)
+      return !isNaN(num) && num >= min && (max === undefined || num <= max)
+    },
+    {
+      message:
+        max !== undefined
+          ? `Must be a number between ${min} and ${max}`
+          : `Must be a number >= ${min}`,
+    }
+  )
+  return schema.optional()
+}
+
+export const labReportSchema = z.object({
+  // Basic Info
+  labName: z.string().optional(),
+  testDate: z.string().optional(),
+  sampleId: z.string().optional(),
+
+  // Macronutrients - stored as strings, validated as numbers
+  ph: optionalStringNumber(0, 14),
+  organicMatter: optionalStringNumber(0, 100),
+  nitrogen: optionalStringNumber(0),
+  phosphorus: optionalStringNumber(0),
+  potassium: optionalStringNumber(0),
+
+  // Secondary Nutrients
+  calcium: optionalStringNumber(0),
+  magnesium: optionalStringNumber(0),
+  sulfur: optionalStringNumber(0),
+
+  // Micronutrients
+  zinc: optionalStringNumber(0),
+  manganese: optionalStringNumber(0),
+  iron: optionalStringNumber(0),
+  copper: optionalStringNumber(0),
+  boron: optionalStringNumber(0),
+
+  // Other
+  cec: optionalStringNumber(0),
+  baseSaturation: optionalStringNumber(0, 100),
+
+  // Required context
+  crop: z.string().min(1, 'Please select a crop'),
+  locationState: z.string().min(1),
+  locationCountry: z.string().min(1),
+})
+
+export type LabReportInput = z.infer<typeof labReportSchema>
