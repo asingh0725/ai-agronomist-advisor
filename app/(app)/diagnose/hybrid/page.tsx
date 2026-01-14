@@ -153,7 +153,12 @@ export default function HybridDiagnosePage() {
     form.watch('nitrogen'),
     form.watch('phosphorus'),
     form.watch('potassium'),
-  ].some(value => value !== undefined && value !== '')
+  ].some(value => value !== undefined && value !== '') &&
+  !form.formState.errors.ph &&
+  !form.formState.errors.organicMatter &&
+  !form.formState.errors.nitrogen &&
+  !form.formState.errors.phosphorus &&
+  !form.formState.errors.potassium
 
   if (isFetching) {
     return (
@@ -275,7 +280,7 @@ export default function HybridDiagnosePage() {
                     <FormItem>
                       <FormLabel>pH</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="0-14" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                        <Input type="number" step="0.1" placeholder="0-14" {...field} />
                       </FormControl>
                       <FormDescription>pH scale</FormDescription>
                       <FormMessage />
@@ -290,7 +295,7 @@ export default function HybridDiagnosePage() {
                     <FormItem>
                       <FormLabel>Organic Matter</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="0-100" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                        <Input type="number" step="0.1" placeholder="0-100" {...field} />
                       </FormControl>
                       <FormDescription>%</FormDescription>
                       <FormMessage />
@@ -305,7 +310,7 @@ export default function HybridDiagnosePage() {
                     <FormItem>
                       <FormLabel>Nitrogen (N)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="ppm" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                        <Input type="number" step="0.1" placeholder="ppm" {...field} />
                       </FormControl>
                       <FormDescription>ppm</FormDescription>
                       <FormMessage />
@@ -320,7 +325,7 @@ export default function HybridDiagnosePage() {
                     <FormItem>
                       <FormLabel>Phosphorus (P)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="ppm" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                        <Input type="number" step="0.1" placeholder="ppm" {...field} />
                       </FormControl>
                       <FormDescription>ppm</FormDescription>
                       <FormMessage />
@@ -335,7 +340,7 @@ export default function HybridDiagnosePage() {
                     <FormItem>
                       <FormLabel>Potassium (K)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.1" placeholder="ppm" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
+                        <Input type="number" step="0.1" placeholder="ppm" {...field} />
                       </FormControl>
                       <FormDescription>ppm</FormDescription>
                       <FormMessage />
