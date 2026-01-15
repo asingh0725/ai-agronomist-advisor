@@ -49,6 +49,7 @@ export default function PhotoDiagnosePage() {
 
   const form = useForm<PhotoDiagnoseInput>({
     resolver: zodResolver(photoDiagnoseSchema),
+    mode: 'onChange',
     defaultValues: {
       description: '',
       crop: '',
@@ -139,8 +140,6 @@ export default function PhotoDiagnosePage() {
       setIsLoading(false)
     }
   }
-
-  const isFormValid = form.formState.isValid && imageFile !== null
 
   if (isFetching) {
     return (
@@ -334,7 +333,7 @@ export default function PhotoDiagnosePage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={!isFormValid || isLoading}>
+                <Button type="submit" disabled={isLoading || (!imageFile && !form.formState.isValid)}>
                   {isLoading ? "Analyzing..." : "Analyze Crop"}
                 </Button>
               </div>
