@@ -54,11 +54,12 @@ model Recommendation {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  inputId     String
+  inputId     String   @unique
   input       Input    @relation(fields: [inputId], references: [id], onDelete: Cascade)
-  diagnosis   String
-  actions     Json
+  diagnosis   Json
   confidence  Float
+  modelUsed   String
+  tokensUsed  Int?
   createdAt   DateTime @default(now())
 
   feedback Feedback[]
