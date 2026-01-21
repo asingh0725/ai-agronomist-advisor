@@ -79,7 +79,11 @@ CREATE TABLE "Source" (
     "url" TEXT,
     "sourceType" "SourceType" NOT NULL,
     "institution" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "chunksCount" INTEGER NOT NULL DEFAULT 0,
+    "errorMessage" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Source_pkey" PRIMARY KEY ("id")
 );
@@ -159,6 +163,9 @@ CREATE UNIQUE INDEX "Recommendation_inputId_key" ON "Recommendation"("inputId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Source_url_key" ON "Source"("url");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ImageChunk_sourceId_imageUrl_key" ON "ImageChunk"("sourceId", "imageUrl");
 
 -- AddForeignKey
 ALTER TABLE "UserProfile" ADD CONSTRAINT "UserProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

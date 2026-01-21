@@ -88,12 +88,16 @@ model Feedback {
 }
 
 model Source {
-  id          String     @id @default(cuid())
-  title       String
-  url         String?    @unique
-  sourceType  SourceType
-  institution String?
-  createdAt   DateTime   @default(now())
+  id           String     @id @default(cuid())
+  title        String
+  url          String?    @unique
+  sourceType   SourceType
+  institution  String?
+  status       String     @default("pending")
+  chunksCount  Int        @default(0)
+  errorMessage String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   textChunks  TextChunk[]
   imageChunks ImageChunk[]
