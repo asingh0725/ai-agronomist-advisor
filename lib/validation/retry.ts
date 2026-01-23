@@ -52,15 +52,23 @@ export async function generateWithRetry(
       lastError = error as Error;
 
       if (error instanceof ZodError) {
-        console.error(`Validation failed on attempt ${attempt}:`, error.errors);
+        console.error(`Validation failed on attempt ${attempt}:`, error.issues);
 
         if (attempt === MAX_ATTEMPTS) {
           throw new ValidationError(
             "Recommendation failed validation after maximum retries",
-            error.errors
+            error.issues
           );
         }
         // Continue to next attempt
+      } else if(error instanceof SyntaxError) {
+        if (attempt === MAX_ATTEMPTS) {
+          console.error(`Validation failed on attempt ${attempt}:`, error.message);
+          throw new ValidationError(
+            "Recommendation failed validation after maximum retries",
+            error.message
+          );
+        }
       } else {
         // Non-validation error (e.g., API error) - don't retry
         console.error("Non-validation error:", error);
@@ -81,7 +89,7 @@ function formatRetryFeedback(error: Error): string {
     let feedback =
       "Your previous response failed validation. Please fix these issues:\n\n";
 
-    error.errors.forEach((err, index) => {
+    error.issues.forEach((err: any, index: number) => {
       const path = err.path.join(".");
       feedback += `${index + 1}. Field "${path}": ${err.message}\n`;
     });

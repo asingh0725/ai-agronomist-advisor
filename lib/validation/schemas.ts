@@ -11,8 +11,8 @@ export const DiagnosisSchema = z.object({
   ]),
   confidence: z
     .number()
-    .min(0, "Confidence must be >= 0")
-    .max(1, "Confidence must be <= 1"),
+    .min(0.5, "Confidence must be >= 0.5")
+    .max(0.95, "Confidence must be <= 0.95"),
   reasoning: z.string().min(10, "Reasoning must be at least 10 characters"),
 });
 
