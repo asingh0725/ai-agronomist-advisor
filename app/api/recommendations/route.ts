@@ -76,10 +76,27 @@ export async function POST(request: NextRequest) {
       description: input.description || undefined,
       labData: input.labData || undefined,
       imageUrl: input.imageUrl || undefined,
-      crop: (input.labData as any)?.crop || undefined,
-      location: input.user.profile?.location || undefined,
+      crop: input.crop ?? (input.labData as any)?.crop ?? undefined,
+
+      location: input.location ?? input.user.profile?.location ?? undefined,
     };
 
+    const existingRecommendation = await prisma.recommendation.findUnique({
+      where: { inputId: input.id },
+    });
+
+    if (existingRecommendation) {
+      return NextResponse.json({
+        id: existingRecommendation.id,
+        recommendation: {
+          diagnosis: existingRecommendation.diagnosis,
+          confidence: existingRecommendation.confidence,
+        },
+        metadata: {
+          reused: true,
+        },
+      });
+    }
     // Generate recommendation with retry logic
     const recommendation = await generateWithRetry(normalizedInput, context);
 
@@ -96,15 +113,27 @@ export async function POST(request: NextRequest) {
 
     // Store source links
     await Promise.all(
-      recommendation.sources.map((source) =>
-        prisma.recommendationSource.create({
+      recommendation.sources.map(async (source) => {
+        const [textChunk, imageChunk] = await Promise.all([
+          prisma.textChunk.findUnique({
+            where: { id: source.chunkId },
+            select: { id: true },
+          }),
+          prisma.imageChunk.findUnique({
+            where: { id: source.chunkId },
+            select: { id: true },
+          }),
+        ]);
+
+        return prisma.recommendationSource.create({
           data: {
             recommendationId: savedRecommendation.id,
-            textChunkId: source.chunkId,
+            textChunkId: textChunk ? source.chunkId : null,
+            imageChunkId: imageChunk ? source.chunkId : null,
             relevanceScore: source.relevance,
           },
-        })
-      )
+        });
+      })
     );
 
     const latency = Date.now() - startTime;

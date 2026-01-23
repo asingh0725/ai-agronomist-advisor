@@ -125,6 +125,8 @@ model ImageChunk {
   metadata  Json?
   createdAt DateTime                    @default(now())
 
+  recommendationSources RecommendationSource[]
+
   @@unique([sourceId, imageUrl])
 }
 
@@ -134,6 +136,8 @@ model RecommendationSource {
   recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
   textChunkId      String?
   textChunk        TextChunk?     @relation(fields: [textChunkId], references: [id])
+  imageChunkId     String?
+  imageChunk       ImageChunk?    @relation(fields: [imageChunkId], references: [id])
   relevanceScore   Float?
 }
 
