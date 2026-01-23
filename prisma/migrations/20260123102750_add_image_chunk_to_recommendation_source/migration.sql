@@ -118,6 +118,7 @@ CREATE TABLE "RecommendationSource" (
     "id" TEXT NOT NULL,
     "recommendationId" TEXT NOT NULL,
     "textChunkId" TEXT,
+    "imageChunkId" TEXT,
     "relevanceScore" DOUBLE PRECISION,
 
     CONSTRAINT "RecommendationSource_pkey" PRIMARY KEY ("id")
@@ -196,6 +197,9 @@ ALTER TABLE "RecommendationSource" ADD CONSTRAINT "RecommendationSource_recommen
 
 -- AddForeignKey
 ALTER TABLE "RecommendationSource" ADD CONSTRAINT "RecommendationSource_textChunkId_fkey" FOREIGN KEY ("textChunkId") REFERENCES "TextChunk"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RecommendationSource" ADD CONSTRAINT "RecommendationSource_imageChunkId_fkey" FOREIGN KEY ("imageChunkId") REFERENCES "ImageChunk"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProductPrice" ADD CONSTRAINT "ProductPrice_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
