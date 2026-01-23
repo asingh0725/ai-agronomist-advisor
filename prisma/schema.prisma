@@ -104,30 +104,36 @@ model Source {
 }
 
 model TextChunk {
-  id        String                       @id @default(cuid())
-  sourceId  String
-  source    Source                       @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  content   String
-  embedding Unsupported("vector(1536)")?
-  metadata  Json?
-  createdAt DateTime                     @default(now())
+  id           String                       @id @default(cuid())
+  contentHash  String?                      @unique
+  sourceId     String
+  source       Source                       @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  content      String                       @db.Text
+  embedding    Unsupported("vector(1536)")?
+  chunkIndex   Int                          @default(0)
+  metadata     Json?
+  createdAt    DateTime                     @default(now())
 
   recommendations RecommendationSource[]
+
+  @@index([sourceId])
 }
 
 model ImageChunk {
-  id        String                      @id @default(cuid())
-  sourceId  String
-  source    Source                      @relation(fields: [sourceId], references: [id], onDelete: Cascade)
-  imageUrl  String
-  caption   String?
-  embedding Unsupported("vector(512)")?
-  metadata  Json?
-  createdAt DateTime                    @default(now())
+  id           String                      @id @default(cuid())
+  contentHash  String?                     @unique
+  sourceId     String
+  source       Source                      @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  imageUrl     String
+  caption      String?                     @db.Text
+  embedding    Unsupported("vector(1536)")?
+  metadata     Json?
+  createdAt    DateTime                    @default(now())
 
   recommendationSources RecommendationSource[]
 
   @@unique([sourceId, imageUrl])
+  @@index([sourceId])
 }
 
 model RecommendationSource {
