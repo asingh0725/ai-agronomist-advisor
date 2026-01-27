@@ -9,7 +9,7 @@ import { encoding_for_model } from "@dqbd/tiktoken";
 import type { ChunkData, ImageData } from "../scrapers/types";
 
 const openai = new OpenAI({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // OpenAI text-embedding-3-small limits
