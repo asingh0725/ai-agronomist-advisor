@@ -2,10 +2,12 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DiagnosisDisplay } from "@/components/recommendations/diagnosis-display";
+import { ActionItemsDisplay } from "@/components/recommendations/action-items-display";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import type { FullRecommendation } from "@/lib/utils/format-diagnosis";
 
 interface RecommendationPageProps {
   params: {
@@ -52,6 +54,12 @@ export default async function RecommendationPage({
     notFound();
   }
 
+  // Parse the diagnosis field which contains the full recommendation
+  const fullRecommendation = recommendation.diagnosis as FullRecommendation;
+  const diagnosis = fullRecommendation.diagnosis || recommendation.diagnosis;
+  const recommendations = fullRecommendation.recommendations || [];
+  const products = fullRecommendation.products || [];
+
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <div className="mb-6">
@@ -82,10 +90,12 @@ export default async function RecommendationPage({
 
         <Suspense fallback={<DiagnosisSkeleton />}>
           <DiagnosisDisplay
-            diagnosis={recommendation.diagnosis}
+            diagnosis={diagnosis}
             confidence={recommendation.confidence}
           />
         </Suspense>
+
+        <ActionItemsDisplay actions={recommendations} />
 
         {recommendation.input && (
           <Card>
@@ -93,13 +103,45 @@ export default async function RecommendationPage({
               <h2 className="text-xl font-semibold">Input Information</h2>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">
-                  Type
-                </h3>
-                <p className="text-gray-900 capitalize">
-                  {recommendation.input.type}
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-1">
+                    Type
+                  </h3>
+                  <p className="text-gray-900 capitalize">
+                    {recommendation.input.type}
+                  </p>
+                </div>
+                {recommendation.input.crop && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      Crop
+                    </h3>
+                    <p className="text-gray-900 capitalize">
+                      {recommendation.input.crop}
+                    </p>
+                  </div>
+                )}
+                {recommendation.input.location && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      Location
+                    </h3>
+                    <p className="text-gray-900">
+                      {recommendation.input.location}
+                    </p>
+                  </div>
+                )}
+                {recommendation.input.season && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-1">
+                      Season
+                    </h3>
+                    <p className="text-gray-900 capitalize">
+                      {recommendation.input.season}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {recommendation.input.description && (
@@ -146,6 +188,9 @@ export default async function RecommendationPage({
               <h2 className="text-xl font-semibold">
                 Sources ({recommendation.sources.length})
               </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Knowledge base chunks that informed this recommendation
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -157,9 +202,25 @@ export default async function RecommendationPage({
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         {source.source && (
-                          <h4 className="font-medium text-gray-900 mb-1">
-                            {source.source.title}
-                          </h4>
+                          <>
+                            {source.source.url ? (
+                              <a
+                                href={source.source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline mb-1 block"
+                              >
+                                {source.source.title}
+                              </a>
+                            ) : (
+                              <h4 className="font-medium text-gray-900 mb-1">
+                                {source.source.title}
+                              </h4>
+                            )}
+                            <p className="text-xs text-gray-500 mb-1">
+                              {source.source.type}
+                            </p>
+                          </>
                         )}
                         <p className="text-sm text-gray-600">
                           Type: {source.type} • Relevance:{" "}

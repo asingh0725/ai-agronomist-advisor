@@ -101,11 +101,12 @@ export async function POST(request: NextRequest) {
     const recommendation = await generateWithRetry(normalizedInput, context);
 
     // Store recommendation in database
+    // Note: diagnosis field stores the full recommendation output (diagnosis + recommendations + products)
     const savedRecommendation = await prisma.recommendation.create({
       data: {
         userId: user.id,
         inputId: input.id,
-        diagnosis: recommendation.diagnosis,
+        diagnosis: recommendation as any, // Store full recommendation object
         confidence: recommendation.confidence,
         modelUsed: "claude-sonnet-4-5",
       },

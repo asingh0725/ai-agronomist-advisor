@@ -105,6 +105,9 @@ export async function GET(
         description: recommendation.input.description,
         imageUrl: recommendation.input.imageUrl,
         labData: recommendation.input.labData,
+        crop: recommendation.input.crop,
+        location: recommendation.input.location,
+        season: recommendation.input.season,
         createdAt: recommendation.input.createdAt,
       },
       sources: recommendation.sources.map((source) => {
