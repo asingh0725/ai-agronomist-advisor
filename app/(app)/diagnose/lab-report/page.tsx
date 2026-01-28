@@ -9,6 +9,7 @@ import { ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { labReportSchema, type LabReportInput } from "@/lib/validations/diagnose"
 import { CROP_OPTIONS, LOCATIONS } from "@/lib/constants/profile"
+import { AnalyzingLoader } from "@/components/diagnose/analyzing-loader"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -160,12 +161,12 @@ export default function LabReportPage() {
 
       if (!inputRes.ok) {
         const err = await inputRes.json()
-        throw new Error(err.error || 'Failed to save input')
+        throw new Error(err.error || 'Failed to generate recommendation')
       }
 
-      const input = await inputRes.json()
-      toast.success('Lab report submitted!')
-      router.push(`/recommendations/${input.id}`)
+      const { recommendationId } = await inputRes.json()
+      toast.success('Recommendation generated!')
+      router.push(`/recommendations/${recommendationId}`)
     } catch (error) {
       console.error('Error submitting lab report:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to submit lab report')
@@ -183,29 +184,31 @@ export default function LabReportPage() {
   }
 
   return (
-    <div className="container max-w-3xl py-8">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <Link href="/dashboard" className="hover:text-foreground transition-colors">
-          Dashboard
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <Link href="/diagnose" className="hover:text-foreground transition-colors">
-          Diagnose
-        </Link>
-        <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground">Lab Report</span>
-      </div>
+    <>
+      {isLoading && <AnalyzingLoader stage="analyzing" />}
+      <div className="container max-w-3xl py-8">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+          <Link href="/dashboard" className="hover:text-foreground transition-colors">
+            Dashboard
+          </Link>
+          <ChevronRight className="h-4 w-4" />
+          <Link href="/diagnose" className="hover:text-foreground transition-colors">
+            Diagnose
+          </Link>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground">Lab Report</span>
+        </div>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
-          Lab Report Data Entry
-        </h1>
-        <p className="text-muted-foreground">
-          Enter your soil test results for precise recommendations
-        </p>
-      </div>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">
+            Lab Report Data Entry
+          </h1>
+          <p className="text-muted-foreground">
+            Enter your soil test results for precise recommendations
+          </p>
+        </div>
 
       <Card>
         <CardHeader>
@@ -616,13 +619,14 @@ export default function LabReportPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Analyzing..." : "Analyze Soil"}
+                  Analyze Soil
                 </Button>
               </div>
             </form>
           </Form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

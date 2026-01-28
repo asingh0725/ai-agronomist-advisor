@@ -30,18 +30,6 @@ async function testInputVariations() {
         location: 'Minnesota',
       },
     },
-    {
-      name: 'Hybrid input (photo + lab)',
-      input: {
-        type: 'hybrid',
-        description: 'Leaf margins turning brown',
-        labData: {
-          pH: 7.2,
-          K: 45,
-        },
-        crop: 'corn',
-      },
-    },
   ]
 
   for (const testCase of testCases) {

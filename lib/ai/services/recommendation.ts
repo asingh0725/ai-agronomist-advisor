@@ -51,7 +51,7 @@ export async function generateRecommendation(
       let claudeResponse
 
       // Use vision API if we have an image
-      if (input.imageUrl && (input.type === 'PHOTO' || input.type === 'HYBRID')) {
+      if (input.imageUrl && input.type === 'PHOTO') {
         const { base64, mediaType } = await imageUrlToBase64(input.imageUrl)
         claudeResponse = await analyzeWithVision(
           DIAGNOSIS_SYSTEM_PROMPT,
@@ -118,7 +118,7 @@ export function inputToPromptInput(input: {
   season?: string | null
 }): DiagnosisPromptInput {
   return {
-    type: input.type as 'PHOTO' | 'LAB_REPORT' | 'HYBRID',
+    type: input.type as 'PHOTO' | 'LAB_REPORT',
     imageUrl: input.imageUrl,
     description: input.description,
     labData: input.labData,

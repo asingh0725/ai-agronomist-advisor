@@ -3,67 +3,40 @@ import type { ParsedContent } from "../scrapers/types";
 
 const pdf = (pdfParse as any).default || pdfParse;
 
+// Custom error class for invalid PDF
+class InvalidPDFException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InvalidPDFException';
+  }
+}
+
 /**
- * Parse PDF content using pdf-parse v2 API with robust error handling
+ * Parse PDF content using pdf-parse with robust error handling
  * Docs: https://www.npmjs.com/package/pdf-parse
  */
 export async function parsePDF(
   buffer: Buffer,
   sourceUrl: string
 ): Promise<ParsedContent> {
-  const data = await pdf(buffer);
-
-  // Split content into pages
-  const pages = data.text.split("\f"); // Form feed character separates pages in pdf-parse
-
-  const sections: ParsedContent["sections"] = [];
-  let currentSection: ParsedContent["sections"][0] = {
-    text: "",
-    images: [],
-  };
-
-  // Process each page
-  pages.forEach((pageText: string, pageIndex: number) => {
-    const lines = pageText.split("\n");
-    let pageContent = "";
-
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-
-      // Detect headings (heuristic: short lines in ALL CAPS or title case)
-      const isHeading =
-        trimmed.length < 80 &&
-        (trimmed === trimmed.toUpperCase() ||
-          /^[A-Z][a-z]+(?: [A-Z][a-z]+)*:?$/.test(trimmed));
-
-      if (isHeading) {
-        // Save current section if it has content
-        if (currentSection.text.trim()) {
-          sections.push(currentSection);
-        }
-
   // Check if buffer looks like a PDF (starts with %PDF-)
   const headerCheck = buffer.slice(0, 5).toString('ascii');
   if (!headerCheck.startsWith('%PDF-')) {
     throw new Error(`Invalid PDF header. Got: "${headerCheck}". This may be HTML or another file type.`);
   }
 
-  // Initialize parser with buffer data
-  const parser = new PDFParse({ data: buffer });
-  
   try {
-    // Extract text from PDF
-    const result = await parser.getText();
-    
+    // Extract text from PDF using pdf-parse
+    const data = await pdf(buffer);
+
     // Validate we got text
-    if (!result || !result.text) {
+    if (!data || !data.text) {
       throw new Error('PDF parsed but returned no text');
     }
 
     // Split content into pages (form feed character \f separates pages)
-    const pages = result.text.split('\f').filter(page => page.trim().length > 0);
-    
+    const pages = data.text.split('\f').filter((page: string) => page.trim().length > 0);
+
     if (pages.length === 0) {
       throw new Error('PDF contains no readable text');
     }
@@ -75,11 +48,11 @@ export async function parsePDF(
     };
 
     // Process each page
-    pages.forEach((pageText, pageIndex) => {
+    pages.forEach((pageText: string, pageIndex: number) => {
       const lines = pageText.split('\n');
       let pageContent = '';
 
-      lines.forEach((line) => {
+      lines.forEach((line: string) => {
         const trimmed = line.trim();
         if (!trimmed) return;
 
@@ -124,13 +97,13 @@ export async function parsePDF(
     // If no sections created, create a single section with all text
     if (sections.length === 0) {
       sections.push({
-        text: result.text,
+        text: data.text,
         images: [],
       });
     }
 
     // Extract tables (basic detection)
-    const tables = extractTablesFromText(result.text);
+    const tables = extractTablesFromText(data.text);
 
     // Calculate metadata
     const wordCount = sections.reduce(
@@ -160,7 +133,7 @@ export async function parsePDF(
       tables,
       metadata: {
         wordCount,
-        imageCount: 0, // PDF image extraction requires parser.getImage()
+        imageCount: 0, // PDF image extraction would require additional parsing
         tableCount: tables.length,
       },
     };
@@ -173,14 +146,11 @@ export async function parsePDF(
         `Original error: ${error.message}`
       );
     }
-    
+
     // Re-throw with context
     throw new Error(
       `Failed to parse PDF from ${sourceUrl}: ${error instanceof Error ? error.message : String(error)}`
     );
-  } finally {
-    // Always destroy parser to free memory
-    await parser.destroy();
   }
 }
 

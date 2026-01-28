@@ -108,7 +108,7 @@ For successful analysis, use this exact structure:
 {"validation":{"passed":true,"inputQuality":"good","qualityFactors":{"imageClarity":"clear","imageRelevance":"agricultural","descriptionDetail":"detailed","labDataProvided":false}},"diagnosis":{"primaryCondition":{"condition":"string","confidence":0.00,"confidenceLevel":"moderate","severity":"moderate","reasoning":"string"},"differentialDiagnoses":[{"condition":"string","likelihood":0.00,"differentiatingFactors":"string"}]},"recommendations":[{"action":"string","priority":"immediate","timing":"string","details":"string","safetyNotes":"string or null"}],"confidenceExplanation":"string","additionalNotes":"string","disclaimers":{"liability":"standard liability text","safety":"standard safety text"}}`
 
 export interface DiagnosisPromptInput {
-  type: 'PHOTO' | 'LAB_REPORT' | 'HYBRID'
+  type: 'PHOTO' | 'LAB_REPORT'
   imageUrl?: string | null
   description?: string | null
   labData?: Record<string, number | string | null> | null
@@ -243,64 +243,6 @@ export function buildLabReportPrompt(input: DiagnosisPromptInput): string {
 }
 
 /**
- * Build the user prompt for hybrid diagnosis (photo + lab data)
- */
-export function buildHybridPrompt(input: DiagnosisPromptInput): string {
-  const parts: string[] = []
-
-  parts.push('## Combined Crop and Soil Analysis Request')
-  parts.push('')
-  parts.push('Please analyze both the attached image and the soil test data to provide a comprehensive diagnosis.')
-  parts.push('')
-
-  if (input.description) {
-    parts.push('### My Observations')
-    parts.push(input.description)
-    parts.push('')
-  }
-
-  if (input.labData && Object.keys(input.labData).length > 0) {
-    // Use same lab data formatting as buildLabReportPrompt
-    parts.push('### Soil Test Results')
-    const labEntries = Object.entries(input.labData).filter(([_, v]) => v !== null && v !== '')
-
-    const formatValue = (key: string, value: any): string => {
-      const units: Record<string, string> = {
-        ph: '', organicMatter: '%', nitrogen: ' ppm', phosphorus: ' ppm', potassium: ' ppm',
-        calcium: ' ppm', magnesium: ' ppm', sulfur: ' ppm', zinc: ' ppm', manganese: ' ppm',
-        iron: ' ppm', copper: ' ppm', boron: ' ppm', cec: ' meq/100g', baseSaturation: '%',
-      }
-      return `${value}${units[key] || ''}`
-    }
-
-    const formatKey = (key: string): string => {
-      const names: Record<string, string> = {
-        ph: 'pH', organicMatter: 'Organic Matter', nitrogen: 'Nitrogen (N)', phosphorus: 'Phosphorus (P)',
-        potassium: 'Potassium (K)', calcium: 'Calcium (Ca)', magnesium: 'Magnesium (Mg)', sulfur: 'Sulfur (S)',
-        zinc: 'Zinc (Zn)', manganese: 'Manganese (Mn)', iron: 'Iron (Fe)', copper: 'Copper (Cu)',
-        boron: 'Boron (B)', cec: 'CEC', baseSaturation: 'Base Saturation',
-      }
-      return names[key] || key
-    }
-
-    labEntries.forEach(([k, v]) => {
-      parts.push(`- ${formatKey(k)}: ${formatValue(k, v)}`)
-    })
-    parts.push('')
-  }
-
-  parts.push('### Context')
-  if (input.crop) parts.push(`- **Crop**: ${input.crop}`)
-  if (input.location) parts.push(`- **Location**: ${input.location}`)
-  if (input.growthStage) parts.push(`- **Growth Stage**: ${input.growthStage}`)
-  parts.push('')
-
-  parts.push('Please validate the input quality first, then provide your diagnosis and recommendations in the specified JSON format.')
-
-  return parts.join('\n')
-}
-
-/**
  * Build the appropriate prompt based on input type
  */
 export function buildDiagnosisPrompt(input: DiagnosisPromptInput): string {
@@ -309,8 +251,6 @@ export function buildDiagnosisPrompt(input: DiagnosisPromptInput): string {
       return buildPhotoPrompt(input)
     case 'LAB_REPORT':
       return buildLabReportPrompt(input)
-    case 'HYBRID':
-      return buildHybridPrompt(input)
     default:
       return buildPhotoPrompt(input)
   }

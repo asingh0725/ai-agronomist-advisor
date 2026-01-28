@@ -112,11 +112,31 @@ export async function generateRecommendation(
       inputTokens: usage.input_tokens,
       outputTokens: usage.output_tokens,
       latencyMs: latency,
+      stopReason: response.stop_reason,
     });
 
+    // Check if response has content
+    if (!response.content || response.content.length === 0) {
+      console.error("Claude returned empty content:", {
+        stopReason: response.stop_reason,
+        content: response.content,
+      });
+      throw new Error(
+        `Claude returned empty response. Stop reason: ${response.stop_reason}`
+      );
+    }
+
     const content = response.content[0];
-    if (content.type !== "text") {
-      throw new Error("Unexpected response type from Claude");
+    if (!content || content.type !== "text") {
+      console.error("Unexpected content type:", content);
+      throw new Error(
+        `Unexpected response type from Claude: ${content?.type || "undefined"}`
+      );
+    }
+
+    // Check if text is empty
+    if (!content.text || content.text.trim().length === 0) {
+      throw new Error("Claude returned empty text response");
     }
 
     // Parse JSON response - strip markdown code blocks if present

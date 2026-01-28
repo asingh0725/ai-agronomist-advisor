@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { DiagnosisDisplay } from "@/components/recommendations/diagnosis-display";
-import { ActionItemsDisplay } from "@/components/recommendations/action-items-display";
+import { RecommendationContent } from "@/components/recommendations/recommendation-content";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import type { FullRecommendation } from "@/lib/utils/format-diagnosis";
 
 interface RecommendationPageProps {
@@ -132,6 +133,10 @@ async function getRecommendation(id: string) {
               title: sourceDoc.title,
               type: sourceDoc.sourceType,
               url: sourceDoc.url,
+              publisher: sourceDoc.institution,
+              publishedDate: (sourceDoc.metadata as Record<string, unknown>)?.publishedDate
+                ? new Date((sourceDoc.metadata as Record<string, unknown>).publishedDate as string).toLocaleDateString()
+                : null,
             }
           : null,
       };
@@ -149,20 +154,20 @@ export default async function RecommendationPage({
   }
 
   // Parse the diagnosis field which contains the full recommendation
-  const fullRecommendation = recommendation.diagnosis as FullRecommendation;
+  const fullRecommendation = recommendation.diagnosis as unknown as FullRecommendation;
   const diagnosis = fullRecommendation.diagnosis || recommendation.diagnosis;
-  const recommendations = fullRecommendation.recommendations || [];
+  const actionItems = fullRecommendation.recommendations || [];
   const products = fullRecommendation.products || [];
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <div className="mb-6">
+    <div className="container max-w-4xl mx-auto py-8 px-4 print:max-w-none print:px-0">
+      <div className="mb-6 print:hidden">
         <Link
           href="/recommendations"
           className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to recommendations
+          Back to Recommendations
         </Link>
       </div>
 
@@ -172,7 +177,8 @@ export default async function RecommendationPage({
             Recommendation Details
           </h1>
           <p className="text-gray-600">
-            Created on {new Date(recommendation.createdAt).toLocaleDateString("en-US", {
+            Created on{" "}
+            {new Date(recommendation.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",
               day: "numeric",
@@ -189,10 +195,14 @@ export default async function RecommendationPage({
           />
         </Suspense>
 
-        <ActionItemsDisplay actions={recommendations} />
+        <RecommendationContent
+          actionItems={actionItems}
+          sources={recommendation.sources}
+          products={products}
+        />
 
         {recommendation.input && (
-          <Card>
+          <Card className="print:shadow-none print:border-gray-300">
             <CardHeader>
               <h2 className="text-xl font-semibold">Input Information</h2>
             </CardHeader>
@@ -254,11 +264,16 @@ export default async function RecommendationPage({
                   <h3 className="text-sm font-medium text-gray-700 mb-2">
                     Submitted Image
                   </h3>
-                  <img
-                    src={recommendation.input.imageUrl}
-                    alt="Input image"
-                    className="max-w-md rounded-lg border border-gray-200"
-                  />
+                  <div className="relative max-w-md">
+                    <Image
+                      src={recommendation.input.imageUrl}
+                      alt="Submitted field image"
+                      width={500}
+                      height={400}
+                      className="rounded-lg border border-gray-200 object-cover"
+                      unoptimized
+                    />
+                  </div>
                 </div>
               )}
 
@@ -276,65 +291,7 @@ export default async function RecommendationPage({
           </Card>
         )}
 
-        {recommendation.sources && recommendation.sources.length > 0 && (
-          <Card>
-            <CardHeader>
-              <h2 className="text-xl font-semibold">
-                Sources ({recommendation.sources.length})
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Knowledge base chunks that informed this recommendation
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {recommendation.sources.map((source: any) => (
-                  <div
-                    key={source.id}
-                    className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        {source.source && (
-                          <>
-                            {source.source.url ? (
-                              <a
-                                href={source.source.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline mb-1 block"
-                              >
-                                {source.source.title}
-                              </a>
-                            ) : (
-                              <h4 className="font-medium text-gray-900 mb-1">
-                                {source.source.title}
-                              </h4>
-                            )}
-                            <p className="text-xs text-gray-500 mb-1">
-                              {source.source.type}
-                            </p>
-                          </>
-                        )}
-                        <p className="text-sm text-gray-600">
-                          Type: {source.type} • Relevance:{" "}
-                          {Math.round(source.relevanceScore * 100)}%
-                        </p>
-                      </div>
-                    </div>
-                    {source.content && (
-                      <p className="text-sm text-gray-700 line-clamp-3">
-                        {source.content}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="text-sm text-gray-500 text-center py-4">
+        <div className="text-sm text-gray-500 text-center py-4 print:hidden">
           Model: {recommendation.modelUsed || "Unknown"}
         </div>
       </div>

@@ -5,10 +5,137 @@ import { prisma } from "@/lib/prisma";
 import { searchTextChunks, searchImageChunks } from "@/lib/retrieval/search";
 import { assembleContext } from "@/lib/retrieval/context-assembly";
 import { generateWithRetry, ValidationError } from "@/lib/validation/retry";
+import { Prisma } from "@prisma/client";
+import { CLAUDE_MODEL } from "@/lib/ai/claude";
 
 const requestSchema = z.object({
   inputId: z.string().cuid(),
 });
+
+/**
+ * GET /api/recommendations - List user's recommendations
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const sort = searchParams.get("sort") || "date_desc";
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
+
+    // Build where clause
+    const where: Prisma.RecommendationWhereInput = {
+      userId: user.id,
+    };
+
+    // Search by crop or condition (in diagnosis JSON)
+    if (search) {
+      where.OR = [
+        {
+          input: {
+            crop: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          diagnosis: {
+            path: ["diagnosis", "condition"],
+            string_contains: search,
+          },
+        },
+      ];
+    }
+
+    // Build orderBy
+    let orderBy: Prisma.RecommendationOrderByWithRelationInput = { createdAt: "desc" };
+    switch (sort) {
+      case "date_asc":
+        orderBy = { createdAt: "asc" };
+        break;
+      case "date_desc":
+        orderBy = { createdAt: "desc" };
+        break;
+      case "confidence_high":
+        orderBy = { confidence: "desc" };
+        break;
+      case "confidence_low":
+        orderBy = { confidence: "asc" };
+        break;
+    }
+
+    // Get total count
+    const total = await prisma.recommendation.count({ where });
+
+    // Get paginated results
+    const recommendations = await prisma.recommendation.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        input: {
+          select: {
+            id: true,
+            type: true,
+            crop: true,
+            location: true,
+            imageUrl: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+    // Format response
+    const formattedRecommendations = recommendations.map((rec) => {
+      const diagnosis = rec.diagnosis as any;
+      return {
+        id: rec.id,
+        createdAt: rec.createdAt,
+        confidence: rec.confidence,
+        condition: diagnosis?.diagnosis?.condition || "Unknown",
+        conditionType: diagnosis?.diagnosis?.conditionType || "unknown",
+        firstAction: diagnosis?.recommendations?.[0]?.action || null,
+        input: {
+          id: rec.input.id,
+          type: rec.input.type,
+          crop: rec.input.crop,
+          location: rec.input.location,
+          imageUrl: rec.input.imageUrl,
+        },
+      };
+    });
+
+    return NextResponse.json({
+      recommendations: formattedRecommendations,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (error) {
+    console.error("List recommendations error:", error);
+    return NextResponse.json(
+      { error: "Failed to list recommendations" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -108,7 +235,7 @@ export async function POST(request: NextRequest) {
         inputId: input.id,
         diagnosis: recommendation as any, // Store full recommendation object
         confidence: recommendation.confidence,
-        modelUsed: "claude-sonnet-4-5",
+        modelUsed: CLAUDE_MODEL,
       },
     });
 

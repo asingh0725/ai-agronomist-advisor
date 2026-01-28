@@ -3,20 +3,45 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   ActionItem,
   getPriorityLabel,
   getPriorityColor,
 } from "@/lib/utils/format-diagnosis";
 import { Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { CitationLink } from "./citation-link";
 
 interface ActionItemsDisplayProps {
   actions: ActionItem[];
+  citationMap?: Map<string, number>;
+  onCitationClick?: (sourceNumber: number) => void;
 }
 
-export function ActionItemsDisplay({ actions }: ActionItemsDisplayProps) {
+// Priority order for sorting
+const PRIORITY_ORDER: Record<ActionItem["priority"], number> = {
+  immediate: 0,
+  soon: 1,
+  when_convenient: 2,
+};
+
+export function ActionItemsDisplay({
+  actions,
+  citationMap,
+  onCitationClick,
+}: ActionItemsDisplayProps) {
   if (!actions || actions.length === 0) {
     return null;
   }
+
+  // Sort actions by priority
+  const sortedActions = [...actions].sort(
+    (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
+  );
 
   const getPriorityIcon = (priority: ActionItem["priority"]) => {
     switch (priority) {
@@ -29,60 +54,83 @@ export function ActionItemsDisplay({ actions }: ActionItemsDisplayProps) {
     }
   };
 
+  // Default to first 2 items expanded
+  const defaultExpanded = sortedActions.slice(0, 2).map((_, i) => `action-${i}`);
+
   return (
-    <Card>
+    <Card className="print:shadow-none print:border-0">
       <CardHeader>
         <CardTitle className="text-xl font-semibold">
           Recommended Actions
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {actions.map((action, index) => (
-            <div
+        <Accordion
+          type="multiple"
+          defaultValue={defaultExpanded}
+          className="space-y-3 print:space-y-4"
+        >
+          {sortedActions.map((action, index) => (
+            <AccordionItem
               key={index}
-              className="border border-gray-200 rounded-lg p-4 space-y-3"
+              value={`action-${index}`}
+              id={`action-${index}`}
+              className="border border-gray-200 rounded-lg px-4 data-[state=open]:bg-gray-50/50 print:border-gray-300 print:[&[data-state=closed]]:block"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-semibold text-gray-900">
-                      {index + 1}.
+              <AccordionTrigger className="hover:no-underline py-4">
+                <div className="flex items-start justify-between gap-4 w-full pr-4">
+                  <div className="flex items-center gap-3 text-left">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-semibold text-gray-700 shrink-0">
+                      {index + 1}
                     </span>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-base font-semibold text-gray-900">
                       {action.action}
                     </h3>
                   </div>
+                  <Badge
+                    variant="outline"
+                    className={`${getPriorityColor(action.priority)} flex items-center gap-1.5 px-3 py-1 whitespace-nowrap shrink-0`}
+                  >
+                    {getPriorityIcon(action.priority)}
+                    {getPriorityLabel(action.priority)}
+                  </Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="print:block print:!h-auto">
+                <div className="space-y-3 pt-2">
                   {action.timing && (
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-600">
                       <strong>Timing:</strong> {action.timing}
                     </p>
                   )}
+                  <div className="bg-white rounded-lg p-3 border border-gray-200">
+                    <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+                      {action.details}
+                    </p>
+                  </div>
+                  {action.citations && action.citations.length > 0 && citationMap && (
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <span>Sources:</span>
+                      {action.citations.map((chunkId, i) => {
+                        const sourceNumber = citationMap.get(chunkId);
+                        if (sourceNumber === undefined) return null;
+                        return (
+                          <span key={chunkId}>
+                            <CitationLink
+                              sourceNumber={sourceNumber}
+                              onClick={() => onCitationClick?.(sourceNumber)}
+                            />
+                            {i < action.citations.length - 1 && ","}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <Badge
-                  variant="outline"
-                  className={`${getPriorityColor(action.priority)} flex items-center gap-1.5 px-3 py-1 whitespace-nowrap`}
-                >
-                  {getPriorityIcon(action.priority)}
-                  {getPriorityLabel(action.priority)}
-                </Badge>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                  {action.details}
-                </p>
-              </div>
-
-              {action.citations && action.citations.length > 0 && (
-                <div className="flex items-start gap-2 text-xs text-gray-500">
-                  <span className="font-medium">Sources:</span>
-                  <span>{action.citations.join(", ")}</span>
-                </div>
-              )}
-            </div>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </CardContent>
     </Card>
   );
