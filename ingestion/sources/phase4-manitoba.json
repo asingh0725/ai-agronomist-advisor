@@ -3,49 +3,49 @@
   "description": "Manitoba agriculture and crop production sources",
   "province": "Manitoba",
   "totalUrls": 3,
-  "estimatedChunks": 15,
+  "estimatedChunks": 36,
   "sources": {
     "manitoba_agriculture": {
       "institution": "Manitoba Agriculture",
-      "baseUrl": "https://www.gov.mb.ca/agriculture/",
+      "baseUrl": "https://www.gov.mb.ca/agriculture",
       "priority": "high",
       "urlCount": 3,
       "urls": [
         {
-          "url": "https://www.gov.mb.ca/agriculture/crops/",
-          "title": "Manitoba Crops",
-          "publicationId": "MB-CROPS",
+          "url": "https://www.gov.mb.ca/agriculture/crops/guides-and-publications/pubs/guide-crop-protection-insects-2025.pdf",
+          "title": "Guide to Crop Protection - Insects 2025",
+          "publicationId": "MB-GCP-INSECTS-2025",
           "crops": ["wheat", "canola", "soybeans"],
-          "topics": ["production", "management", "markets"],
-          "type": "html",
-          "publishYear": "2023",
-          "estimatedChunks": 5,
+          "topics": ["pest", "insects", "management"],
+          "type": "pdf",
+          "publishYear": "2025",
+          "estimatedChunks": 12,
           "priority": "high",
-          "notes": "Manitoba crop production resources."
+          "notes": "Manitoba crop protection guide focused on insects."
         },
         {
-          "url": "https://www.gov.mb.ca/agriculture/crops/crop-management/",
-          "title": "Crop Management",
-          "publicationId": "MB-CROP-MGMT",
+          "url": "https://www.gov.mb.ca/agriculture/crops/guides-and-publications/pubs/guide-crop-protection-diseases-2025.pdf",
+          "title": "Guide to Crop Protection - Diseases 2025",
+          "publicationId": "MB-GCP-DISEASES-2025",
           "crops": ["wheat", "canola", "soybeans"],
-          "topics": ["management", "fertility", "rotation"],
-          "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 5,
-          "priority": "medium",
-          "notes": "Crop management guidance and resources."
+          "topics": ["disease", "fungicide", "management"],
+          "type": "pdf",
+          "publishYear": "2025",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "Manitoba crop protection guide focused on diseases."
         },
         {
-          "url": "https://www.gov.mb.ca/agriculture/crops/crop-production/",
-          "title": "Crop Production",
-          "publicationId": "MB-CROP-PROD",
+          "url": "https://www.gov.mb.ca/agriculture/crops/soil-fertility/pubs/fer01s01.pdf",
+          "title": "Soil Fertility for Field Crops",
+          "publicationId": "MB-FER01S01",
           "crops": ["wheat", "canola", "soybeans"],
-          "topics": ["production", "seeding", "harvest"],
-          "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 5,
+          "topics": ["soil", "fertility", "nutrients"],
+          "type": "pdf",
+          "publishYear": "2019",
+          "estimatedChunks": 12,
           "priority": "medium",
-          "notes": "Production resources for Manitoba crops."
+          "notes": "Soil fertility guidance for Manitoba field crops."
         }
       ]
     }

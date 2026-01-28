@@ -3,49 +3,49 @@
   "description": "Alberta agriculture and crop production sources",
   "province": "Alberta",
   "totalUrls": 3,
-  "estimatedChunks": 15,
+  "estimatedChunks": 36,
   "sources": {
     "alberta_agriculture": {
       "institution": "Government of Alberta - Agriculture",
-      "baseUrl": "https://www.alberta.ca/",
+      "baseUrl": "https://www1.agriculture.alberta.ca",
       "priority": "high",
       "urlCount": 3,
       "urls": [
         {
-          "url": "https://www.alberta.ca/crop-production.aspx",
-          "title": "Crop Production",
-          "publicationId": "AB-CROP-PROD",
+          "url": "https://www1.agriculture.alberta.ca/%24department/deptdocs.nsf/all/agdex14757/%24file/640-15.pdf",
+          "title": "Soil Test Interpretations and Fertilizer Recommendations",
+          "publicationId": "AGDEX-640-15",
           "crops": ["wheat", "canola", "barley"],
-          "topics": ["production", "management", "rotation"],
-          "type": "html",
-          "publishYear": "2023",
-          "estimatedChunks": 5,
-          "priority": "high",
-          "notes": "Overview of crop production resources for Alberta."
-        },
-        {
-          "url": "https://www.alberta.ca/crop-protection.aspx",
-          "title": "Crop Protection",
-          "publicationId": "AB-CROP-PROTECT",
-          "crops": ["wheat", "canola", "barley"],
-          "topics": ["pest", "disease", "weed"],
-          "type": "html",
-          "publishYear": "2023",
-          "estimatedChunks": 5,
-          "priority": "high",
-          "notes": "Crop protection programs and guidance."
-        },
-        {
-          "url": "https://www.alberta.ca/soil-fertility-management.aspx",
-          "title": "Soil Fertility Management",
-          "publicationId": "AB-SOIL-FERT",
-          "crops": ["wheat", "canola", "forage"],
           "topics": ["soil", "fertility", "nutrients"],
-          "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 5,
+          "type": "pdf",
+          "publishYear": "2016",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "Alberta Agriculture soil test interpretation guide."
+        },
+        {
+          "url": "https://www1.agriculture.alberta.ca/%24Department/deptdocs.nsf/ba3468a2a8681f69872569d60073fde1/64f71281cca7eb63872578d1004c6b12/%24FILE/121_561-1.pdf",
+          "title": "Production of Oilseed Crops in Alberta",
+          "publicationId": "AGDEX-121-561-1",
+          "crops": ["canola"],
+          "topics": ["production", "management", "rotation"],
+          "type": "pdf",
+          "publishYear": "2014",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "Alberta oilseed production reference."
+        },
+        {
+          "url": "https://www1.agriculture.alberta.ca/%24department/deptdocs.nsf/all/agdex3795/%24file/142_32-1.pdf",
+          "title": "Growing Wheat in Alberta",
+          "publicationId": "AGDEX-142-32-1",
+          "crops": ["wheat"],
+          "topics": ["production", "varieties", "management"],
+          "type": "pdf",
+          "publishYear": "2012",
+          "estimatedChunks": 12,
           "priority": "medium",
-          "notes": "Soil fertility and nutrient management resources."
+          "notes": "Alberta wheat production guide."
         }
       ]
     }

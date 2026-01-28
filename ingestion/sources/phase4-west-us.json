@@ -4,7 +4,7 @@
   "region": "West US",
   "states": ["CA", "OR", "WA", "ID", "NV", "AZ", "NM", "CO", "UT", "WY", "MT"],
   "totalUrls": 6,
-  "estimatedChunks": 64,
+  "estimatedChunks": 84,
   "sources": {
     "uc_ipm": {
       "institution": "University of California IPM",
@@ -52,45 +52,45 @@
     },
     "oregon_state_extension": {
       "institution": "Oregon State University Extension Service",
-      "baseUrl": "https://extension.oregonstate.edu/",
+      "baseUrl": "https://extension.oregonstate.edu",
       "priority": "high",
       "urlCount": 3,
       "urls": [
         {
-          "url": "https://extension.oregonstate.edu/crop-production",
-          "title": "OSU Extension Crop Production",
-          "publicationId": "OSU-CROP-PROD",
-          "crops": ["wheat", "barley", "hay"],
+          "url": "https://extension.oregonstate.edu/sites/extd8/files/documents/em9115.pdf",
+          "title": "Central Oregon Dryland Wheat Production Guide",
+          "publicationId": "OSU-EM9115",
+          "crops": ["wheat"],
           "topics": ["production", "management", "soil"],
-          "type": "html",
-          "publishYear": "2023",
-          "estimatedChunks": 6,
+          "type": "pdf",
+          "publishYear": "2012",
+          "estimatedChunks": 12,
           "priority": "high",
-          "notes": "OSU Extension crop production resources."
+          "notes": "OSU Extension dryland wheat production guide."
         },
         {
-          "url": "https://extension.oregonstate.edu/forages",
-          "title": "OSU Extension Forages",
-          "publicationId": "OSU-FORAGES",
-          "crops": ["alfalfa", "hay", "pasture"],
-          "topics": ["forage", "management", "production"],
-          "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 5,
-          "priority": "medium",
-          "notes": "Forage and pasture management resources."
+          "url": "https://extension.oregonstate.edu/sites/extd8/files/catalog/auto/EM9302.pdf",
+          "title": "Nitrogen Fertilizer Management for Western Oregon",
+          "publicationId": "OSU-EM9302",
+          "crops": ["wheat", "grass seed"],
+          "topics": ["nutrients", "fertility", "management"],
+          "type": "pdf",
+          "publishYear": "2015",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "OSU Extension nitrogen management guidance."
         },
         {
-          "url": "https://extension.oregonstate.edu/grains",
-          "title": "OSU Extension Grains",
-          "publicationId": "OSU-GRAINS",
-          "crops": ["wheat", "barley", "oats"],
-          "topics": ["production", "disease", "varieties"],
-          "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 5,
+          "url": "https://extension.oregonstate.edu/sites/extd8/files/documents/em9173.pdf",
+          "title": "Managing Herbicide-Resistant Weeds in Pacific Northwest Crops",
+          "publicationId": "OSU-EM9173",
+          "crops": ["wheat", "barley", "grass seed"],
+          "topics": ["weed", "herbicide", "management"],
+          "type": "pdf",
+          "publishYear": "2014",
+          "estimatedChunks": 12,
           "priority": "medium",
-          "notes": "Small grain management resources."
+          "notes": "Weed management guide for PNW crops."
         }
       ]
     }

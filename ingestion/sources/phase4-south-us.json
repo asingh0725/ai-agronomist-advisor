@@ -4,7 +4,7 @@
   "region": "South US",
   "states": ["TX", "GA", "AL", "MS", "LA", "AR", "NC", "SC", "FL", "TN", "KY"],
   "totalUrls": 6,
-  "estimatedChunks": 36,
+  "estimatedChunks": 56,
   "sources": {
     "texas_agrlife_extension": {
       "institution": "Texas A&M AgriLife Extension",
@@ -13,40 +13,40 @@
       "urlCount": 3,
       "urls": [
         {
-          "url": "https://agrilifeextension.tamu.edu/library/field-crops/",
-          "title": "AgriLife Extension Field Crops",
-          "publicationId": "TX-AGRILIFE-FIELD-CROPS",
-          "crops": ["corn", "cotton", "sorghum"],
-          "topics": ["production", "management", "pest"],
+          "url": "https://agrilifeextension.tamu.edu/asset-external/irrigated-and-dryland-sorghum-production-in-south-and-southwest-texas/",
+          "title": "Irrigated and Dryland Sorghum Production in South and Southwest Texas",
+          "publicationId": "TX-SORGHUM-PROD",
+          "crops": ["sorghum"],
+          "topics": ["production", "irrigation", "management"],
           "type": "html",
-          "publishYear": "2023",
-          "estimatedChunks": 6,
-          "priority": "critical",
-          "notes": "Field crop production resources for Texas."
+          "publishYear": "2016",
+          "estimatedChunks": 8,
+          "priority": "high",
+          "notes": "Texas AgriLife sorghum production guide."
         },
         {
-          "url": "https://agrilifeextension.tamu.edu/library/forages/",
-          "title": "AgriLife Extension Forages",
-          "publicationId": "TX-AGRILIFE-FORAGES",
-          "crops": ["alfalfa", "hay", "pasture"],
-          "topics": ["forage", "production", "management"],
+          "url": "https://agrilifeextension.tamu.edu/asset-external/winter-wheat-management-calendar-for-the-rolling-plains-and-high-plains-of-texas/",
+          "title": "Winter Wheat Management Calendar for the Rolling Plains and High Plains of Texas",
+          "publicationId": "TX-WHEAT-CALENDAR",
+          "crops": ["wheat"],
+          "topics": ["management", "production", "timing"],
           "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 6,
+          "publishYear": "2018",
+          "estimatedChunks": 8,
           "priority": "high",
-          "notes": "Forage and pasture management resources."
+          "notes": "Texas AgriLife wheat management calendar."
         },
         {
-          "url": "https://agrilifeextension.tamu.edu/library/crops/",
-          "title": "AgriLife Extension Crops",
-          "publicationId": "TX-AGRILIFE-CROPS",
-          "crops": ["corn", "cotton", "wheat"],
-          "topics": ["production", "nutrients", "pest"],
+          "url": "https://agrilifeextension.tamu.edu/asset-external/crop-nutrient-needs-in-south-and-southwest-texas/",
+          "title": "Crop Nutrient Needs in South and Southwest Texas",
+          "publicationId": "TX-NUTRIENT-NEEDS",
+          "crops": ["corn", "sorghum", "cotton"],
+          "topics": ["nutrients", "fertility", "management"],
           "type": "html",
-          "publishYear": "2022",
-          "estimatedChunks": 6,
-          "priority": "high",
-          "notes": "Crop production and management resources."
+          "publishYear": "2016",
+          "estimatedChunks": 8,
+          "priority": "medium",
+          "notes": "AgriLife nutrient management guidance."
         }
       ]
     },
@@ -57,40 +57,40 @@
       "urlCount": 3,
       "urls": [
         {
-          "url": "https://extension.uga.edu/programs-services/extension-agriculture-and-natural-resources/crops-and-soils.html",
-          "title": "UGA Extension Crops and Soils",
-          "publicationId": "UGA-CROPS-SOILS",
-          "crops": ["corn", "cotton", "peanuts"],
-          "topics": ["production", "soil", "management"],
-          "type": "html",
-          "publishYear": "2023",
-          "estimatedChunks": 6,
+          "url": "https://extension.uga.edu/content/dam/extension/programs-and-services/integrated-pest-management/documents/handbooks/2021-pmh-comm-chapters/Cotton.pdf",
+          "title": "Cotton Pest Management Handbook",
+          "publicationId": "UGA-COTTON-PMH-2021",
+          "crops": ["cotton"],
+          "topics": ["pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2021",
+          "estimatedChunks": 12,
           "priority": "high",
-          "notes": "Program overview for crops and soils extension."
+          "notes": "UGA IPM handbook chapter for cotton."
         },
         {
-          "url": "https://extension.uga.edu/publications/detail.html?number=B1362",
-          "title": "Corn Production Guide",
-          "publicationId": "UGA-B1362",
-          "crops": ["corn"],
-          "topics": ["production", "nutrients", "planting"],
-          "type": "html",
-          "publishYear": "2019",
-          "estimatedChunks": 6,
-          "priority": "high",
-          "notes": "UGA extension corn production bulletin."
-        },
-        {
-          "url": "https://extension.uga.edu/publications/detail.html?number=B1251",
-          "title": "Peanut Production Guide",
-          "publicationId": "UGA-B1251",
+          "url": "https://extension.uga.edu/content/dam/extension/programs-and-services/integrated-pest-management/documents/handbooks/2020-pmh-chapters/Peanut.pdf",
+          "title": "Peanut Pest Management Handbook",
+          "publicationId": "UGA-PEANUT-PMH-2020",
           "crops": ["peanuts"],
-          "topics": ["production", "disease", "pest"],
+          "topics": ["pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2020",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "UGA IPM handbook chapter for peanuts."
+        },
+        {
+          "url": "https://extension.uga.edu/publications/detail.html?number=B1146&title=peanut-production-field-guide",
+          "title": "Peanut Production Field Guide",
+          "publicationId": "UGA-B1146",
+          "crops": ["peanuts"],
+          "topics": ["production", "management", "planting"],
           "type": "html",
-          "publishYear": "2018",
-          "estimatedChunks": 6,
+          "publishYear": "2011",
+          "estimatedChunks": 8,
           "priority": "medium",
-          "notes": "UGA extension peanut production bulletin."
+          "notes": "UGA extension peanut production field guide."
         }
       ]
     }

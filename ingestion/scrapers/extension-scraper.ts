@@ -7,11 +7,11 @@ export class ExtensionScraper extends BaseScraper {
   // Update the scrape method in lib/ingestion/scrapers/extension-scraper.ts
   async scrape(url: string): Promise<ScrapedDocument> {
     try {
-      const buffer = await this.fetchPDF(url);
-      const actualType = detectContentType(buffer, url);
+      const { buffer, finalUrl } = await this.fetchBufferWithFallback(url);
+      const actualType = detectContentType(buffer, finalUrl);
 
       if (actualType === "pdf") {
-        return this.processPDFBuffer(buffer, url);
+        return this.processPDFBuffer(buffer, finalUrl);
       }
 
       // If we hit an HTML page instead of a PDF (e.g., MSU landing pages)
@@ -21,13 +21,13 @@ export class ExtensionScraper extends BaseScraper {
         // Look for PDF links in the page content (Landing Page Pattern)
         const pdfMatch = html.match(/href="([^"]+\.pdf)"/i);
         if (pdfMatch) {
-          const absolutePdfUrl = new URL(pdfMatch[1], url).href;
+          const absolutePdfUrl = new URL(pdfMatch[1], finalUrl).href;
           console.log(`Found PDF link on landing page: ${absolutePdfUrl}`);
           const pdfBuffer = await this.fetchPDF(absolutePdfUrl);
           return this.processPDFBuffer(pdfBuffer, absolutePdfUrl);
         }
 
-        return this.processHTMLBuffer(buffer, url);
+        return this.processHTMLBuffer(buffer, finalUrl);
       }
 
       throw new Error("Unknown content type");
@@ -35,6 +35,70 @@ export class ExtensionScraper extends BaseScraper {
       console.error(`Scrape failed for ${url}:`, error);
       throw error;
     }
+  }
+
+  private buildUrlVariants(url: string): string[] {
+    const variants = new Set<string>([url]);
+    let urlObj: URL;
+
+    try {
+      urlObj = new URL(url);
+    } catch {
+      return Array.from(variants);
+    }
+
+    const hasTrailingSlash = urlObj.pathname.endsWith("/");
+    const trimmed = url.replace(/\/+$/, "");
+    const withSlash = hasTrailingSlash ? url : `${url}/`;
+    variants.add(trimmed);
+    variants.add(withSlash);
+
+    const host = urlObj.hostname;
+    const alternateHost = host.startsWith("www.")
+      ? host.slice(4)
+      : `www.${host}`;
+    const altUrl = new URL(url);
+    altUrl.hostname = alternateHost;
+    variants.add(altUrl.toString());
+
+    const altTrimmed = altUrl.toString().replace(/\/+$/, "");
+    variants.add(altTrimmed);
+    variants.add(`${altTrimmed}/`);
+
+    return Array.from(variants);
+  }
+
+  private getStatusFromError(error: unknown): number | null {
+    const message = error instanceof Error ? error.message : String(error);
+    const match = message.match(/HTTP\s+(\d{3})/i);
+    return match ? Number(match[1]) : null;
+  }
+
+  private async fetchBufferWithFallback(url: string): Promise<{
+    buffer: Buffer;
+    finalUrl: string;
+  }> {
+    const candidates = this.buildUrlVariants(url);
+    let lastError: unknown;
+
+    for (const candidate of candidates) {
+      try {
+        const buffer = await this.fetchPDF(candidate);
+        if (candidate !== url) {
+          console.log(`  ↪ Retried with alternate URL: ${candidate}`);
+        }
+        return { buffer, finalUrl: candidate };
+      } catch (error) {
+        lastError = error;
+        const status = this.getStatusFromError(error);
+        if (status === 404 || status === 403) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw lastError ?? new Error(`Failed to fetch URL: ${url}`);
   }
 
   /**
