@@ -16,6 +16,28 @@ export interface Diagnosis {
   reasoning: string;
 }
 
+export interface ActionItem {
+  action: string;
+  priority: "immediate" | "soon" | "when_convenient";
+  timing?: string;
+  details: string;
+  citations: string[];
+}
+
+export interface ProductSuggestion {
+  productId: string;
+  reason: string;
+  applicationRate?: string;
+  alternatives?: string[];
+}
+
+export interface FullRecommendation {
+  diagnosis: Diagnosis;
+  recommendations: ActionItem[];
+  products: ProductSuggestion[];
+  confidence: number;
+}
+
 /**
  * Get human-readable label for condition type
  */
@@ -92,4 +114,32 @@ export function getConfidenceColor(confidence: number): string {
   };
 
   return colors[level];
+}
+
+/**
+ * Get label for action priority
+ */
+export function getPriorityLabel(
+  priority: ActionItem["priority"]
+): string {
+  const labels = {
+    immediate: "Immediate",
+    soon: "Soon",
+    when_convenient: "When Convenient",
+  };
+  return labels[priority];
+}
+
+/**
+ * Get color for action priority
+ */
+export function getPriorityColor(
+  priority: ActionItem["priority"]
+): string {
+  const colors = {
+    immediate: "text-red-600 bg-red-50 border-red-200",
+    soon: "text-orange-600 bg-orange-50 border-orange-200",
+    when_convenient: "text-blue-600 bg-blue-50 border-blue-200",
+  };
+  return colors[priority];
 }

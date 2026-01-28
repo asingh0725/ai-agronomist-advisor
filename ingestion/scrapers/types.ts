@@ -129,6 +129,8 @@ export interface CostTracker {
 export interface SourceUrlConfig {
   phase: 1 | 2 | 3;
   description: string;
+  totalUrls?: number;
+  estimatedChunks?: number;
   sources: Record<
     string,
     {

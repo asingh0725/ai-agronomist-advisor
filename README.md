@@ -25,7 +25,7 @@ Row crops, vegetables, fruits, specialty crops, and forage species commonly grow
 
 ## Key Features
 
-- **Multi-modal inputs**: photo, text description, lab data, or hybrid.
+- **Multi-modal inputs**: photo with text description, or lab data.
 - **Research-grounded recommendations** with citations and confidence indicators.
 - **Product guidance** with pricing, application rates, and purchase links.
 - **Feedback loop** to improve recommendations based on outcomes.
@@ -35,7 +35,7 @@ Row crops, vegetables, fruits, specialty crops, and forage species commonly grow
 
 ## How It Works (Short Version)
 
-1. **Input**: Users submit a photo, description, lab results, or all three.
+1. **Input**: Users submit a photo with description, or lab results.
 2. **Analysis**: Vision + NLP extract symptoms and normalize data.
 3. **Retrieval**: RAG fetches relevant sources and reference images.
 4. **Recommendation**: Structured diagnosis + actions + products are produced.

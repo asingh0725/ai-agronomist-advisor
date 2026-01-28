@@ -5,28 +5,26 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Camera, FileSpreadsheet, Layers } from 'lucide-react'
+import { Camera, FileSpreadsheet } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 interface Input {
   id: string
-  type: 'PHOTO' | 'LAB_REPORT' | 'HYBRID'
+  type: 'PHOTO' | 'LAB_REPORT'
   crop: string | null
   location: string | null
   createdAt: string
-  recommendations: { id: string }[]
+  recommendations: { id: string } | null
 }
 
 const typeIcons = {
   PHOTO: Camera,
   LAB_REPORT: FileSpreadsheet,
-  HYBRID: Layers,
 }
 
 const typeLabels = {
   PHOTO: 'Photo Analysis',
   LAB_REPORT: 'Lab Report',
-  HYBRID: 'Hybrid Analysis',
 }
 
 export default function HistoryPage() {
@@ -91,13 +89,14 @@ export default function HistoryPage() {
 
       {inputs.map((input) => {
         const Icon = typeIcons[input.type]
-        const hasRecommendation = input.recommendations && input.recommendations.length > 0
+        const hasRecommendation = input.recommendations !== null
+        const recommendationId = input.recommendations?.id
 
         return (
           <Card
             key={input.id}
             className="cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => router.push(`/recommendations/${input.id}`)}
+            onClick={() => router.push(`/recommendations/${recommendationId || input.id}`)}
           >
             <CardHeader className="flex flex-row items-center gap-4 py-4">
               <div className="p-2 bg-muted rounded-lg">

@@ -77,22 +77,3 @@ export const labReportSchema = z.object({
 
 export type LabReportInput = z.infer<typeof labReportSchema>;
 
-export const hybridDiagnoseSchema = z.object({
-  // Photo section (optional)
-  description: z.string().max(1000).optional(),
-
-  // Lab section - just macronutrients (all optional)
-  ph: optionalStringNumber(0, 14),
-  organicMatter: optionalStringNumber(0, 100),
-  nitrogen: optionalStringNumber(0),
-  phosphorus: optionalStringNumber(0),
-  potassium: optionalStringNumber(0),
-
-  // Shared required fields
-  crop: z.string().min(1, "Please select a crop"),
-  growthStage: z.string().min(1, "Please select a growth stage"),
-  locationState: z.string().min(1),
-  locationCountry: z.string().min(1),
-});
-
-export type HybridDiagnoseInput = z.infer<typeof hybridDiagnoseSchema>;

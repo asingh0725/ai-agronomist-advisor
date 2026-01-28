@@ -105,7 +105,7 @@ async function runPhase1Ingestion(options: RunOptions) {
     await fs.readFile(urlFile, "utf-8")
   );
 
-  let totalUrls = countTotalUrls(urlList);
+  let totalUrls = countTotalUrls(urlList) || 0;
   const estimatedChunks = estimateChunks(urlList);
   
   if (options.limit) {

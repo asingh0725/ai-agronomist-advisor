@@ -14,6 +14,7 @@ import {
 } from "@/lib/validations/diagnose"
 import { CROP_OPTIONS, LOCATIONS } from "@/lib/constants/profile"
 import { ImageUploadZone } from "@/components/diagnose/image-upload-zone"
+import { AnalyzingLoader } from "@/components/diagnose/analyzing-loader"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -43,6 +44,7 @@ import { Textarea } from "@/components/ui/textarea"
 export default function PhotoDiagnosePage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingStage, setLoadingStage] = useState<"uploading" | "analyzing">("uploading")
   const [isFetching, setIsFetching] = useState(true)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imageError, setImageError] = useState<string>('')
@@ -92,6 +94,7 @@ export default function PhotoDiagnosePage() {
     }
 
     setIsLoading(true)
+    setLoadingStage("uploading")
     setImageError('')
 
     try {
@@ -111,7 +114,8 @@ export default function PhotoDiagnosePage() {
 
       const { url: imageUrl } = await uploadRes.json()
 
-      // Step 2: Create input record
+      // Step 2: Create input and generate recommendation
+      setLoadingStage("analyzing")
       const inputRes = await fetch('/api/inputs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,12 +131,12 @@ export default function PhotoDiagnosePage() {
 
       if (!inputRes.ok) {
         const err = await inputRes.json()
-        throw new Error(err.error || 'Failed to save input')
+        throw new Error(err.error || 'Failed to generate recommendation')
       }
 
-      const input = await inputRes.json()
-      toast.success('Analysis submitted!')
-      router.push(`/recommendations/${input.id}`)
+      const { recommendationId } = await inputRes.json()
+      toast.success('Recommendation generated!')
+      router.push(`/recommendations/${recommendationId}`)
     } catch (error) {
       console.error('Error submitting diagnosis:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to submit analysis')
@@ -150,7 +154,9 @@ export default function PhotoDiagnosePage() {
   }
 
   return (
-    <div className="container max-w-3xl py-8">
+    <>
+      {isLoading && <AnalyzingLoader stage={loadingStage} />}
+      <div className="container max-w-3xl py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/dashboard" className="hover:text-foreground transition-colors">
@@ -334,7 +340,7 @@ export default function PhotoDiagnosePage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isLoading || (!imageFile && !form.formState.isValid)}>
-                  {isLoading ? "Analyzing..." : "Analyze Crop"}
+                  Analyze Crop
                 </Button>
               </div>
             </form>
@@ -342,5 +348,6 @@ export default function PhotoDiagnosePage() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }

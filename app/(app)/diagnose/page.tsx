@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Camera, FileSpreadsheet, Layers, ChevronRight } from "lucide-react"
+import { Camera, FileSpreadsheet, ChevronRight } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -27,20 +27,12 @@ const inputMethods = [
     icon: FileSpreadsheet,
     href: '/diagnose/lab-report',
     time: '~5 min'
-  },
-  {
-    id: 'hybrid',
-    title: 'Both (Most Accurate)',
-    description: 'Combine visual observation with lab data',
-    icon: Layers,
-    href: '/diagnose/hybrid',
-    time: '~7 min'
   }
 ]
 
 export default function DiagnosePage() {
   return (
-    <div className="container max-w-7xl py-8">
+    <div className="container max-w-5xl py-8 px-4 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/dashboard" className="hover:text-foreground transition-colors">
@@ -50,38 +42,38 @@ export default function DiagnosePage() {
         <span className="text-foreground">Diagnose</span>
       </div>
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
+      {/* Header - centered */}
+      <div className="mb-10 text-center">
+        <h1 className="text-3xl font-bold tracking-tight mb-3">
           Diagnose Your Crop Issue
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground max-w-xl mx-auto">
           Choose your preferred method to get personalized recommendations
         </p>
       </div>
 
-      {/* Input Method Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Input Method Cards - centered grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
         {inputMethods.map((method) => {
           const Icon = method.icon
           return (
             <Link key={method.id} href={method.href}>
               <Card className="h-full transition-all hover:shadow-lg hover:border-primary cursor-pointer">
-                <CardHeader>
+                <CardHeader className="pb-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-primary/10 rounded-lg">
-                      <Icon className="h-6 w-6 text-primary" />
+                      <Icon className="h-7 w-7 text-primary" />
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
                       {method.time}
                     </span>
                   </div>
                   <CardTitle className="text-xl">{method.title}</CardTitle>
-                  <CardDescription className="text-base">
+                  <CardDescription className="text-base mt-2">
                     {method.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   <Button variant="outline" className="w-full">
                     Get Started
                   </Button>
