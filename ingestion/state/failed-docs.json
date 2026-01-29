@@ -1,0 +1,7 @@
+[
+  {
+    "url": "https://agsci.psu.edu/research/centers-facilities/extension/frec/resources/treefruit_booklet_plaincommunity_optimized.pdf",
+    "title": "Penn State Tree Fruit Production Guide (Plain Communities)",
+    "error": "Failed to parse PDF from https://agsci.psu.edu/research/centers-facilities/extension/frec/resources/treefruit_booklet_plaincommunity_optimized.pdf: Please provide binary data as `Uint8Array`, rather than `Buffer`."
+  }
+]

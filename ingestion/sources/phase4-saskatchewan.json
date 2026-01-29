@@ -46,6 +46,18 @@
           "estimatedChunks": 5,
           "priority": "medium",
           "notes": "Soil fertility and nutrient management guidance."
+        },
+        {
+          "url": "https://www.saskatchewan.ca/business/agriculture-natural-resources-and-industry/agribusiness-farmers-and-ranchers/crops-and-irrigation/crop-guides-and-publications/guide-to-crop-protection",
+          "title": "Guide to Crop Protection",
+          "publicationId": "SK-SOIL-FERT",
+          "crops": ["wheat", "canola", "barley"],
+          "topics": ["soil", "fertility", "nutrients", "protection"],
+          "type": "html",
+          "publishYear": "2025",
+          "estimatedChunks": 5,
+          "priority": "medium",
+          "notes": "Soil fertility and nutrient management guidance."
         }
       ]
     }

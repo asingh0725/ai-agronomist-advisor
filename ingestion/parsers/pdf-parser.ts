@@ -1,170 +1,122 @@
-import * as pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 import type { ParsedContent } from "../scrapers/types";
-
-type PdfParseFn = (buffer: Buffer) => Promise<{ text?: string }>;
-
-const resolvePdfParser = (moduleRef: unknown): PdfParseFn | null => {
-  if (typeof moduleRef === "function") {
-    return moduleRef as PdfParseFn;
-  }
-
-  const moduleDefault = (moduleRef as { default?: unknown } | null)?.default;
-  if (typeof moduleDefault === "function") {
-    return moduleDefault as PdfParseFn;
-  }
-
-  const nestedDefault = (moduleDefault as { default?: unknown } | null)?.default;
-  if (typeof nestedDefault === "function") {
-    return nestedDefault as PdfParseFn;
-  }
-
-  return null;
-};
-
-let cachedPdfParser: PdfParseFn | null = resolvePdfParser(pdfParse);
-
-const getPdfParser = async (): Promise<PdfParseFn> => {
-  if (cachedPdfParser) {
-    return cachedPdfParser;
-  }
-
-  const imported = await import("pdf-parse");
-  cachedPdfParser = resolvePdfParser(imported);
-
-  if (!cachedPdfParser) {
-    throw new Error(
-      "pdf-parse did not resolve to a callable function. Check the pdf-parse module export format."
-    );
-  }
-
-  return cachedPdfParser;
-};
 
 // Custom error class for invalid PDF
 class InvalidPDFException extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'InvalidPDFException';
+    this.name = "InvalidPDFException";
   }
 }
 
 /**
- * Parse PDF content using pdf-parse with robust error handling
+ * Parse PDF content using pdf-parse v2
  * Docs: https://www.npmjs.com/package/pdf-parse
  */
 export async function parsePDF(
-  buffer: Buffer,
   sourceUrl: string
 ): Promise<ParsedContent> {
-  // Check if buffer looks like a PDF (starts with %PDF-)
-  const headerCheck = buffer.slice(0, 5).toString('ascii');
-  if (!headerCheck.startsWith('%PDF-')) {
-    throw new Error(`Invalid PDF header. Got: "${headerCheck}". This may be HTML or another file type.`);
-  }
+  const parser = new PDFParse({ url: sourceUrl });
 
   try {
-    const pdfParser = await getPdfParser();
+    // Extract text from PDF
+    const result = await parser.getText();
 
-    // Extract text from PDF using pdf-parse
-    const data = await pdfParser(buffer);
-
-    // Validate we got text
-    if (!data || !data.text) {
-      throw new Error('PDF parsed but returned no text');
+    if (!result?.text) {
+      throw new Error("PDF parsed but returned no text");
     }
 
-    // Split content into pages (form feed character \f separates pages)
-    const pages = data.text.split('\f').filter((page: string) => page.trim().length > 0);
+    const text = result.text;
+
+    // Split content into pages (form feed character)
+    const pages = text
+      .split("\f")
+      .filter((page) => page.trim().length > 0);
 
     if (pages.length === 0) {
-      throw new Error('PDF contains no readable text');
+      throw new Error("PDF contains no readable text");
     }
 
-    const sections: ParsedContent['sections'] = [];
-    let currentSection: ParsedContent['sections'][0] = {
-      text: '',
+    const sections: ParsedContent["sections"] = [];
+    let currentSection: ParsedContent["sections"][0] = {
+      text: "",
       images: [],
     };
 
     // Process each page
-    pages.forEach((pageText: string, pageIndex: number) => {
-      const lines = pageText.split('\n');
-      let pageContent = '';
+    pages.forEach((pageText, pageIndex) => {
+      const lines = pageText.split("\n");
+      let pageContent = "";
 
-      lines.forEach((line: string) => {
+      lines.forEach((line) => {
         const trimmed = line.trim();
         if (!trimmed) return;
 
-        // Detect headings (heuristic: short lines in ALL CAPS or title case)
+        // Detect headings
         const isHeading =
           trimmed.length < 80 &&
-          trimmed.length > 3 && // Must be at least 4 chars
-          (trimmed === trimmed.toUpperCase() ||
-            /^[A-Z][a-z]+(?: [A-Z][a-z]+)*:?$/.test(trimmed));
+          trimmed.length > 3 &&
+          (
+            trimmed === trimmed.toUpperCase() ||
+            /^[A-Z][a-z]+(?: [A-Z][a-z]+)*:?$/.test(trimmed)
+          );
 
         if (isHeading) {
-          // Save current section if it has content
           if (currentSection.text.trim()) {
             sections.push(currentSection);
           }
 
-          // Start new section
           currentSection = {
             heading: trimmed,
-            text: '',
+            text: "",
             images: [],
           };
         } else {
-          pageContent += (pageContent ? ' ' : '') + trimmed;
+          pageContent += (pageContent ? " " : "") + trimmed;
         }
       });
 
-      // Add page content to current section
       if (pageContent.trim()) {
         currentSection.text +=
-          (currentSection.text ? '\n\n' : '') +
+          (currentSection.text ? "\n\n" : "") +
           `[Page ${pageIndex + 1}] ` +
           pageContent;
       }
     });
 
-    // Add final section
     if (currentSection.text.trim()) {
       sections.push(currentSection);
     }
 
-    // If no sections created, create a single section with all text
     if (sections.length === 0) {
       sections.push({
-        text: data.text,
+        text,
         images: [],
       });
     }
 
-    // Extract tables (basic detection)
-    const tables = extractTablesFromText(data.text);
+    // Extract tables
+    const tables = extractTablesFromText(text);
 
-    // Calculate metadata
     const wordCount = sections.reduce(
       (sum, section) => sum + section.text.split(/\s+/).length,
       0
     );
 
-    // Extract title (try first non-empty line or first heading)
-    let title = 'Untitled PDF';
-    if (sections.length > 0) {
+    // Extract title
+    let title = "Untitled PDF";
+    if (sections[0]) {
       if (sections[0].heading) {
         title = sections[0].heading;
       } else {
-        const firstLine = sections[0].text.split('\n')[0]?.trim();
+        const firstLine = sections[0].text.split("\n")[0]?.trim();
         if (firstLine && firstLine.length < 100) {
           title = firstLine;
         }
       }
     }
 
-    // Ensure title is reasonable
-    title = title.substring(0, 200); // Max 200 chars
+    title = title.substring(0, 200);
 
     return {
       title,
@@ -172,33 +124,36 @@ export async function parsePDF(
       tables,
       metadata: {
         wordCount,
-        imageCount: 0, // PDF image extraction would require additional parsing
+        imageCount: 0,
         tableCount: tables.length,
       },
     };
   } catch (error) {
-    // Handle known PDF parsing errors gracefully
     if (error instanceof InvalidPDFException) {
       throw new Error(
         `Invalid PDF structure at ${sourceUrl}. ` +
-        `This PDF may be corrupted, password-protected, or use an unsupported format. ` +
+        `This PDF may be corrupted, password-protected, or unsupported. ` +
         `Original error: ${error.message}`
       );
     }
 
-    // Re-throw with context
     throw new Error(
-      `Failed to parse PDF from ${sourceUrl}: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to parse PDF from ${sourceUrl}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
     );
+  } finally {
+    // IMPORTANT: always free resources
+    await parser.destroy();
   }
 }
 
 /**
  * Extract tables from text (basic heuristic detection)
  */
-function extractTablesFromText(text: string): ParsedContent['tables'] {
-  const tables: ParsedContent['tables'] = [];
-  const lines = text.split('\n');
+function extractTablesFromText(text: string): ParsedContent["tables"] {
+  const tables: ParsedContent["tables"] = [];
+  const lines = text.split("\n");
 
   let inTable = false;
   let currentTable: string[][] = [];
@@ -208,38 +163,37 @@ function extractTablesFromText(text: string): ParsedContent['tables'] {
     const line = lines[i].trim();
     if (!line) continue;
 
-    // Detect table start (heuristic: line with multiple tab-separated values or aligned columns)
-    const hasMultipleColumns = /\t.+\t/.test(line) || /\s{3,}.+\s{3,}/.test(line);
+    const hasMultipleColumns =
+      /\t.+\t/.test(line) || /\s{3,}.+\s{3,}/.test(line);
 
     if (hasMultipleColumns) {
       if (!inTable) {
         inTable = true;
-        // Look back for table name/caption
+
         if (i > 0) {
           const prevLine = lines[i - 1].trim();
           if (
             prevLine.length < 100 &&
-            (prevLine.toLowerCase().includes('table') ||
-              prevLine.toLowerCase().includes('figure'))
+            (
+              prevLine.toLowerCase().includes("table") ||
+              prevLine.toLowerCase().includes("figure")
+            )
           ) {
             tableName = prevLine;
           }
         }
       }
 
-      // Split by tabs or multiple spaces
       const cells = line
         .split(/\t+|\s{3,}/)
         .map((cell) => cell.trim())
-        .filter((cell) => cell.length > 0);
+        .filter(Boolean);
 
       if (cells.length > 1) {
         currentTable.push(cells);
       }
     } else if (inTable) {
-      // End of table
       if (currentTable.length > 1) {
-        // Only save if at least 2 rows
         tables.push({
           heading: tableName,
           rows: currentTable,
@@ -252,7 +206,6 @@ function extractTablesFromText(text: string): ParsedContent['tables'] {
     }
   }
 
-  // Save last table if exists
   if (currentTable.length > 1) {
     tables.push({
       heading: tableName,
@@ -261,14 +214,4 @@ function extractTablesFromText(text: string): ParsedContent['tables'] {
   }
 
   return tables;
-}
-
-/**
- * Validate if a buffer contains a valid PDF
- * Returns true if buffer starts with PDF magic bytes
- */
-export function isValidPDF(buffer: Buffer): boolean {
-  if (!buffer || buffer.length < 5) return false;
-  const header = buffer.slice(0, 5).toString('ascii');
-  return header.startsWith('%PDF-');
 }
