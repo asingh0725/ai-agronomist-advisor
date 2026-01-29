@@ -7,7 +7,10 @@ import { parsePDF } from "../parsers/pdf-parser";
 import { chunkDocument } from "../processing/chunker";
 import { generateTextEmbeddings } from "../processing/embedder";
 import { upsertSources, upsertTextChunks } from "../processing/upserter";
-import { extractImages, calculateImageStats } from "../processing/image-extractor";
+import {
+  extractImages,
+  calculateImageStats,
+} from "../processing/image-extractor";
 import { generateImageEmbeddings } from "../processing/embedder";
 import { upsertImageChunks } from "../processing/upserter";
 import type {
@@ -25,38 +28,54 @@ interface RunOptions {
   skipScrape: boolean;
   skipImages: boolean;
   dryRun: boolean;
+  file?: string;
 }
 
 /**
  * Detect actual content type from buffer, not URL extension
  * Prevents misclassifying HTML error pages as PDFs
  */
-function detectContentType(buffer: Buffer, url: string): 'html' | 'pdf' | 'unknown' {
+function detectContentType(
+  buffer: Buffer,
+  url: string
+): "html" | "pdf" | "unknown" {
   if (!buffer || buffer.length < 10) {
-    return 'unknown';
+    return "unknown";
   }
 
   // Check magic bytes (first few bytes)
-  const header = buffer.slice(0, 10).toString('ascii');
-  
+  const header = buffer.slice(0, 10).toString("ascii");
+
   // PDF magic bytes: %PDF-
-  if (header.startsWith('%PDF-')) {
-    return 'pdf';
+  if (header.startsWith("%PDF-")) {
+    return "pdf";
   }
-  
+
   // HTML indicators
-  const htmlIndicators = ['<!DOCTYPE', '<!doctype', '<html', '<HTML', '<?xml', '<head', '<HEAD'];
-  if (htmlIndicators.some(indicator => header.startsWith(indicator))) {
-    return 'html';
+  const htmlIndicators = [
+    "<!DOCTYPE",
+    "<!doctype",
+    "<html",
+    "<HTML",
+    "<?xml",
+    "<head",
+    "<HEAD",
+  ];
+  if (htmlIndicators.some((indicator) => header.startsWith(indicator))) {
+    return "html";
   }
-  
+
   // Check first 100 bytes for HTML tags
-  const sample = buffer.slice(0, 100).toString('utf8').toLowerCase();
-  if (sample.includes('<html') || sample.includes('<!doctype') || sample.includes('<head')) {
-    return 'html';
+  const sample = buffer.slice(0, 100).toString("utf8").toLowerCase();
+  if (
+    sample.includes("<html") ||
+    sample.includes("<!doctype") ||
+    sample.includes("<head")
+  ) {
+    return "html";
   }
-  
-  return 'unknown';
+
+  return "unknown";
 }
 
 /**
@@ -83,31 +102,206 @@ function estimateChunks(urlList: SourceUrlConfig): number {
   return total;
 }
 
+function slugifyKey(value: string): string {
+  const slug = value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return slug || "source";
+}
+
+function normalizeToSourceUrlConfig(raw: unknown): SourceUrlConfig {
+  if (!raw || typeof raw !== "object") {
+    throw new Error("Config must be a JSON object.");
+  }
+
+  const config = raw as {
+    phase?: number;
+    description?: string;
+    region?: string;
+    province?: string;
+    states?: string[];
+    territories?: string[];
+    totalUrls?: number;
+    estimatedChunks?: number;
+    sources?: Record<string, unknown> | Array<Record<string, unknown>>;
+  };
+
+  if (!config.sources) {
+    throw new Error("Config must include a sources field.");
+  }
+
+  let sources: SourceUrlConfig["sources"];
+
+  if (Array.isArray(config.sources)) {
+    sources = {};
+    config.sources.forEach((source, index) => {
+      const sourceRecord = source as {
+        sourceKey?: string;
+        institution?: string;
+        name?: string;
+        baseUrl?: string;
+        priority?: "critical" | "high" | "medium" | "low";
+        urls?: Array<Record<string, unknown>>;
+        urlCount?: number;
+        focus?: string[];
+      };
+      const rawKey =
+        sourceRecord.sourceKey ||
+        sourceRecord.institution ||
+        sourceRecord.name ||
+        `source-${index}`;
+      const baseKey = slugifyKey(rawKey);
+      const uniqueKey = sources[baseKey] ? `${baseKey}-${index}` : baseKey;
+      sources[uniqueKey] = {
+        institution: sourceRecord.institution || sourceRecord.name || rawKey,
+        baseUrl: sourceRecord.baseUrl || "",
+        priority: sourceRecord.priority || "medium",
+        urlCount: sourceRecord.urlCount,
+        focus: sourceRecord.focus,
+        urls: (sourceRecord.urls || []).map((url) => {
+          const record = url as {
+            url?: string;
+            title?: string;
+            publicationId?: string;
+            crops?: string[];
+            topics?: string[];
+            expectedChunks?: number;
+            estimatedChunks?: number;
+            type?: "html" | "pdf";
+            publishYear?: string;
+            priority?: "critical" | "high" | "medium" | "low";
+            notes?: string;
+          };
+
+          return {
+            url: record.url || "",
+            title: record.title || "Untitled",
+            publicationId: record.publicationId,
+            crops: record.crops || [],
+            topics: record.topics || [],
+            expectedChunks:
+              record.expectedChunks ?? record.estimatedChunks ?? 25,
+            type: record.type,
+            publishYear: record.publishYear,
+            priority: record.priority,
+            notes: record.notes,
+          };
+        }),
+      };
+    });
+  } else {
+    sources = {} as SourceUrlConfig["sources"];
+    Object.entries(config.sources).forEach(([key, source]) => {
+      const sourceRecord = source as {
+        institution?: string;
+        name?: string;
+        baseUrl?: string;
+        priority?: "critical" | "high" | "medium" | "low";
+        urls?: Array<Record<string, unknown>>;
+        urlCount?: number;
+        focus?: string[];
+      };
+      sources[key] = {
+        institution: sourceRecord.institution || sourceRecord.name || key,
+        baseUrl: sourceRecord.baseUrl || "",
+        priority: sourceRecord.priority || "medium",
+        urlCount: sourceRecord.urlCount,
+        focus: sourceRecord.focus,
+        urls: (sourceRecord.urls || []).map((url) => {
+          const record = url as {
+            url?: string;
+            title?: string;
+            publicationId?: string;
+            crops?: string[];
+            topics?: string[];
+            expectedChunks?: number;
+            estimatedChunks?: number;
+            type?: "html" | "pdf";
+            publishYear?: string;
+            priority?: "critical" | "high" | "medium" | "low";
+            notes?: string;
+          };
+
+          return {
+            url: record.url || "",
+            title: record.title || "Untitled",
+            publicationId: record.publicationId,
+            crops: record.crops || [],
+            topics: record.topics || [],
+            expectedChunks:
+              record.expectedChunks ?? record.estimatedChunks ?? 25,
+            type: record.type,
+            publishYear: record.publishYear,
+            priority: record.priority,
+            notes: record.notes,
+          };
+        }),
+      };
+    });
+  }
+
+  if (!Object.keys(sources).length) {
+    throw new Error("Config must include at least one source.");
+  }
+
+  return {
+    phase: config.phase ?? 1,
+    description: config.description ?? "Extension ingestion",
+    region: config.region,
+    province: config.province,
+    states: config.states,
+    territories: config.territories,
+    totalUrls: config.totalUrls,
+    estimatedChunks: config.estimatedChunks,
+    sources,
+  };
+}
+
+async function loadUrlConfig(options: RunOptions): Promise<{
+  urlList: SourceUrlConfig;
+  urlFile: string;
+}> {
+  const urlFile = options.file
+    ? options.file
+    : options.test
+      ? "ingestion/sources/test-urls.json"
+      : "ingestion/sources/phase3-urls.json";
+
+  let raw: unknown;
+  try {
+    const content = await fs.readFile(urlFile, "utf-8");
+    raw = JSON.parse(content);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to read or parse ${urlFile}: ${message}`);
+  }
+
+  return { urlList: normalizeToSourceUrlConfig(raw), urlFile };
+}
+
 async function runPhase1Ingestion(options: RunOptions) {
   const startTime = Date.now();
 
   console.log("🌱 AI Agronomist Knowledge Base Ingestion - Phase 1");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log(
-    `Mode: ${options.test ? "TEST (10 URLs)" : "FULL (187 URLs)"}`
-  );
+  const modeLabel = options.file
+    ? `CUSTOM FILE (${options.file})`
+    : options.test
+      ? "TEST (10 URLs)"
+      : "FULL (phase3-urls.json)";
+  console.log(`Mode: ${modeLabel}`);
   console.log(`Dry Run: ${options.dryRun ? "YES (no DB writes)" : "NO"}`);
   console.log(`Skip Scrape: ${options.skipScrape ? "YES" : "NO"}`);
   console.log(`Skip Images: ${options.skipImages ? "YES" : "NO"}`);
   console.log("");
 
   // Load URL list
-  const urlFile = options.test
-    ? "ingestion/sources/test-urls.json"
-    : "ingestion/sources/phase3-urls.json";
-
-  const urlList: SourceUrlConfig = JSON.parse(
-    await fs.readFile(urlFile, "utf-8")
-  );
+  const { urlList, urlFile } = await loadUrlConfig(options);
 
   let totalUrls = countTotalUrls(urlList) || 0;
   const estimatedChunks = estimateChunks(urlList);
-  
+
   if (options.limit) {
     totalUrls = Math.min(totalUrls, options.limit);
     console.log(`⚠️  Limiting to first ${options.limit} URLs\n`);
@@ -116,6 +310,7 @@ async function runPhase1Ingestion(options: RunOptions) {
   console.log(`📦 Target: ${totalUrls} URLs`);
   console.log(`📚 Sources: ${Object.keys(urlList.sources).length}`);
   console.log(`📊 Estimated chunks: ${estimatedChunks}\n`);
+  console.log(`📄 Config file: ${urlFile}\n`);
 
   // Initialize trackers
   const tracker: ProgressTracker = {
@@ -172,24 +367,28 @@ async function runPhase1Ingestion(options: RunOptions) {
   }
 
   // DEBUG: Check scraped content for images
-  console.log('\n🔍 DEBUG: Checking scraped documents for <img> tags...');
+  console.log("\n🔍 DEBUG: Checking scraped documents for <img> tags...");
   if (documents.length > 0) {
     const firstDoc = documents[0];
     console.log(`   First doc title: ${firstDoc.title}`);
     console.log(`   Content type: ${firstDoc.contentType}`);
     console.log(`   Content length: ${firstDoc.content.length} chars`);
-    
+
     // Check for <img tags in HTML
-    if (firstDoc.contentType === 'html') {
+    if (firstDoc.contentType === "html") {
       const imgMatches = firstDoc.content.match(/<img/gi);
-      console.log(`   Contains <img tags: ${imgMatches ? imgMatches.length : 0}`);
-      
+      console.log(
+        `   Contains <img tags: ${imgMatches ? imgMatches.length : 0}`
+      );
+
       if (imgMatches && imgMatches.length > 0) {
         // Show first image tag
         const imgTagRegex = /<img[^>]+>/gi;
         const imgTags = firstDoc.content.match(imgTagRegex);
         if (imgTags && imgTags.length > 0) {
-          console.log(`   First image tag preview: ${imgTags[0].slice(0, 150)}...`);
+          console.log(
+            `   First image tag preview: ${imgTags[0].slice(0, 150)}...`
+          );
         }
       }
     }
@@ -237,17 +436,19 @@ async function runPhase1Ingestion(options: RunOptions) {
         // For "pdf" or unknown, check actual content
         const buffer = Buffer.from(doc.content, "base64");
         const actualType = detectContentType(buffer, doc.url);
-        
-        if (actualType === 'pdf') {
-          parsedContent = await parsePDF(buffer, doc.url);
-        } else if (actualType === 'html') {
-          console.log('   ⚠️  URL ends in .pdf but content is HTML - parsing as HTML');
+
+        if (actualType === "pdf") {
+          parsedContent = await parsePDF(doc.url);
+        } else if (actualType === "html") {
+          console.log(
+            "   ⚠️  URL ends in .pdf but content is HTML - parsing as HTML"
+          );
           // Decode buffer back to string for HTML parser
-          parsedContent = parseHTML(buffer.toString('utf8'), doc.url);
+          parsedContent = parseHTML(buffer.toString("utf8"), doc.url);
         } else {
           // Unknown type - try HTML first (most common fallback)
-          console.log('   ⚠️  Unknown content type, attempting HTML parse');
-          parsedContent = parseHTML(buffer.toString('utf8'), doc.url);
+          console.log("   ⚠️  Unknown content type, attempting HTML parse");
+          parsedContent = parseHTML(buffer.toString("utf8"), doc.url);
         }
       }
 
@@ -260,7 +461,7 @@ async function runPhase1Ingestion(options: RunOptions) {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error(`  ✗ Failed to parse: ${errorMsg}`);
-      
+
       failedDocs.push({
         url: doc.url,
         title: doc.title,
@@ -270,33 +471,33 @@ async function runPhase1Ingestion(options: RunOptions) {
   }
 
   console.log(`\n✅ Parsed ${parsed.length} documents`);
-  
+
   if (failedDocs.length > 0) {
     console.log(`⚠️  ${failedDocs.length} documents failed to parse`);
     await fs.writeFile(
-      'ingestion/state/failed-docs.json',
+      "ingestion/state/failed-docs.json",
       JSON.stringify(failedDocs, null, 2)
     );
   }
 
   // DEBUG: Check parsed content for images
-  console.log('\n🔍 DEBUG: Checking parsed documents for images...');
+  console.log("\n🔍 DEBUG: Checking parsed documents for images...");
   console.log(`   Total parsed documents: ${parsed.length}`);
   if (parsed.length > 0) {
     const { doc, parsed: parsedContent } = parsed[0];
     console.log(`   First doc title: ${parsedContent.title}`);
     console.log(`   First doc sections: ${parsedContent.sections.length}`);
-    
+
     parsedContent.sections.forEach((section, idx) => {
-      console.log(`   Section ${idx}: ${section.heading || 'No heading'}`);
+      console.log(`   Section ${idx}: ${section.heading || "No heading"}`);
       console.log(`     - Text length: ${section.text.length} chars`);
       console.log(`     - Images in section: ${section.images.length}`);
-      
+
       if (section.images.length > 0) {
         section.images.forEach((img, imgIdx) => {
           console.log(`       Image ${imgIdx}: ${img.url.slice(0, 80)}...`);
-          console.log(`         - Alt: ${img.alt || 'none'}`);
-          console.log(`         - Caption: ${img.caption || 'none'}`);
+          console.log(`         - Alt: ${img.alt || "none"}`);
+          console.log(`         - Caption: ${img.caption || "none"}`);
         });
       }
     });
@@ -353,7 +554,7 @@ async function runPhase1Ingestion(options: RunOptions) {
 
   // NEW: embedder now returns ChunkData & { embedding } directly!
   const embeddedChunks = await generateTextEmbeddings(allChunks);
-  
+
   tracker.chunksEmbedded = embeddedChunks.length;
 
   // Step 6: Upsert to database
@@ -392,9 +593,7 @@ async function runPhase1Ingestion(options: RunOptions) {
       allImages.push(...images);
 
       if (images.length > 0) {
-        console.log(
-          `  ${doc.title.slice(0, 50)}: ${images.length} images`
-        );
+        console.log(`  ${doc.title.slice(0, 50)}: ${images.length} images`);
       }
     }
 
@@ -410,15 +609,17 @@ async function runPhase1Ingestion(options: RunOptions) {
       Object.entries(stats.byCategory).forEach(([cat, count]) => {
         console.log(`      ${cat}: ${count}`);
       });
-      
+
       if (Object.keys(stats.byCrop).length > 0) {
         console.log(`   By crop:`);
         Object.entries(stats.byCrop).forEach(([crop, count]) => {
           console.log(`      ${crop}: ${count}`);
         });
       }
-      
-      console.log(`   With alt text: ${stats.avgAltTextLength > 0 ? allImages.filter(i => i.altText).length : 0}`);
+
+      console.log(
+        `   With alt text: ${stats.avgAltTextLength > 0 ? allImages.filter((i) => i.altText).length : 0}`
+      );
       console.log(`   With captions: ${stats.imagesWithCaptions}`);
       console.log(`   With context: ${stats.imagesWithContext}`);
 
@@ -493,9 +694,7 @@ async function runPhase1Ingestion(options: RunOptions) {
   console.log("💾 Progress saved to ingestion/state/progress.json\n");
 
   if (options.dryRun) {
-    console.log(
-      "⚠️  DRY RUN MODE - No data was written to the database"
-    );
+    console.log("⚠️  DRY RUN MODE - No data was written to the database");
     console.log("   Run without --dry-run to write to database\n");
   }
 }
@@ -506,7 +705,12 @@ const program = new Command();
 program
   .name("run-phase1")
   .description("Run Phase 1 knowledge base ingestion")
-  .option("--test", "Use test-urls.json (10 URLs) instead of full phase1", false)
+  .option(
+    "--test",
+    "Use test-urls.json (10 URLs) instead of full phase1",
+    false
+  )
+  .option("--file <path>", "Use a custom JSON source config file")
   .option("--limit <number>", "Limit number of URLs to process", parseInt)
   .option("--skip-scrape", "Skip scraping, use cached documents", false)
   .option("--skip-images", "Skip image processing", false)

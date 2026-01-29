@@ -1,0 +1,53 @@
+{
+  "phase": 4,
+  "description": "Manitoba agriculture and crop production sources",
+  "province": "Manitoba",
+  "totalUrls": 3,
+  "estimatedChunks": 36,
+  "sources": {
+    "manitoba_agriculture": {
+      "institution": "Manitoba Agriculture",
+      "baseUrl": "https://www.gov.mb.ca/agriculture",
+      "priority": "high",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://www.gov.mb.ca/agriculture/crops/guides-and-publications/pubs/guide-crop-protection-insects-2025.pdf",
+          "title": "Guide to Crop Protection - Insects 2025",
+          "publicationId": "MB-GCP-INSECTS-2025",
+          "crops": ["wheat", "canola", "soybeans"],
+          "topics": ["pest", "insects", "management"],
+          "type": "pdf",
+          "publishYear": "2025",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "Manitoba crop protection guide focused on insects."
+        },
+        {
+          "url": "https://www.gov.mb.ca/agriculture/crops/guides-and-publications/pubs/guide-crop-protection-diseases-2025.pdf",
+          "title": "Guide to Crop Protection - Diseases 2025",
+          "publicationId": "MB-GCP-DISEASES-2025",
+          "crops": ["wheat", "canola", "soybeans"],
+          "topics": ["disease", "fungicide", "management"],
+          "type": "pdf",
+          "publishYear": "2025",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "Manitoba crop protection guide focused on diseases."
+        },
+        {
+          "url": "https://www.gov.mb.ca/agriculture/crops/soil-fertility/pubs/fer01s01.pdf",
+          "title": "Soil Fertility for Field Crops",
+          "publicationId": "MB-FER01S01",
+          "crops": ["wheat", "canola", "soybeans"],
+          "topics": ["soil", "fertility", "nutrients"],
+          "type": "pdf",
+          "publishYear": "2019",
+          "estimatedChunks": 12,
+          "priority": "medium",
+          "notes": "Soil fertility guidance for Manitoba field crops."
+        }
+      ]
+    }
+  }
+}

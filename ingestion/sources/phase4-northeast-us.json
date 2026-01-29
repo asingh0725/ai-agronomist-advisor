@@ -1,0 +1,98 @@
+{
+  "phase": 4,
+  "description": "Northeast US field crops and agronomy extension sources",
+  "region": "Northeast US",
+  "states": ["NY", "PA", "NJ", "CT", "MA", "VT", "NH", "ME", "RI"],
+  "totalUrls": 6,
+  "estimatedChunks": 48,
+  "sources": {
+    "cornell_fieldcrops": {
+      "institution": "Cornell University Field Crops",
+      "baseUrl": "https://fieldcrops.cals.cornell.edu/",
+      "priority": "critical",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://fieldcrops.cals.cornell.edu/corn/",
+          "title": "Cornell Field Crops - Corn",
+          "publicationId": "CU-FC-CORN",
+          "crops": ["corn"],
+          "topics": ["production", "management", "nutrition"],
+          "type": "html",
+          "publishYear": "2023",
+          "estimatedChunks": 6,
+          "priority": "critical",
+          "notes": "Cornell field crops corn management overview and resources."
+        },
+        {
+          "url": "https://fieldcrops.cals.cornell.edu/soybeans/",
+          "title": "Cornell Field Crops - Soybeans",
+          "publicationId": "CU-FC-SOY",
+          "crops": ["soybeans"],
+          "topics": ["production", "management", "varieties"],
+          "type": "html",
+          "publishYear": "2023",
+          "estimatedChunks": 6,
+          "priority": "high",
+          "notes": "Soybean production guidance and management references."
+        },
+        {
+          "url": "https://fieldcrops.cals.cornell.edu/small-grains/",
+          "title": "Cornell Field Crops - Small Grains",
+          "publicationId": "CU-FC-SG",
+          "crops": ["wheat", "barley", "oats"],
+          "topics": ["production", "disease", "management"],
+          "type": "html",
+          "publishYear": "2022",
+          "estimatedChunks": 6,
+          "priority": "high",
+          "notes": "Small grains agronomy resources and updates."
+        }
+      ]
+    },
+    "penn_state_extension": {
+      "institution": "Penn State Extension",
+      "baseUrl": "https://agsci.psu.edu/research/centers-facilities/extension/frec/resources",
+      "priority": "critical",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://agsci.psu.edu/research/centers-facilities/extension/frec/resources/treefruit_booklet_plaincommunity_optimized.pdf",
+          "title": "Penn State Tree Fruit Production Guide (Plain Communities)",
+          "publicationId": "PSU-FREC-TREEFRUIT",
+          "crops": ["tree fruit"],
+          "topics": ["production", "management", "orchards"],
+          "type": "pdf",
+          "publishYear": "2020",
+          "estimatedChunks": 10,
+          "priority": "high",
+          "notes": "Penn State fruit research and extension guide."
+        },
+        {
+          "url": "https://agsci.psu.edu/research/centers-facilities/extension/frec/resources/tree-fruit-program-summary-report-2019-2020.pdf",
+          "title": "Tree Fruit Program Summary Report 2019-2020",
+          "publicationId": "PSU-FREC-TREEFRUIT-REPORT",
+          "crops": ["tree fruit"],
+          "topics": ["production", "research", "management"],
+          "type": "pdf",
+          "publishYear": "2020",
+          "estimatedChunks": 10,
+          "priority": "medium",
+          "notes": "Penn State fruit research summary report."
+        },
+        {
+          "url": "https://agsci.psu.edu/research/centers-facilities/extension/frec/resources/workshop-presentations/2018-commercial-tree-fruit-school/pruning-by-the-numbers-jim-schupp.pdf",
+          "title": "Pruning by the Numbers",
+          "publicationId": "PSU-FREC-PRUNING",
+          "crops": ["tree fruit"],
+          "topics": ["pruning", "canopy management", "orchards"],
+          "type": "pdf",
+          "publishYear": "2018",
+          "estimatedChunks": 10,
+          "priority": "medium",
+          "notes": "Penn State tree fruit pruning workshop presentation."
+        }
+      ]
+    }
+  }
+}

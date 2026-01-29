@@ -1,0 +1,98 @@
+{
+  "phase": 4,
+  "description": "Great Plains US agronomy and field crop extension sources",
+  "region": "Great Plains US",
+  "states": ["KS", "NE", "ND", "SD", "OK"],
+  "totalUrls": 6,
+  "estimatedChunks": 60,
+  "sources": {
+    "ndsu_extension": {
+      "institution": "North Dakota State University Extension",
+      "baseUrl": "https://www.ndsu.edu/agriculture/extension/publications",
+      "priority": "critical",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://www.ndsu.edu/agriculture/extension/publications/soil-fertility-recommendations-corn",
+          "title": "Soil Fertility Recommendations for Corn",
+          "publicationId": "NDSU-SF-CORN",
+          "crops": ["corn"],
+          "topics": ["soil", "fertility", "nutrients"],
+          "type": "html",
+          "publishYear": "2020",
+          "estimatedChunks": 8,
+          "priority": "high",
+          "notes": "NDSU extension guidance on corn fertility."
+        },
+        {
+          "url": "https://www.ndsu.edu/agriculture/extension/publications/fertilizing-hard-red-spring-wheat-and-durum",
+          "title": "Fertilizing Hard Red Spring Wheat and Durum",
+          "publicationId": "NDSU-WHEAT-FERT",
+          "crops": ["wheat", "durum"],
+          "topics": ["fertility", "nutrients", "management"],
+          "type": "html",
+          "publishYear": "2020",
+          "estimatedChunks": 8,
+          "priority": "high",
+          "notes": "NDSU wheat fertility recommendations."
+        },
+        {
+          "url": "https://www.ndsu.edu/agriculture/extension/publications/soybean-production-field-guide-north-dakota",
+          "title": "Soybean Production Field Guide for North Dakota",
+          "publicationId": "NDSU-SOY-FIELD-GUIDE",
+          "crops": ["soybeans"],
+          "topics": ["production", "management", "planting"],
+          "type": "html",
+          "publishYear": "2018",
+          "estimatedChunks": 8,
+          "priority": "medium",
+          "notes": "NDSU soybean production field guide."
+        }
+      ]
+    },
+    "kansas_state_extension": {
+      "institution": "Kansas State Research and Extension",
+      "baseUrl": "https://bookstore.ksre.ksu.edu/",
+      "priority": "high",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/corn-production-handbook_C560.pdf",
+          "title": "Corn Production Handbook",
+          "publicationId": "KSRE-C560",
+          "crops": ["corn"],
+          "topics": ["production", "management", "hybrids"],
+          "type": "pdf",
+          "publishYear": "2020",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "K-State corn production handbook."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/soybean-production-handbook_C449.pdf",
+          "title": "Soybean Production Handbook",
+          "publicationId": "KSRE-C449",
+          "crops": ["soybeans"],
+          "topics": ["production", "management", "planting"],
+          "type": "pdf",
+          "publishYear": "2019",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "K-State soybean production handbook."
+        },
+        {
+          "url": "https://bookstore.ksre.ksu.edu/pubs/wheat-production-handbook_C529.pdf",
+          "title": "Wheat Production Handbook",
+          "publicationId": "KSRE-C529",
+          "crops": ["wheat"],
+          "topics": ["production", "management", "disease"],
+          "type": "pdf",
+          "publishYear": "2018",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "K-State wheat production handbook."
+        }
+      ]
+    }
+  }
+}

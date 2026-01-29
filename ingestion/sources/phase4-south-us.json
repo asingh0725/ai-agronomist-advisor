@@ -1,0 +1,98 @@
+{
+  "phase": 4,
+  "description": "Southern US agronomy and field crop extension sources",
+  "region": "South US",
+  "states": ["TX", "GA", "AL", "MS", "LA", "AR", "NC", "SC", "FL", "TN", "KY"],
+  "totalUrls": 6,
+  "estimatedChunks": 56,
+  "sources": {
+    "texas_agrlife_extension": {
+      "institution": "Texas A&M AgriLife Extension",
+      "baseUrl": "https://agrilifeextension.tamu.edu/",
+      "priority": "critical",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://agrilifeextension.tamu.edu/asset-external/irrigated-and-dryland-sorghum-production-in-south-and-southwest-texas/",
+          "title": "Irrigated and Dryland Sorghum Production in South and Southwest Texas",
+          "publicationId": "TX-SORGHUM-PROD",
+          "crops": ["sorghum"],
+          "topics": ["production", "irrigation", "management"],
+          "type": "html",
+          "publishYear": "2016",
+          "estimatedChunks": 8,
+          "priority": "high",
+          "notes": "Texas AgriLife sorghum production guide."
+        },
+        {
+          "url": "https://agrilifeextension.tamu.edu/asset-external/winter-wheat-management-calendar-for-the-rolling-plains-and-high-plains-of-texas/",
+          "title": "Winter Wheat Management Calendar for the Rolling Plains and High Plains of Texas",
+          "publicationId": "TX-WHEAT-CALENDAR",
+          "crops": ["wheat"],
+          "topics": ["management", "production", "timing"],
+          "type": "html",
+          "publishYear": "2018",
+          "estimatedChunks": 8,
+          "priority": "high",
+          "notes": "Texas AgriLife wheat management calendar."
+        },
+        {
+          "url": "https://agrilifeextension.tamu.edu/asset-external/crop-nutrient-needs-in-south-and-southwest-texas/",
+          "title": "Crop Nutrient Needs in South and Southwest Texas",
+          "publicationId": "TX-NUTRIENT-NEEDS",
+          "crops": ["corn", "sorghum", "cotton"],
+          "topics": ["nutrients", "fertility", "management"],
+          "type": "html",
+          "publishYear": "2016",
+          "estimatedChunks": 8,
+          "priority": "medium",
+          "notes": "AgriLife nutrient management guidance."
+        }
+      ]
+    },
+    "uga_extension": {
+      "institution": "University of Georgia Extension",
+      "baseUrl": "https://extension.uga.edu/",
+      "priority": "high",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://extension.uga.edu/content/dam/extension/programs-and-services/integrated-pest-management/documents/handbooks/2021-pmh-comm-chapters/Cotton.pdf",
+          "title": "Cotton Pest Management Handbook",
+          "publicationId": "UGA-COTTON-PMH-2021",
+          "crops": ["cotton"],
+          "topics": ["pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2021",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "UGA IPM handbook chapter for cotton."
+        },
+        {
+          "url": "https://extension.uga.edu/content/dam/extension/programs-and-services/integrated-pest-management/documents/handbooks/2020-pmh-chapters/Peanut.pdf",
+          "title": "Peanut Pest Management Handbook",
+          "publicationId": "UGA-PEANUT-PMH-2020",
+          "crops": ["peanuts"],
+          "topics": ["pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2020",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "UGA IPM handbook chapter for peanuts."
+        },
+        {
+          "url": "https://extension.uga.edu/publications/detail.html?number=B1146&title=peanut-production-field-guide",
+          "title": "Peanut Production Field Guide",
+          "publicationId": "UGA-B1146",
+          "crops": ["peanuts"],
+          "topics": ["production", "management", "planting"],
+          "type": "html",
+          "publishYear": "2011",
+          "estimatedChunks": 8,
+          "priority": "medium",
+          "notes": "UGA extension peanut production field guide."
+        }
+      ]
+    }
+  }
+}

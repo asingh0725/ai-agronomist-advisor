@@ -1,18 +1,18 @@
 {
   "phase": 1,
-  "completedAt": "2026-01-27T08:32:27.719Z",
+  "completedAt": "2026-01-29T00:52:02.676Z",
   "tracker": {
-    "documentsScraped": 110,
-    "documentsParsed": 110,
-    "chunksCreated": 15037,
-    "chunksEmbedded": 15037,
-    "imagesProcessed": 54,
-    "imagesEmbedded": 54,
+    "documentsScraped": 0,
+    "documentsParsed": 0,
+    "chunksCreated": 0,
+    "chunksEmbedded": 0,
+    "imagesProcessed": 0,
+    "imagesEmbedded": 0,
     "costs": {
       "text": 0,
       "images": 0,
       "total": 0
     }
   },
-  "elapsed": 1439255
+  "elapsed": 72522
 }

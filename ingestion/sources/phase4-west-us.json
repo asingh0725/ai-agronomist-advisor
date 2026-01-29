@@ -1,0 +1,98 @@
+{
+  "phase": 4,
+  "description": "Western US agronomy and specialty crop extension sources",
+  "region": "West US",
+  "states": ["CA", "OR", "WA", "ID", "NV", "AZ", "NM", "CO", "UT", "WY", "MT"],
+  "totalUrls": 6,
+  "estimatedChunks": 84,
+  "sources": {
+    "uc_ipm": {
+      "institution": "University of California IPM",
+      "baseUrl": "https://ipm.ucanr.edu/",
+      "priority": "critical",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://ipm.ucanr.edu/PDF/PMG/pmgalmond.pdf",
+          "title": "Almond: UC IPM Pest Management Guidelines",
+          "publicationId": "UCIPM-ALM",
+          "crops": ["almonds"],
+          "topics": ["IPM", "pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2022",
+          "estimatedChunks": 16,
+          "priority": "critical",
+          "notes": "UC IPM almond pest management guidelines PDF."
+        },
+        {
+          "url": "https://ipm.ucanr.edu/PDF/PMG/pmgapple.pdf",
+          "title": "Apple: UC IPM Pest Management Guidelines",
+          "publicationId": "UCIPM-APPLE",
+          "crops": ["apples"],
+          "topics": ["IPM", "pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2021",
+          "estimatedChunks": 16,
+          "priority": "high",
+          "notes": "UC IPM apple pest management guidelines PDF."
+        },
+        {
+          "url": "https://www.ipm.ucanr.edu/PDF/PMG/pmgapricot.pdf",
+          "title": "Apricot: UC IPM Pest Management Guidelines",
+          "publicationId": "UCIPM-APRICOT",
+          "crops": ["apricots"],
+          "topics": ["IPM", "pest", "disease", "weed"],
+          "type": "pdf",
+          "publishYear": "2021",
+          "estimatedChunks": 16,
+          "priority": "high",
+          "notes": "UC IPM apricot pest management guidelines PDF."
+        }
+      ]
+    },
+    "oregon_state_extension": {
+      "institution": "Oregon State University Extension Service",
+      "baseUrl": "https://extension.oregonstate.edu",
+      "priority": "high",
+      "urlCount": 3,
+      "urls": [
+        {
+          "url": "https://extension.oregonstate.edu/sites/extd8/files/documents/em9115.pdf",
+          "title": "Central Oregon Dryland Wheat Production Guide",
+          "publicationId": "OSU-EM9115",
+          "crops": ["wheat"],
+          "topics": ["production", "management", "soil"],
+          "type": "pdf",
+          "publishYear": "2012",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "OSU Extension dryland wheat production guide."
+        },
+        {
+          "url": "https://extension.oregonstate.edu/sites/extd8/files/catalog/auto/EM9302.pdf",
+          "title": "Nitrogen Fertilizer Management for Western Oregon",
+          "publicationId": "OSU-EM9302",
+          "crops": ["wheat", "grass seed"],
+          "topics": ["nutrients", "fertility", "management"],
+          "type": "pdf",
+          "publishYear": "2015",
+          "estimatedChunks": 12,
+          "priority": "high",
+          "notes": "OSU Extension nitrogen management guidance."
+        },
+        {
+          "url": "https://extension.oregonstate.edu/sites/extd8/files/documents/em9173.pdf",
+          "title": "Managing Herbicide-Resistant Weeds in Pacific Northwest Crops",
+          "publicationId": "OSU-EM9173",
+          "crops": ["wheat", "barley", "grass seed"],
+          "topics": ["weed", "herbicide", "management"],
+          "type": "pdf",
+          "publishYear": "2014",
+          "estimatedChunks": 12,
+          "priority": "medium",
+          "notes": "Weed management guide for PNW crops."
+        }
+      ]
+    }
+  }
+}
