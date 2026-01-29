@@ -74,6 +74,16 @@ export class ExtensionScraper extends BaseScraper {
     return match ? Number(match[1]) : null;
   }
 
+  private isRetryableFallbackError(error: unknown): boolean {
+    const code =
+      (error as { cause?: { code?: string } })?.cause?.code ??
+      (error as { code?: string })?.code;
+    return (
+      code === "ERR_TLS_CERT_ALTNAME_INVALID" ||
+      code === "ERR_TLS_CERT_COMMON_NAME_INVALID"
+    );
+  }
+
   private async fetchBufferWithFallback(url: string): Promise<{
     buffer: Buffer;
     finalUrl: string;
@@ -92,6 +102,9 @@ export class ExtensionScraper extends BaseScraper {
         lastError = error;
         const status = this.getStatusFromError(error);
         if (status === 404 || status === 403) {
+          continue;
+        }
+        if (this.isRetryableFallbackError(error)) {
           continue;
         }
         throw error;

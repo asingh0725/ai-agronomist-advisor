@@ -1,24 +1,44 @@
 import * as pdfParse from "pdf-parse";
 import type { ParsedContent } from "../scrapers/types";
 
-const resolvedPdfParse = (() => {
-  if (typeof pdfParse === "function") {
-    return pdfParse;
+type PdfParseFn = (buffer: Buffer) => Promise<{ text?: string }>;
+
+const resolvePdfParser = (moduleRef: unknown): PdfParseFn | null => {
+  if (typeof moduleRef === "function") {
+    return moduleRef as PdfParseFn;
   }
 
-  const moduleDefault = (pdfParse as unknown as { default?: unknown }).default;
+  const moduleDefault = (moduleRef as { default?: unknown } | null)?.default;
   if (typeof moduleDefault === "function") {
-    return moduleDefault;
+    return moduleDefault as PdfParseFn;
   }
 
-  const nestedDefault = (moduleDefault as { default?: unknown } | undefined)
-    ?.default;
+  const nestedDefault = (moduleDefault as { default?: unknown } | null)?.default;
   if (typeof nestedDefault === "function") {
-    return nestedDefault;
+    return nestedDefault as PdfParseFn;
   }
 
   return null;
-})();
+};
+
+let cachedPdfParser: PdfParseFn | null = resolvePdfParser(pdfParse);
+
+const getPdfParser = async (): Promise<PdfParseFn> => {
+  if (cachedPdfParser) {
+    return cachedPdfParser;
+  }
+
+  const imported = await import("pdf-parse");
+  cachedPdfParser = resolvePdfParser(imported);
+
+  if (!cachedPdfParser) {
+    throw new Error(
+      "pdf-parse did not resolve to a callable function. Check the pdf-parse module export format."
+    );
+  }
+
+  return cachedPdfParser;
+};
 
 // Custom error class for invalid PDF
 class InvalidPDFException extends Error {
@@ -43,14 +63,10 @@ export async function parsePDF(
   }
 
   try {
-    if (!resolvedPdfParse) {
-      throw new Error(
-        "pdf-parse did not resolve to a callable function. Check the pdf-parse module export format."
-      );
-    }
+    const pdfParser = await getPdfParser();
 
     // Extract text from PDF using pdf-parse
-    const data = await resolvedPdfParse(buffer);
+    const data = await pdfParser(buffer);
 
     // Validate we got text
     if (!data || !data.text) {
