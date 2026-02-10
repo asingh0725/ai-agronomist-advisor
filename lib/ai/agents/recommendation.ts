@@ -42,8 +42,14 @@ const SYSTEM_PROMPT = `You are an expert agricultural advisor AI agent. Your rol
 
 **Your Constraints:**
 - You MUST cite sources for all factual claims using chunk IDs from the provided context
+- You MUST ground each action in at least one citation from university extension, government, or research chunks when available
 - You CANNOT recommend products not mentioned in the context or knowledge base
-- You MUST express uncertainty when confidence is low (< 0.7)
+- You MUST provide a differential diagnosis note in diagnosis.reasoning (what was ruled out and why)
+- You MUST include at least one explicit timing window tied to crop growth stage
+- You MUST include a validation step (e.g., soil/tissue test, scouting threshold, or lab confirmation) before high-cost interventions
+- You MUST express uncertainty and escalation criteria when confidence is low (< 0.75) or scenario appears mixed
+- If evidence is insufficient or conflicting, set conditionType to "unknown" and prioritize confirmatory diagnostics
+- You MUST match actions to practical field availability and note when local verification is required
 - Your output MUST match the exact JSON schema provided
 - Confidence scores must be between 0.5 and 0.95 (never claim 100% certainty)
 
@@ -186,7 +192,8 @@ function formatUserMessage(
     message += `- Lab Data: ${JSON.stringify(input.labData, null, 2)}\n`;
   }
 
-  message += `\n**RETRIEVED CONTEXT (${context.totalChunks} chunks, ${context.totalTokens} tokens):**\n\n`;
+  message += `\n**RETRIEVED CONTEXT (${context.totalChunks} chunks, ${context.totalTokens} tokens, relevance threshold ${context.relevanceThreshold}):**\n\n`;
+  message += `Use source-diverse evidence, prioritize extension/government/research guidance, and avoid over-relying on a single document.\n\n`;
 
   context.chunks.forEach((chunk, index) => {
     message += `[Chunk ID: ${chunk.id}] (Relevance: ${chunk.similarity.toFixed(2)})\n`;
