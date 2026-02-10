@@ -1,0 +1,109 @@
+{
+  "summary": {
+    "totalRecommendations": 100,
+    "avgOverallRating": 4.68,
+    "avgAccuracyRating": 4.6,
+    "helpfulRate": 0.8,
+    "issueRate": 0.32,
+    "topIssues": [
+      {
+        "issue": "Missing key information",
+        "count": 32
+      }
+    ],
+    "categories": [
+      {
+        "category": "nitrogen_deficiency",
+        "count": 12,
+        "avgOverall": 4.75,
+        "avgAccuracy": 4.67,
+        "helpfulRate": 0.833,
+        "issueRate": 0.25
+      },
+      {
+        "category": "phosphorus_deficiency",
+        "count": 8,
+        "avgOverall": 4.63,
+        "avgAccuracy": 4.5,
+        "helpfulRate": 0.75,
+        "issueRate": 0.375
+      },
+      {
+        "category": "potassium_deficiency",
+        "count": 8,
+        "avgOverall": 4.63,
+        "avgAccuracy": 4.75,
+        "helpfulRate": 0.875,
+        "issueRate": 0.375
+      },
+      {
+        "category": "micronutrient_deficiency",
+        "count": 12,
+        "avgOverall": 4.75,
+        "avgAccuracy": 4.5,
+        "helpfulRate": 0.75,
+        "issueRate": 0.25
+      },
+      {
+        "category": "fungal_disease",
+        "count": 15,
+        "avgOverall": 4.67,
+        "avgAccuracy": 4.6,
+        "helpfulRate": 0.8,
+        "issueRate": 0.333
+      },
+      {
+        "category": "bacterial_or_viral",
+        "count": 8,
+        "avgOverall": 4.63,
+        "avgAccuracy": 4.75,
+        "helpfulRate": 0.875,
+        "issueRate": 0.375
+      },
+      {
+        "category": "insect_pressure",
+        "count": 12,
+        "avgOverall": 4.75,
+        "avgAccuracy": 4.5,
+        "helpfulRate": 0.75,
+        "issueRate": 0.25
+      },
+      {
+        "category": "abiotic_stress",
+        "count": 10,
+        "avgOverall": 4.6,
+        "avgAccuracy": 4.6,
+        "helpfulRate": 0.8,
+        "issueRate": 0.4
+      },
+      {
+        "category": "edge_case",
+        "count": 15,
+        "avgOverall": 4.67,
+        "avgAccuracy": 4.6,
+        "helpfulRate": 0.8,
+        "issueRate": 0.333
+      }
+    ]
+  },
+  "learnings": {
+    "promptTuning": [
+      "Require a differential diagnosis line for every response, including what was ruled out and why.",
+      "Force immediate mention of growth-stage timing windows and when action is too late to matter.",
+      "Always include a validation step (soil test, tissue test, pest threshold, or diagnostic lab) before costly interventions.",
+      "If confidence <0.75 or case is mixed, require explicit uncertainty language and escalation criteria."
+    ],
+    "sourcingModelTuning": [
+      "Increase source diversity: cap chunks per source so recommendations do not overfit one document.",
+      "Prioritize extension/government/research sources in context ranking for higher agronomic reliability.",
+      "Require recommendation-level citations to map to at least one high-authority source chunk.",
+      "Log retrieval depth and source-type distribution to detect citation blind spots."
+    ],
+    "validationTargets": {
+      "minAvgOverallRating": 4.2,
+      "minAvgAccuracyRating": 4.2,
+      "maxIssueRate": 0.3,
+      "minHelpfulRate": 0.75
+    }
+  }
+}
