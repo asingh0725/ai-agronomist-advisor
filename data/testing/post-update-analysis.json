@@ -1,0 +1,85 @@
+{
+  "summary": {
+    "totalRecommendations": 20,
+    "avgOverallRating": 4.5,
+    "avgAccuracyRating": 4,
+    "helpfulRate": 0.5,
+    "issueRate": 0.5,
+    "topIssues": [
+      {
+        "issue": "Missing key information",
+        "count": 10
+      }
+    ],
+    "categories": [
+      {
+        "category": "nitrogen_deficiency",
+        "count": 2,
+        "avgOverall": 4,
+        "avgAccuracy": 3,
+        "helpfulRate": 0,
+        "issueRate": 1
+      },
+      {
+        "category": "phosphorus_deficiency",
+        "count": 2,
+        "avgOverall": 4,
+        "avgAccuracy": 3,
+        "helpfulRate": 0,
+        "issueRate": 1
+      },
+      {
+        "category": "potassium_deficiency",
+        "count": 1,
+        "avgOverall": 4,
+        "avgAccuracy": 3,
+        "helpfulRate": 0,
+        "issueRate": 1
+      },
+      {
+        "category": "micronutrient_deficiency",
+        "count": 3,
+        "avgOverall": 4,
+        "avgAccuracy": 3,
+        "helpfulRate": 0,
+        "issueRate": 1
+      },
+      {
+        "category": "fungal_disease",
+        "count": 2,
+        "avgOverall": 4,
+        "avgAccuracy": 3,
+        "helpfulRate": 0,
+        "issueRate": 1
+      },
+      {
+        "category": "edge_case",
+        "count": 10,
+        "avgOverall": 5,
+        "avgAccuracy": 5,
+        "helpfulRate": 1,
+        "issueRate": 0
+      }
+    ]
+  },
+  "learnings": {
+    "promptTuning": [
+      "Require a differential diagnosis line for every response, including what was ruled out and why.",
+      "Force immediate mention of growth-stage timing windows and when action is too late to matter.",
+      "Always include a validation step (soil test, tissue test, pest threshold, or diagnostic lab) before costly interventions.",
+      "If confidence <0.75 or case is mixed, require explicit uncertainty language and escalation criteria."
+    ],
+    "sourcingModelTuning": [
+      "Increase source diversity: cap chunks per source so recommendations do not overfit one document.",
+      "Prioritize extension/government/research sources in context ranking for higher agronomic reliability.",
+      "Require recommendation-level citations to map to at least one high-authority source chunk.",
+      "Log retrieval depth and source-type distribution to detect citation blind spots."
+    ],
+    "validationTargets": {
+      "minAvgOverallRating": 4.2,
+      "minAvgAccuracyRating": 4.2,
+      "maxIssueRate": 0.3,
+      "minHelpfulRate": 0.75
+    }
+  }
+}

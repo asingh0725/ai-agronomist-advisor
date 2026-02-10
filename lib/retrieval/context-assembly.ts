@@ -24,6 +24,15 @@ const RELEVANCE_THRESHOLD = 0.5;
 const MAX_TOKENS = 4000;
 const CHARS_PER_TOKEN = 3;
 const MAX_CHARS = MAX_TOKENS * CHARS_PER_TOKEN;
+const MAX_CHUNKS_PER_SOURCE = 2;
+
+const SOURCE_TYPE_PRIORITY: Record<string, number> = {
+  GOVERNMENT: 4,
+  UNIVERSITY_EXTENSION: 3,
+  RESEARCH_PAPER: 2,
+  MANUFACTURER: 1,
+  RETAILER: 0,
+};
 
 /**
  * Assemble retrieved chunks into structured context for LLM consumption
@@ -41,14 +50,29 @@ export async function assembleContext(
     (r) => r.similarity >= RELEVANCE_THRESHOLD
   );
 
-  // Sort by relevance (highest first)
-  relevantResults.sort((a, b) => b.similarity - a.similarity);
-
   // Fetch source metadata
   const chunks = await enrichWithSourceMetadata(relevantResults);
 
+  // Prefer higher authority source types while preserving relevance
+  chunks.sort((a, b) => {
+    const authorityDelta =
+      (SOURCE_TYPE_PRIORITY[b.source.sourceType] ?? 0) -
+      (SOURCE_TYPE_PRIORITY[a.source.sourceType] ?? 0);
+
+    if (authorityDelta !== 0) {
+      return authorityDelta;
+    }
+
+    return b.similarity - a.similarity;
+  });
+
+  const sourceBalancedChunks = enforceSourceDiversity(
+    chunks,
+    MAX_CHUNKS_PER_SOURCE
+  );
+
   // Truncate to fit within token limit
-  const truncatedChunks = truncateToFit(chunks, MAX_CHARS);
+  const truncatedChunks = truncateToFit(sourceBalancedChunks, MAX_CHARS);
 
   const totalTokens = Math.ceil(
     truncatedChunks.reduce((sum, c) => sum + c.content.length, 0) /
@@ -61,6 +85,26 @@ export async function assembleContext(
     totalTokens,
     relevanceThreshold: RELEVANCE_THRESHOLD,
   };
+}
+
+function enforceSourceDiversity(
+  chunks: RetrievedChunk[],
+  maxPerSource: number
+): RetrievedChunk[] {
+  const sourceCounts = new Map<string, number>();
+  const balanced: RetrievedChunk[] = [];
+
+  for (const chunk of chunks) {
+    const count = sourceCounts.get(chunk.source.id) || 0;
+    if (count >= maxPerSource) {
+      continue;
+    }
+
+    sourceCounts.set(chunk.source.id, count + 1);
+    balanced.push(chunk);
+  }
+
+  return balanced;
 }
 
 /**

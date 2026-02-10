@@ -53,41 +53,41 @@ Row crops, vegetables, fruits, specialty crops, and forage species commonly grow
 
 ### Week 1: Foundation
 
-| Session | Focus | Deliverables |
-|---------|-------|--------------|
-| **1** | Project Setup | Next.js 14 scaffold, Tailwind + shadcn/ui, folder structure, TypeScript config, PWA manifest, basic layout components |
-| **2** | Database + Auth | Prisma schema, Supabase connection, auth pages (login/signup/callback), protected route middleware, user profile table |
-| **3** | Core UI Shell | App layout (sidebar, header, mobile nav), dashboard page, landing page, settings pages, dark mode |
+| Session | Focus           | Deliverables                                                                                                           |
+| ------- | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **1**   | Project Setup   | Next.js 14 scaffold, Tailwind + shadcn/ui, folder structure, TypeScript config, PWA manifest, basic layout components  |
+| **2**   | Database + Auth | Prisma schema, Supabase connection, auth pages (login/signup/callback), protected route middleware, user profile table |
+| **3**   | Core UI Shell   | App layout (sidebar, header, mobile nav), dashboard page, landing page, settings pages, dark mode                      |
 
 **Milestone:** Deployable shell with working auth, navigable but empty.
 
 ### Week 2: Input + Ingestion
 
-| Session | Focus | Deliverables |
-|---------|-------|--------------|
-| **4** | Diagnose Flow UI | Input method picker, image upload component (drag-drop + camera), description input, lab report form, crop/location selectors |
-| **5** | Ingestion Pipeline (Part 1) | Scrapers for university extensions, PDF parser, HTML parser, chunking logic, R2 upload for images |
-| **6** | Ingestion Pipeline (Part 2) | Embedding generation (text + image), pgvector upsert, product scraper, source metadata tracking |
+| Session | Focus                       | Deliverables                                                                                                                  |
+| ------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **4**   | Diagnose Flow UI            | Input method picker, image upload component (drag-drop + camera), description input, lab report form, crop/location selectors |
+| **5**   | Ingestion Pipeline (Part 1) | Scrapers for university extensions, PDF parser, HTML parser, chunking logic, R2 upload for images                             |
+| **6**   | Ingestion Pipeline (Part 2) | Embedding generation (text + image), pgvector upsert, product scraper, source metadata tracking                               |
 
 **Milestone:** User can upload images and describe issues. Knowledge base populated with real data (~500-1000 chunks).
 
 ### Week 3: AI + Products
 
-| Session | Focus | Deliverables |
-|---------|-------|--------------|
-| **7** | RAG + Recommendation Engine | Vector search API, context assembly, recommendation agent prompt, Claude integration, Zod validation + retry logic |
-| **8** | Results UI + Sources | Recommendation detail page, diagnosis display, action items, confidence indicator, sources panel, citation linking |
-| **9** | Products System | Product schema, product search API, product detail page, price display, comparison view, purchase links |
+| Session | Focus                       | Deliverables                                                                                                       |
+| ------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **7**   | RAG + Recommendation Engine | Vector search API, context assembly, recommendation agent prompt, Claude integration, Zod validation + retry logic |
+| **8**   | Results UI + Sources        | Recommendation detail page, diagnosis display, action items, confidence indicator, sources panel, citation linking |
+| **9**   | Products System             | Product schema, product search API, product detail page, price display, comparison view, purchase links            |
 
 **Milestone:** Full flow operational — upload → diagnosis → recommendations → products.
 
 ### Week 4: Polish + Launch
 
-| Session | Focus | Deliverables |
-|---------|-------|--------------|
-| **10** | Feedback Loop | Quick feedback component, detailed feedback form, outcome reporter, feedback storage, user feedback history page |
-| **11** | PWA + Offline | Service worker implementation, caching strategies, install prompt, offline indicator, background sync |
-| **12** | Launch Prep | Bug fixes, error handling audit, loading/empty states, rate limiting, final UI polish, beta deployment |
+| Session | Focus         | Deliverables                                                                                                     |
+| ------- | ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **10**  | Feedback Loop | Quick feedback component, detailed feedback form, outcome reporter, feedback storage, user feedback history page |
+| **11**  | PWA + Offline | Service worker implementation, caching strategies, install prompt, offline indicator, background sync            |
+| **12**  | Launch Prep   | Bug fixes, error handling audit, loading/empty states, rate limiting, final UI polish, beta deployment           |
 
 **Milestone:** Production-ready MVP deployed with beta users.
 
@@ -101,50 +101,120 @@ Row crops, vegetables, fruits, specialty crops, and forage species commonly grow
 - [ ] Admin dashboard for feedback monitoring
 - [ ] A/B testing framework for prompt versions
 
-# Manual Feedback Testing Plan
+| Category              | Crops                        | Regions                   | Scenarios                  |   Count |
+| --------------------- | ---------------------------- | ------------------------- | -------------------------- | ------: |
+| Nitrogen Deficiency   | Corn, Soybeans, Wheat        | Midwest, South, West      | Early/Mid/Late season      |      12 |
+| Phosphorus Deficiency | Corn, Soybeans, Tomatoes     | Midwest, Southeast        | Seedling/Vegetative        |       8 |
+| Potassium Deficiency  | Corn, Soybeans, Cotton       | Midwest, Southeast        | Reproductive stage         |       8 |
+| Micronutrients        | Various                      | Various                   | Zn, Fe, Mn, B deficiencies |      12 |
+| Fungal Diseases       | Corn, Soybeans, Wheat        | Midwest, Southeast        | Early/Late season          |      15 |
+| Bacterial/Viral       | Tomatoes, Peppers, Cucurbits | Various                   | Growing season             |       8 |
+| Insects               | Corn, Soybeans, Cotton       | Midwest, Southeast, South | Various life stages        |      12 |
+| Abiotic Stress        | Various                      | Various                   | Drought, heat, cold, hail  |      10 |
+| Edge Cases            | Various                      | Various                   | Multiple issues, unclear   |      15 |
+| **TOTAL**             |                              |                           |                            | **100** |
 
-## Overview
 
-After implementing the feedback system (Session 10), conduct systematic expert testing by generating 100 diverse recommendations and providing agronomic feedback to jump-start the continuous improvement loop.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 1) Generate baseline scenarios (100)
+npx tsx scripts/testing/generate-scenarios.ts
+
+# 2) Run baseline cycle with immediate feedback capture
+# mode=live uses actual retrieval + recommendation model
+# mode=mock runs deterministic dry-run (CI/local fallback)
+npx tsx scripts/testing/run-feedback-cycle.ts --mode=live --count=100 --persist=true --userEmail=expert-test@ai-agronomist.local --out=baseline-live-100.json
+
+# Optional: verify rows were persisted
+# SELECT COUNT(*) FROM "Recommendation" r JOIN "User" u ON u.id = r."userId" WHERE u.email = 'expert-test@ai-agronomist.local';
+# SELECT COUNT(*) FROM "Feedback" f JOIN "User" u ON u.id = f."userId" WHERE u.email = 'expert-test@ai-agronomist.local';
+
+# 3) Analyze baseline feedback and extract learnings
+npx tsx scripts/analyze-feedback.ts --input=data/testing/baseline-live-100.json
+
+### Step 4: Build Retest Set and Re-Run (20)
+
+```bash
+# Build mixed retest set (10 low-performing + 10 high-performing)
+npx tsx scripts/testing/build-retest-set.ts --input=data/testing/baseline-live-100.json
+
+# Run post-update validation on retest set
+npx tsx scripts/testing/run-feedback-cycle.ts --mode=live --count=20 --scenarios=data/testing/retest-20.json --out=post-update-live-20.json
+```
+
+
+
+| Metric              | Baseline (100) | Post-Update (20) | Change |
+| ------------------- | -------------- | ---------------- | ------ |
+| Avg Overall Rating  | ?              | ?                | ?      |
+| Avg Accuracy Rating | ?              | ?                | ?      |
+| Helpful Rate        | ?              | ?                | ?      |
+| Issue Rate          | ?              | ?                | ?      |
 ---
 
-## Testing Strategy
+| ------ | ---- | --------- | ------ | ------- | -------- | ------ | -------- | ------- |
 
-### Timeline: 4 Weeks
 
-| Week | Activity | Goal |
-|------|----------|------|
-| **Week 1** | Generate 100 diverse recommendations | Establish baseline across crops/regions/scenarios |
-| **Week 2** | Provide expert feedback on all 100 | Collect quality ratings and detailed comments |
-| **Week 3** | Run analysis & update prompt | Identify patterns and generate learnings |
-| **Week 4** | Test improvements | Measure quality improvement vs baseline |
 
----
 
-## Week 1: Generate 100 Diverse Recommendations
 
-### Coverage Matrix
 
-| Category | Crops | Regions | Scenarios | Count |
-|----------|-------|---------|-----------|-------|
-| **Nitrogen Deficiency** | Corn, Soybeans, Wheat | Midwest, South, West | Early/Mid/Late season | 12 |
-| **Phosphorus Deficiency** | Corn, Soybeans, Tomatoes | Midwest, Southeast | Seedling/Vegetative | 8 |
-| **Potassium Deficiency** | Corn, Soybeans, Cotton | Midwest, Southeast | Reproductive stage | 8 |
-| **Micronutrients** | Various | Various | Zn, Fe, Mn, B deficiencies | 12 |
-| **Fungal Diseases** | Corn, Soybeans, Wheat | Midwest, Southeast | Early/Late season | 15 |
-| **Bacterial/Viral** | Tomatoes, Peppers, Cucurbits | Various | Growing season | 8 |
-| **Insects** | Corn, Soybeans, Cotton | Midwest, Southeast, South | Various life stages | 12 |
-| **Abiotic Stress** | Various | Various | Drought, heat, cold, hail | 10 |
-| **Edge Cases** | Various | Various | Multiple issues, unclear | 15 |
-| **TOTAL** | | | | **100** |
 
-### Sample Test Cases
 
-#### Nutrient Deficiencies (40 recommendations)
+Applied UAN 32-0-0 at 50 lbs N/acre on June 15 to 40-acre field.
+Visual response (greening) observed within 5-7 days. At harvest,
+yield was 180 bu/acre vs 160 bu/acre in untreated check strip.
 
-**Nitrogen:**
-- Corn V4-V6 stage, Midwest (Iowa)
+
+
+
+
+
+
+
+
+
+
+
+
+For yellowing in soybeans: ALWAYS check if symptoms are on upper (new growth)
+or lower (old growth) leaves. Upper leaf chlorosis indicates immobile nutrients
+| KPI                          | Target | How to Measure                                  |
+| ---------------------------- | ------ | ----------------------------------------------- |
+| **Feedback Completion Rate** | 80%+   | Feedbacks submitted / Recommendations generated |
+| **Average Overall Rating**   | 4.0+/5 | Mean of all overall ratings                     |
+| **Average Accuracy Rating**  | 4.2+/5 | Mean of all accuracy ratings                    |
+| **Issue Rate**               | <30%   | Recommendations with issues flagged             |
+| **Outcome Success Rate**     | 70%+   | Successful outcomes / Total outcomes reported   |
+| **Post-Update Improvement**  | +15%   | (Post-update avg - Baseline avg) / Baseline avg |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - Soybeans V3-V5 stage, Southeast (Georgia)
 - Wheat tillering stage, Great Plains (Kansas)
 

@@ -1,0 +1,1052 @@
+[
+  {
+    "recommendationId": "rec_scenario_005",
+    "scenario": {
+      "id": "scenario_005",
+      "category": "nitrogen_deficiency",
+      "crop": "soybean",
+      "region": "South",
+      "growthStage": "V3-V5",
+      "symptoms": "general chlorosis and reduced nodulation after saturated soils",
+      "expectedDiagnosis": "Nitrogen deficiency linked to nodulation stress",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "root/nodule check",
+        "inoculant strategy",
+        "rate guardrails"
+      ],
+      "shouldAvoid": [
+        "overstating yield recovery certainty"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Nitrogen deficiency linked to nodulation stress",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: root/nodule check",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for soybean in South."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.214Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: inoculant strategy, rate guardrails."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_010",
+    "scenario": {
+      "id": "scenario_010",
+      "category": "nitrogen_deficiency",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V4-V6",
+      "symptoms": "yellowing lower leaves and pale canopy under warm wet conditions",
+      "expectedDiagnosis": "Nitrogen deficiency",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "soil or tissue test",
+        "split nitrogen application",
+        "growth-stage timing"
+      ],
+      "shouldAvoid": [
+        "single high-rate burn risk advice"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Nitrogen deficiency",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: soil or tissue test",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.215Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: split nitrogen application, growth-stage timing."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_015",
+    "scenario": {
+      "id": "scenario_015",
+      "category": "phosphorus_deficiency",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "seedling",
+      "symptoms": "purpling leaves and slow early growth in cool wet soil",
+      "expectedDiagnosis": "Phosphorus deficiency",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "soil temperature context",
+        "banded phosphorus recommendation",
+        "starter timing"
+      ],
+      "shouldAvoid": [
+        "claiming fungal disease as primary cause without evidence"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Phosphorus deficiency",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: soil temperature context",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.215Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: banded phosphorus recommendation, starter timing."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_020",
+    "scenario": {
+      "id": "scenario_020",
+      "category": "phosphorus_deficiency",
+      "crop": "soybean",
+      "region": "Southeast",
+      "growthStage": "early vegetative",
+      "symptoms": "stunted plants with dark green leaves on acidic sandy soil",
+      "expectedDiagnosis": "Phosphorus deficiency with pH limitation",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "pH correction",
+        "soil test recommendation",
+        "placement strategy"
+      ],
+      "shouldAvoid": [
+        "blanket high-rate phosphorus without test"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Phosphorus deficiency with pH limitation",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: pH correction",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for soybean in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.216Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: soil test recommendation, placement strategy."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_025",
+    "scenario": {
+      "id": "scenario_025",
+      "category": "potassium_deficiency",
+      "crop": "cotton",
+      "region": "Southeast",
+      "growthStage": "flowering",
+      "symptoms": "leaf edge scorching and poor boll retention",
+      "expectedDiagnosis": "Potassium deficiency",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "split K application",
+        "petiole/tissue test",
+        "water management tie-in"
+      ],
+      "shouldAvoid": [
+        "single large potassium chloride burst in drought"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Potassium deficiency",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: split K application",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for cotton in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.216Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: petiole/tissue test, water management tie-in."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_030",
+    "scenario": {
+      "id": "scenario_030",
+      "category": "micronutrient_deficiency",
+      "crop": "soybean",
+      "region": "Midwest",
+      "growthStage": "V3",
+      "symptoms": "interveinal chlorosis with green veins on young leaves",
+      "expectedDiagnosis": "Iron chlorosis",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "variety tolerance",
+        "chelate guidance",
+        "drainage note"
+      ],
+      "shouldAvoid": [
+        "high confidence without differential"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Iron chlorosis",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: variety tolerance",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for soybean in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.216Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: chelate guidance, drainage note."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_035",
+    "scenario": {
+      "id": "scenario_035",
+      "category": "micronutrient_deficiency",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V5",
+      "symptoms": "striped interveinal chlorosis on younger leaves in high pH soil",
+      "expectedDiagnosis": "Zinc deficiency",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "tissue test confirmation",
+        "foliar vs soil zinc choice",
+        "pH context"
+      ],
+      "shouldAvoid": [
+        "misdiagnosing as nitrogen deficiency"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Zinc deficiency",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: tissue test confirmation",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 0,
+    "createdAt": "2026-02-10T05:21:19.216Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: foliar vs soil zinc choice, pH context.",
+        "No supporting sources were cited."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_040",
+    "scenario": {
+      "id": "scenario_040",
+      "category": "micronutrient_deficiency",
+      "crop": "soybean",
+      "region": "Midwest",
+      "growthStage": "V3",
+      "symptoms": "interveinal chlorosis with green veins on young leaves",
+      "expectedDiagnosis": "Iron chlorosis",
+      "expectedConditionType": "deficiency",
+      "mustInclude": [
+        "variety tolerance",
+        "chelate guidance",
+        "drainage note"
+      ],
+      "shouldAvoid": [
+        "high confidence without differential"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Iron chlorosis",
+      "conditionType": "deficiency",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: variety tolerance",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for soybean in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.216Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: chelate guidance, drainage note."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_045",
+    "scenario": {
+      "id": "scenario_045",
+      "category": "fungal_disease",
+      "crop": "wheat",
+      "region": "Midwest",
+      "growthStage": "heading",
+      "symptoms": "bleached spikelets and pink-orange fungal growth after rains",
+      "expectedDiagnosis": "Fusarium head blight",
+      "expectedConditionType": "disease",
+      "mustInclude": [
+        "DON risk mention",
+        "application timing at flowering",
+        "harvest segregation note"
+      ],
+      "shouldAvoid": [
+        "late curative claim with high confidence"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Fusarium head blight",
+      "conditionType": "disease",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: DON risk mention; single high-rate burn risk advice",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for wheat in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.216Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: application timing at flowering, harvest segregation note."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_050",
+    "scenario": {
+      "id": "scenario_050",
+      "category": "fungal_disease",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "late vegetative",
+      "symptoms": "rectangular gray lesions confined by veins, humid canopy",
+      "expectedDiagnosis": "Gray leaf spot",
+      "expectedConditionType": "disease",
+      "mustInclude": [
+        "differential diagnosis",
+        "fungicide timing",
+        "resistance management"
+      ],
+      "shouldAvoid": [
+        "single chemistry overreliance"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Gray leaf spot",
+      "conditionType": "disease",
+      "confidence": 0.81
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: differential diagnosis",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": false,
+      "overallRating": 4,
+      "accuracyRating": 3,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [
+        "Missing critical items: fungicide timing, resistance management."
+      ],
+      "issueTags": [
+        "Missing key information"
+      ],
+      "recommendToFarmer": "yes_with_changes",
+      "simulatedOutcome": {
+        "applied": false,
+        "success": "partial",
+        "notes": "Would require agronomist revision before recommending field implementation."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_086",
+    "scenario": {
+      "id": "scenario_086",
+      "category": "edge_case",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V8",
+      "symptoms": "interveinal chlorosis with scattered lesioning after herbicide pass and storms",
+      "expectedDiagnosis": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "clear uncertainty",
+        "prioritized diagnostics",
+        "safe immediate actions"
+      ],
+      "shouldAvoid": [
+        "single-cause certainty"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: clear uncertainty; prioritized diagnostics; safe immediate actions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for corn."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_087",
+    "scenario": {
+      "id": "scenario_087",
+      "category": "edge_case",
+      "crop": "cucurbits",
+      "region": "Southeast",
+      "growthStage": "flowering",
+      "symptoms": "wilting at midday recovering at night with patchy distribution",
+      "expectedDiagnosis": "Potential vascular disease or root stress; needs confirmation",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "diagnostic sampling steps",
+        "irrigation and root-zone checks",
+        "containment precautions"
+      ],
+      "shouldAvoid": [
+        "high-confidence diagnosis without test"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Potential vascular disease or root stress; needs confirmation",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: diagnostic sampling steps; irrigation and root-zone checks; containment precautions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for cucurbits in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for cucurbits."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_088",
+    "scenario": {
+      "id": "scenario_088",
+      "category": "edge_case",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V8",
+      "symptoms": "interveinal chlorosis with scattered lesioning after herbicide pass and storms",
+      "expectedDiagnosis": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "clear uncertainty",
+        "prioritized diagnostics",
+        "safe immediate actions"
+      ],
+      "shouldAvoid": [
+        "single-cause certainty"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: clear uncertainty; prioritized diagnostics; safe immediate actions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for corn."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_089",
+    "scenario": {
+      "id": "scenario_089",
+      "category": "edge_case",
+      "crop": "cucurbits",
+      "region": "Southeast",
+      "growthStage": "flowering",
+      "symptoms": "wilting at midday recovering at night with patchy distribution",
+      "expectedDiagnosis": "Potential vascular disease or root stress; needs confirmation",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "diagnostic sampling steps",
+        "irrigation and root-zone checks",
+        "containment precautions"
+      ],
+      "shouldAvoid": [
+        "high-confidence diagnosis without test"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Potential vascular disease or root stress; needs confirmation",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: diagnostic sampling steps; irrigation and root-zone checks; containment precautions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for cucurbits in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for cucurbits."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_092",
+    "scenario": {
+      "id": "scenario_092",
+      "category": "edge_case",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V8",
+      "symptoms": "interveinal chlorosis with scattered lesioning after herbicide pass and storms",
+      "expectedDiagnosis": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "clear uncertainty",
+        "prioritized diagnostics",
+        "safe immediate actions"
+      ],
+      "shouldAvoid": [
+        "single-cause certainty"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: clear uncertainty; prioritized diagnostics; safe immediate actions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for corn."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_093",
+    "scenario": {
+      "id": "scenario_093",
+      "category": "edge_case",
+      "crop": "cucurbits",
+      "region": "Southeast",
+      "growthStage": "flowering",
+      "symptoms": "wilting at midday recovering at night with patchy distribution",
+      "expectedDiagnosis": "Potential vascular disease or root stress; needs confirmation",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "diagnostic sampling steps",
+        "irrigation and root-zone checks",
+        "containment precautions"
+      ],
+      "shouldAvoid": [
+        "high-confidence diagnosis without test"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Potential vascular disease or root stress; needs confirmation",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: diagnostic sampling steps; irrigation and root-zone checks; containment precautions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for cucurbits in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for cucurbits."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_094",
+    "scenario": {
+      "id": "scenario_094",
+      "category": "edge_case",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V8",
+      "symptoms": "interveinal chlorosis with scattered lesioning after herbicide pass and storms",
+      "expectedDiagnosis": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "clear uncertainty",
+        "prioritized diagnostics",
+        "safe immediate actions"
+      ],
+      "shouldAvoid": [
+        "single-cause certainty"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: clear uncertainty; prioritized diagnostics; safe immediate actions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for corn."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_096",
+    "scenario": {
+      "id": "scenario_096",
+      "category": "edge_case",
+      "crop": "corn",
+      "region": "Midwest",
+      "growthStage": "V8",
+      "symptoms": "interveinal chlorosis with scattered lesioning after herbicide pass and storms",
+      "expectedDiagnosis": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "clear uncertainty",
+        "prioritized diagnostics",
+        "safe immediate actions"
+      ],
+      "shouldAvoid": [
+        "single-cause certainty"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Mixed stress: possible nutrient + disease + herbicide interaction",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: clear uncertainty; prioritized diagnostics; safe immediate actions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for corn in Midwest."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for corn."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_097",
+    "scenario": {
+      "id": "scenario_097",
+      "category": "edge_case",
+      "crop": "cucurbits",
+      "region": "Southeast",
+      "growthStage": "flowering",
+      "symptoms": "wilting at midday recovering at night with patchy distribution",
+      "expectedDiagnosis": "Potential vascular disease or root stress; needs confirmation",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "diagnostic sampling steps",
+        "irrigation and root-zone checks",
+        "containment precautions"
+      ],
+      "shouldAvoid": [
+        "high-confidence diagnosis without test"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Potential vascular disease or root stress; needs confirmation",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: diagnostic sampling steps; irrigation and root-zone checks; containment precautions",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for cucurbits in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for cucurbits."
+      }
+    }
+  },
+  {
+    "recommendationId": "rec_scenario_099",
+    "scenario": {
+      "id": "scenario_099",
+      "category": "edge_case",
+      "crop": "cucurbits",
+      "region": "Southeast",
+      "growthStage": "flowering",
+      "symptoms": "wilting at midday recovering at night with patchy distribution",
+      "expectedDiagnosis": "Potential vascular disease or root stress; needs confirmation",
+      "expectedConditionType": "unknown",
+      "mustInclude": [
+        "diagnostic sampling steps",
+        "irrigation and root-zone checks",
+        "containment precautions"
+      ],
+      "shouldAvoid": [
+        "high-confidence diagnosis without test"
+      ]
+    },
+    "diagnosis": {
+      "condition": "Potential vascular disease or root stress; needs confirmation",
+      "conditionType": "unknown",
+      "confidence": 0.62
+    },
+    "recommendationText": [
+      "Confirm diagnosis with targeted scouting and diagnostic testing: diagnostic sampling steps; irrigation and root-zone checks; containment precautions; single high-rate burn risk advice",
+      "Implement risk-reducing treatment plan aligned to local thresholds: Use local extension thresholds for cucurbits in Southeast."
+    ],
+    "sourceCount": 1,
+    "createdAt": "2026-02-10T05:21:19.217Z",
+    "feedback": {
+      "helpful": true,
+      "overallRating": 5,
+      "accuracyRating": 5,
+      "whatWasGood": [
+        "Diagnosis aligned with expected agronomic pattern.",
+        "Condition type classification is plausible.",
+        "Included all required high-value agronomy checks for this scenario.",
+        "Provides evidence traceability via source citations."
+      ],
+      "whatWasWrongOrMissing": [],
+      "issueTags": [],
+      "recommendToFarmer": "yes",
+      "simulatedOutcome": {
+        "applied": true,
+        "success": "yes",
+        "notes": "Expected visible improvement in 5-10 days for cucurbits."
+      }
+    }
+  }
+]
