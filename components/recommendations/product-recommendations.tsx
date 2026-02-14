@@ -19,7 +19,7 @@ import {
   ShoppingCart,
   AlertTriangle,
 } from "lucide-react";
-import { ProductType } from "@prisma/client";
+import type { ProductType } from "@/lib/types/product";
 
 interface ProductRecommendation {
   id: string;

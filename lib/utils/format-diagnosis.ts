@@ -71,8 +71,10 @@ export function getConditionTypeColor(type: ConditionType): string {
 /**
  * Get icon name for condition type (using lucide-react icons)
  */
-export function getConditionTypeIcon(type: ConditionType): string {
-  const icons: Record<ConditionType, string> = {
+export type ConditionIconName = "Droplet" | "AlertCircle" | "Bug" | "Cloud" | "HelpCircle";
+
+export function getConditionTypeIcon(type: ConditionType): ConditionIconName {
+  const icons: Record<ConditionType, ConditionIconName> = {
     deficiency: "Droplet",
     disease: "AlertCircle",
     pest: "Bug",
