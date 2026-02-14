@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#0a1f14"/>
+  <!-- Stem -->
+  <path d="M16 25 Q16 19 16 13" stroke="#76C043" stroke-width="2" stroke-linecap="round"/>
+  <!-- Left leaf -->
+  <path d="M16 17 Q12 12 9 10 Q11 14 16 17Z" fill="#76C043" opacity="0.85"/>
+  <!-- Right leaf -->
+  <path d="M16 14 Q21 9 24 7 Q22 12 16 14Z" fill="#9DD565"/>
+  <!-- AI dot -->
+  <circle cx="24" cy="7" r="1.5" fill="#9DD565"/>
+  <circle cx="24" cy="7" r="3" stroke="#76C043" stroke-width="0.7" fill="none" opacity="0.4"/>
+  <!-- Ground -->
+  <path d="M11 25 Q16 24 21 25" stroke="#76C043" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+</svg>

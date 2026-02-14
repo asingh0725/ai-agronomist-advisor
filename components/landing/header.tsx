@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Leaf, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { LogoIcon } from "@/components/ui/logo-icon";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -42,7 +43,7 @@ export function LandingHeader() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-lime-400 group-hover:glow-accent-sm transition-shadow">
-              <Leaf className="w-5 h-5 text-earth-950" />
+              <LogoIcon size={20} className="text-earth-950" />
             </div>
             <span className="font-semibold text-lg text-white">
               Crop Copilot

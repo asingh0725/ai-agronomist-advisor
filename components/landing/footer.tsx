@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Leaf } from "lucide-react";
+import { LogoIcon } from "@/components/ui/logo-icon";
 
 export function Footer() {
   const footerLinks = {
@@ -51,7 +51,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-lime-400">
-                <Leaf className="w-5 h-5 text-earth-950" />
+                <LogoIcon size={20} className="text-earth-950" />
               </div>
               <span className="font-semibold text-lg text-white">
                 Crop Copilot

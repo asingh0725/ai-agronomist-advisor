@@ -12,10 +12,10 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Leaf,
   User,
   Package,
 } from "lucide-react";
+import { LogoIcon } from "@/components/ui/logo-icon";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -84,7 +84,7 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
           )}
         >
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-lime-400">
-            <Leaf className="w-5 h-5 text-earth-950" />
+            <LogoIcon size={20} className="text-earth-950" />
           </div>
           {!collapsed && (
             <span className="font-semibold text-white truncate">
