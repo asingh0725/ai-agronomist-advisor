@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -10,7 +10,7 @@
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -38,14 +38,17 @@ pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# turborepo
+.turbo
+
 # ingestion pipeline cache & state
-/ingestion/.cache/
-/ingestion/logs/
-/ingestion/state/
+tools/ingestion/.cache/
+tools/ingestion/logs/
+tools/ingestion/state/
 
 # eval & testing output (generated data, not source code)
-/data/eval/
-/data/testing/
+tools/data/eval/
+tools/data/testing/
 
 # OS files
 .DS_Store
