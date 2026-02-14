@@ -26,23 +26,20 @@ export function TrustBar() {
   return (
     <section
       id="trust"
-      className="py-10 bg-[#142a1e] border-t border-white/5"
+      className="py-10 bg-earth-950 border-t border-lime-400/5"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <MotionDiv>
           <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
-            {/* Left text */}
             <div className="flex items-center gap-3 shrink-0">
-              <GraduationCap className="w-5 h-5 text-hero-accent" />
+              <GraduationCap className="w-5 h-5 text-lime-400" />
               <p className="text-sm text-white/50 font-medium whitespace-nowrap">
                 Research sourced from leading agricultural universities
               </p>
             </div>
 
-            {/* Divider */}
             <div className="hidden lg:block w-px h-8 bg-white/10" />
 
-            {/* Infinite slider */}
             <InfiniteSlider speed={40} className="flex-1 w-full lg:w-auto">
               {partners.map((name) => (
                 <div
@@ -56,6 +53,9 @@ export function TrustBar() {
           </div>
         </MotionDiv>
       </div>
+
+      {/* Gradient separator */}
+      <div className="mt-10 h-px bg-gradient-to-r from-transparent via-lime-400/20 to-transparent" />
     </section>
   );
 }

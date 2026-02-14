@@ -18,7 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Search, X, Filter } from "lucide-react";
-import { ProductType } from "@prisma/client";
+import type { ProductType } from "@/lib/types/product";
 
 interface ProductFiltersProps {
   onFiltersChange: (filters: FilterState) => void;

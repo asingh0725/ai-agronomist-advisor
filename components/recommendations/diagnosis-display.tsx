@@ -7,12 +7,21 @@ import {
   getConditionTypeLabel,
   getConditionTypeColor,
   getConditionTypeIcon,
+  type ConditionIconName,
 } from "@/lib/utils/format-diagnosis";
 import {
   ConfidenceIndicator,
   ConfidenceBar,
 } from "./confidence-indicator";
-import * as Icons from "lucide-react";
+import { Droplet, AlertCircle, Bug, Cloud, HelpCircle } from "lucide-react";
+
+const iconMap: Record<ConditionIconName, React.ComponentType<{ className?: string }>> = {
+  Droplet,
+  AlertCircle,
+  Bug,
+  Cloud,
+  HelpCircle,
+};
 
 interface DiagnosisDisplayProps {
   diagnosis: Diagnosis;
@@ -24,7 +33,7 @@ export function DiagnosisDisplay({
   confidence,
 }: DiagnosisDisplayProps) {
   const iconName = getConditionTypeIcon(diagnosis.conditionType);
-  const Icon = (Icons as any)[iconName] || Icons.HelpCircle;
+  const Icon = iconMap[iconName] || HelpCircle;
 
   return (
     <Card className="border-2">

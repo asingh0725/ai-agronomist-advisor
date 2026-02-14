@@ -12,10 +12,10 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Leaf,
   User,
   Package,
 } from "lucide-react";
+import { LogoIcon } from "@/components/ui/logo-icon";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -33,44 +33,16 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Diagnose",
-    href: "/diagnose",
-    icon: Camera,
-  },
-  {
-    title: "Recommendations",
-    href: "/recommendations",
-    icon: ClipboardList,
-  },
-  {
-    title: "Products",
-    href: "/products",
-    icon: Package,
-  },
-  {
-    title: "History",
-    href: "/history",
-    icon: History,
-  },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Diagnose", href: "/diagnose", icon: Camera },
+  { title: "Recommendations", href: "/recommendations", icon: ClipboardList },
+  { title: "Products", href: "/products", icon: Package },
+  { title: "History", href: "/history", icon: History },
 ];
 
 const bottomNavItems: NavItem[] = [
-  {
-    title: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-  {
-    title: "Profile",
-    href: "/settings/profile",
-    icon: User,
-  },
+  { title: "Settings", href: "/settings", icon: Settings },
+  { title: "Profile", href: "/settings/profile", icon: User },
 ];
 
 interface SidebarProps {
@@ -92,9 +64,7 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
   };
 
   const isActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
+    if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
@@ -102,33 +72,35 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-40",
+          "hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-earth-950 border-r border-white/5 transition-all duration-300 z-40",
           collapsed ? "w-16" : "w-64"
         )}
       >
-        {/* Logo/Brand */}
-        <div className={cn(
-          "flex items-center h-16 border-b border-gray-200 px-4",
-          collapsed ? "justify-center" : "gap-3"
-        )}>
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-600">
-            <Leaf className="w-5 h-5 text-white" />
+        {/* Logo */}
+        <div
+          className={cn(
+            "flex items-center h-16 border-b border-white/5 px-4",
+            collapsed ? "justify-center" : "gap-3"
+          )}
+        >
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-lime-400">
+            <LogoIcon size={20} className="text-earth-950" />
           </div>
           {!collapsed && (
-            <span className="font-semibold text-gray-900 truncate">
-              AI Agronomist
+            <span className="font-semibold text-white truncate">
+              Crop Copilot
             </span>
           )}
         </div>
 
         {/* User Info */}
         {!collapsed && (userName || userEmail) && (
-          <div className="px-4 py-3 border-b border-gray-200">
-            <p className="text-sm font-medium text-gray-900 truncate">
+          <div className="px-4 py-3 border-b border-white/5">
+            <p className="text-sm font-medium text-white truncate">
               {userName || "User"}
             </p>
             {userEmail && (
-              <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+              <p className="text-xs text-white/40 truncate">{userEmail}</p>
             )}
           </div>
         )}
@@ -142,14 +114,19 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   active
-                    ? "bg-green-50 text-green-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                  collapsed && "justify-center"
+                    ? "bg-lime-400/10 text-lime-400 border-l-2 border-lime-400 ml-0"
+                    : "text-white/50 hover:bg-white/5 hover:text-white/80",
+                  collapsed && "justify-center border-l-0"
                 )}
               >
-                <item.icon className={cn("w-5 h-5 shrink-0", active && "text-green-600")} />
+                <item.icon
+                  className={cn(
+                    "w-5 h-5 shrink-0 transition-colors",
+                    active ? "text-lime-400" : "text-white/40"
+                  )}
+                />
                 {!collapsed && <span>{item.title}</span>}
               </Link>
             );
@@ -158,7 +135,9 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
               return (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>{NavLink}</TooltipTrigger>
-                  <TooltipContent side="right">{item.title}</TooltipContent>
+                  <TooltipContent side="right" className="bg-earth-900 text-white border-white/10">
+                    {item.title}
+                  </TooltipContent>
                 </Tooltip>
               );
             }
@@ -168,7 +147,7 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="px-2 py-4 border-t border-gray-200 space-y-1">
+        <div className="px-2 py-4 border-t border-white/5 space-y-1">
           {bottomNavItems.map((item) => {
             const active = isActive(item.href);
             const NavLink = (
@@ -176,14 +155,19 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   active
-                    ? "bg-green-50 text-green-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                    ? "bg-lime-400/10 text-lime-400"
+                    : "text-white/50 hover:bg-white/5 hover:text-white/80",
                   collapsed && "justify-center"
                 )}
               >
-                <item.icon className={cn("w-5 h-5 shrink-0", active && "text-green-600")} />
+                <item.icon
+                  className={cn(
+                    "w-5 h-5 shrink-0",
+                    active ? "text-lime-400" : "text-white/40"
+                  )}
+                />
                 {!collapsed && <span>{item.title}</span>}
               </Link>
             );
@@ -192,7 +176,9 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
               return (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>{NavLink}</TooltipTrigger>
-                  <TooltipContent side="right">{item.title}</TooltipContent>
+                  <TooltipContent side="right" className="bg-earth-900 text-white border-white/10">
+                    {item.title}
+                  </TooltipContent>
                 </Tooltip>
               );
             }
@@ -208,19 +194,21 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
                   variant="ghost"
                   size="sm"
                   onClick={handleSignOut}
-                  className="w-full justify-center text-gray-600 hover:text-red-600 hover:bg-red-50"
+                  className="w-full justify-center text-white/40 hover:text-red-400 hover:bg-red-500/10"
                 >
                   <LogOut className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Sign Out</TooltipContent>
+              <TooltipContent side="right" className="bg-earth-900 text-white border-white/10">
+                Sign Out
+              </TooltipContent>
             </Tooltip>
           ) : (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleSignOut}
-              className="w-full justify-start gap-3 px-3 text-gray-600 hover:text-red-600 hover:bg-red-50"
+              className="w-full justify-start gap-3 px-3 text-white/40 hover:text-red-400 hover:bg-red-500/10"
             >
               <LogOut className="w-5 h-5" />
               <span>Sign Out</span>
@@ -229,13 +217,13 @@ export function Sidebar({ userName, userEmail, collapsed, onCollapsedChange }: S
         </div>
 
         {/* Collapse Toggle */}
-        <div className="px-2 py-2 border-t border-gray-200">
+        <div className="px-2 py-2 border-t border-white/5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onCollapsedChange(!collapsed)}
             className={cn(
-              "w-full text-gray-500 hover:text-gray-700",
+              "w-full text-white/30 hover:text-white/60 hover:bg-white/5",
               collapsed ? "justify-center" : "justify-end"
             )}
           >

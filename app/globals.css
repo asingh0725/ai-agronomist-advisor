@@ -4,47 +4,47 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 40 20% 98%;
     --foreground: 20 14.3% 4.1%;
-    --card: 0 0% 100%;
+    --card: 40 14% 96%;
     --card-foreground: 20 14.3% 4.1%;
-    --popover: 0 0% 100%;
+    --popover: 40 20% 98%;
     --popover-foreground: 20 14.3% 4.1%;
     --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 60 4.8% 95.9%;
+    --secondary: 40 8% 94%;
     --secondary-foreground: 24 9.8% 10%;
-    --muted: 60 4.8% 95.9%;
+    --muted: 40 8% 94%;
     --muted-foreground: 25 5.3% 44.7%;
-    --accent: 60 4.8% 95.9%;
+    --accent: 40 8% 94%;
     --accent-foreground: 24 9.8% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 60 9.1% 97.8%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
+    --border: 30 8% 88%;
+    --input: 30 8% 88%;
     --ring: 142.1 76.2% 36.3%;
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 20 14.3% 4.1%;
+    --background: 150 38% 8%;
     --foreground: 60 9.1% 97.8%;
-    --card: 20 14.3% 4.1%;
+    --card: 150 38% 8%;
     --card-foreground: 60 9.1% 97.8%;
-    --popover: 20 14.3% 4.1%;
+    --popover: 150 38% 8%;
     --popover-foreground: 60 9.1% 97.8%;
     --primary: 142.1 70.6% 45.3%;
     --primary-foreground: 144.9 80.4% 10%;
-    --secondary: 12 6.5% 15.1%;
+    --secondary: 150 20% 12%;
     --secondary-foreground: 60 9.1% 97.8%;
-    --muted: 12 6.5% 15.1%;
+    --muted: 150 20% 12%;
     --muted-foreground: 24 5.4% 63.9%;
-    --accent: 12 6.5% 15.1%;
+    --accent: 150 20% 12%;
     --accent-foreground: 60 9.1% 97.8%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 60 9.1% 97.8%;
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
+    --border: 150 20% 12%;
+    --input: 150 20% 12%;
     --ring: 142.1 70.6% 45.3%;
   }
 }
@@ -79,7 +79,7 @@
     z-index: 1;
   }
 
-  /* Infinite slider keyframe — defined here so it's never tree-shaken */
+  /* Infinite slider keyframe */
   @keyframes slide-infinite {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
@@ -97,5 +97,43 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .glass-dark {
+    background: rgba(10, 31, 20, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(118, 192, 67, 0.08);
+  }
+
+  /* Accent glow for CTAs */
+  .glow-accent {
+    box-shadow: 0 0 30px rgba(118, 192, 67, 0.25), 0 0 60px rgba(118, 192, 67, 0.1);
+  }
+  .glow-accent-sm {
+    box-shadow: 0 0 15px rgba(118, 192, 67, 0.2);
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, #76C043 0%, #9DD565 50%, #76C043 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Topography pattern for dark sections */
+  .topo-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2376C043' stroke-width='0.3' opacity='0.06'%3E%3Cpath d='M30 5c13.807 0 25 11.193 25 25S43.807 55 30 55 5 43.807 5 30 16.193 5 30 5z'/%3E%3Cpath d='M30 12c9.941 0 18 8.059 18 18s-8.059 18-18 18-18-8.059-18-18 8.059-18 18-18z'/%3E%3Cpath d='M30 19c6.075 0 11 4.925 11 11s-4.925 11-11 11-11-4.925-11-11 4.925-11 11-11z'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .grain-overlay::after,
+    .animate-float,
+    .animate-pulse-glow,
+    .animate-gradient-shift,
+    .animate-dash-flow {
+      animation: none !important;
+    }
   }
 }

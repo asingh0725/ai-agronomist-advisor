@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Leaf, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { LogoIcon } from "@/components/ui/logo-icon";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -31,29 +32,31 @@ export function LandingHeader() {
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled ? "bg-hero-dark/90 backdrop-blur-xl shadow-lg" : "bg-transparent"
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        isScrolled
+          ? "glass-dark shadow-lg shadow-black/10"
+          : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-hero-accent">
-              <Leaf className="w-5 h-5 text-white" />
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-lime-400 group-hover:glow-accent-sm transition-shadow">
+              <LogoIcon size={20} className="text-earth-950" />
             </div>
             <span className="font-semibold text-lg text-white">
-              AI Agronomist
+              Crop Copilot
             </span>
           </Link>
 
-          {/* Desktop Navigation — Glass Pill */}
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1 glass rounded-full px-3 py-2">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-white/70 hover:text-white px-4 py-1.5 rounded-full hover:bg-white/10 transition-all"
+                className="relative text-sm font-medium text-white/70 hover:text-white px-4 py-1.5 rounded-full hover:bg-white/10 transition-all"
               >
                 {link.label}
               </Link>
@@ -71,7 +74,7 @@ export function LandingHeader() {
             </Button>
             <Button
               asChild
-              className="bg-hero-accent hover:bg-hero-accent/90 text-white rounded-full px-6"
+              className="bg-lime-400 hover:bg-lime-300 text-earth-950 font-semibold rounded-full px-6 transition-all hover:scale-[1.03]"
             >
               <Link href="/signup">Get Started Free</Link>
             </Button>
@@ -98,7 +101,7 @@ export function LandingHeader() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden glass rounded-xl mt-2 p-4 space-y-1"
+              className="md:hidden glass-dark rounded-xl mt-2 p-4 space-y-1"
             >
               {navLinks.map((link) => (
                 <Link
@@ -120,7 +123,7 @@ export function LandingHeader() {
                 </Button>
                 <Button
                   asChild
-                  className="w-full bg-hero-accent hover:bg-hero-accent/90 text-white"
+                  className="w-full bg-lime-400 hover:bg-lime-300 text-earth-950 font-semibold"
                 >
                   <Link href="/signup">Get Started Free</Link>
                 </Button>

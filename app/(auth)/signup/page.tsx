@@ -25,7 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Leaf } from "lucide-react"
+import { LogoIcon } from "@/components/ui/logo-icon"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -75,11 +75,11 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <Leaf className="h-12 w-12 text-primary" />
+            <LogoIcon size={48} className="text-primary" />
           </div>
           <CardTitle className="text-2xl">Create an account</CardTitle>
           <CardDescription>
-            Get started with AI Agronomist Advisor
+            Get started with Crop Copilot
           </CardDescription>
         </CardHeader>
         <CardContent>

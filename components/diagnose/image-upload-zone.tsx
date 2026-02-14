@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { Upload, Camera, X } from "lucide-react"
+import { Upload, Camera, X, ImagePlus } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -11,7 +12,7 @@ interface ImageUploadZoneProps {
   error?: string
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps) {
@@ -40,7 +41,6 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
 
     onChange(file)
 
-    // Create preview
     const reader = new FileReader()
     reader.onloadend = () => {
       setPreview(reader.result as string)
@@ -100,8 +100,13 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
 
   if (preview && value) {
     return (
-      <div className="space-y-4">
-        <div className="relative rounded-lg overflow-hidden border-2 border-primary">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="space-y-4"
+      >
+        <div className="relative rounded-2xl overflow-hidden border-2 border-lime-400/30 shadow-lg shadow-lime-400/5">
           <img
             src={preview}
             alt="Preview"
@@ -111,7 +116,7 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
             type="button"
             variant="destructive"
             size="icon"
-            className="absolute top-2 right-2"
+            className="absolute top-3 right-3 rounded-xl"
             onClick={handleRemove}
           >
             <X className="h-4 w-4" />
@@ -121,23 +126,22 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
           <p className="font-medium">{value.name}</p>
           <p>{formatFileSize(value.size)}</p>
         </div>
-      </div>
+      </motion.div>
     )
   }
 
   return (
     <div className="space-y-4">
-      {/* Drop zone - clickable for browse */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleBrowseClick}
         className={cn(
-          "relative rounded-lg border-2 border-dashed p-8 text-center cursor-pointer transition-colors",
-          isDragging && "border-primary bg-primary/5",
+          "relative rounded-2xl border-2 border-dashed p-12 text-center cursor-pointer transition-all duration-300",
+          isDragging && "border-lime-400 bg-lime-400/5 scale-[1.01]",
           error && "border-destructive",
-          !isDragging && !error && "border-muted-foreground/25 hover:border-primary/50"
+          !isDragging && !error && "border-muted-foreground/20 hover:border-lime-400/40 hover:bg-lime-400/[0.02]"
         )}
       >
         <input
@@ -157,9 +161,19 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
         />
 
         <div className="flex flex-col items-center gap-4">
-          <div className="p-4 bg-primary/10 rounded-full">
-            <Upload className="h-8 w-8 text-primary" />
-          </div>
+          <motion.div
+            animate={isDragging ? { scale: 1.1, y: -4 } : { scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            className={cn(
+              "p-5 rounded-2xl transition-colors",
+              isDragging ? "bg-lime-400/20" : "bg-lime-400/10"
+            )}
+          >
+            <ImagePlus className={cn(
+              "h-8 w-8 transition-colors",
+              isDragging ? "text-lime-400" : "text-lime-400/70"
+            )} />
+          </motion.div>
 
           <div className="space-y-2">
             <p className="text-lg font-medium">
@@ -170,15 +184,26 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
             </p>
           </div>
         </div>
+
+        {/* Animated border on drag */}
+        <AnimatePresence>
+          {isDragging && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 rounded-2xl glow-accent-sm pointer-events-none"
+            />
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Buttons OUTSIDE the drop zone */}
       <div className="flex justify-center gap-2">
         <Button
           type="button"
           variant="outline"
           onClick={handleBrowseClick}
-          className="gap-2"
+          className="gap-2 rounded-xl"
         >
           <Upload className="h-4 w-4" />
           Browse Files
@@ -187,7 +212,7 @@ export function ImageUploadZone({ value, onChange, error }: ImageUploadZoneProps
           type="button"
           variant="outline"
           onClick={handleCameraClick}
-          className="gap-2"
+          className="gap-2 rounded-xl"
         >
           <Camera className="h-4 w-4" />
           Take Photo

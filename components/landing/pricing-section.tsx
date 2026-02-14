@@ -10,7 +10,7 @@ const plans = [
   {
     name: "Starter",
     price: "Free",
-    description: "Perfect for trying out AI Agronomist",
+    description: "Perfect for trying out Crop Copilot",
     features: [
       "3 soil test analyses per month",
       "Basic crop recommendations",
@@ -58,69 +58,70 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-20 lg:py-28 bg-gray-50">
+    <section id="pricing" className="py-20 lg:py-28 bg-earth-950 topo-pattern relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <MotionDiv className="text-center mb-16">
-          <span className="inline-block px-4 py-1.5 bg-[#76C043]/10 text-[#2C5F2D] rounded-full text-sm font-medium mb-4">
+          <span className="inline-block glass rounded-full px-4 py-1.5 text-lime-400 text-sm font-medium mb-4">
             Pricing
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-            Simple, Transparent Pricing
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+            Simple, Transparent{" "}
+            <span className="font-serif italic text-gradient">Pricing</span>
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-white/50 max-w-2xl mx-auto">
             Start free and upgrade as your operation grows. No hidden fees.
           </p>
         </MotionDiv>
 
-        <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-6">
+        <MotionStagger className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-5">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
               variants={staggerItem}
-              className={`relative bg-white rounded-2xl p-8 ${
+              className={`relative rounded-2xl p-8 transition-all duration-300 ${
                 plan.popular
-                  ? "border-2 border-hero-accent shadow-xl scale-105"
-                  : "border border-gray-200 shadow-sm"
+                  ? "glass border-lime-400/30 shadow-xl shadow-lime-400/5 scale-[1.02] lg:scale-105"
+                  : "glass border-white/10 hover:border-white/20"
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-hero-accent text-white text-sm font-medium px-4 py-1 rounded-full shadow-lg">
+                  <span className="bg-lime-400 text-earth-950 text-sm font-bold px-4 py-1 rounded-full shadow-lg glow-accent-sm">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="text-center mb-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-white mb-2">
                   {plan.name}
                 </h3>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-4xl font-bold text-white">
                     {plan.price}
                   </span>
                   {plan.period && (
-                    <span className="text-gray-500">{plan.period}</span>
+                    <span className="text-white/40">{plan.period}</span>
                   )}
                 </div>
-                <p className="text-gray-600 text-sm mt-2">{plan.description}</p>
+                <p className="text-white/50 text-sm mt-2">{plan.description}</p>
               </div>
 
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature, featureIndex) => (
                   <li key={featureIndex} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-hero-accent shrink-0 mt-0.5" />
-                    <span className="text-gray-700 text-sm">{feature}</span>
+                    <Check className="w-5 h-5 text-lime-400 shrink-0 mt-0.5" />
+                    <span className="text-white/70 text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <Button
                 asChild
-                className={`w-full ${
+                className={`w-full rounded-full font-semibold transition-all ${
                   plan.popular
-                    ? "bg-hero-accent hover:bg-hero-accent/90 text-white"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                    ? "bg-lime-400 hover:bg-lime-300 text-earth-950 hover:scale-[1.02] glow-accent-sm"
+                    : "bg-white/10 hover:bg-white/15 text-white border border-white/10"
                 }`}
               >
                 <Link href={plan.href}>{plan.cta}</Link>

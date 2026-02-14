@@ -1,5 +1,6 @@
+"use client";
+
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 import { Camera, ClipboardList, History } from "lucide-react";
 
 const actions = [
@@ -8,21 +9,21 @@ const actions = [
     description: "Upload a photo or enter lab data",
     icon: Camera,
     href: "/diagnose",
-    color: "bg-green-100 text-green-700",
+    primary: true,
   },
   {
     title: "View Results",
     description: "See your recommendations",
     icon: ClipboardList,
     href: "/recommendations",
-    color: "bg-blue-100 text-blue-700",
+    primary: false,
   },
   {
     title: "History",
     description: "Browse past diagnoses",
     icon: History,
     href: "/history",
-    color: "bg-amber-100 text-amber-700",
+    primary: false,
   },
 ];
 
@@ -31,18 +32,44 @@ export function QuickActions() {
     <div>
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {actions.map((action) => (
-          <Link key={action.href} href={action.href}>
-            <Card className="h-full transition-all hover:shadow-md hover:border-gray-300 cursor-pointer">
-              <CardContent className="p-4">
-                <div className={`inline-flex p-2.5 rounded-lg ${action.color} mb-3`}>
-                  <action.icon className="w-5 h-5" />
+        {actions.map((action, i) => (
+          <div
+            key={action.href}
+            className="animate-in fade-in slide-in-from-bottom-2"
+            style={{ animationDelay: `${i * 100}ms`, animationFillMode: "backwards" }}
+          >
+            <Link href={action.href}>
+              <div
+                className={`group h-full rounded-2xl p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${
+                  action.primary
+                    ? "bg-lime-400/10 border border-lime-400/20 hover:border-lime-400/40 hover:shadow-lime-400/10"
+                    : "bg-cream-100 border border-gray-200/60 hover:border-gray-300 hover:shadow-gray-200/50"
+                }`}
+              >
+                <div
+                  className={`inline-flex p-2.5 rounded-xl mb-3 transition-colors ${
+                    action.primary
+                      ? "bg-lime-400/20 group-hover:bg-lime-400/30"
+                      : "bg-gray-100 group-hover:bg-gray-200"
+                  }`}
+                >
+                  <action.icon
+                    className={`w-5 h-5 ${
+                      action.primary ? "text-lime-400" : "text-gray-600"
+                    }`}
+                  />
                 </div>
-                <h3 className="font-medium text-gray-900 mb-1">{action.title}</h3>
+                <h3
+                  className={`font-medium mb-1 ${
+                    action.primary ? "text-earth-900" : "text-gray-900"
+                  }`}
+                >
+                  {action.title}
+                </h3>
                 <p className="text-sm text-gray-500">{action.description}</p>
-              </CardContent>
-            </Card>
-          </Link>
+              </div>
+            </Link>
+          </div>
         ))}
       </div>
     </div>

@@ -24,7 +24,7 @@ export interface SearchOptions {
   sourceBoosts?: Record<string, number>;
 }
 
-const DEFAULT_OPTIONS: Required<SearchOptions> = {
+const DEFAULT_OPTIONS = {
   candidateMultiplier: 4,
   minSimilarity: 0.2,
   keywordBoost: 0.08,
@@ -79,10 +79,20 @@ function extractKeywords(query: string): string[] {
   return Array.from(new Set(tokens)).slice(0, 10);
 }
 
+interface ResolvedSearchOptions {
+  candidateMultiplier: number;
+  minSimilarity: number;
+  keywordBoost: number;
+  crop?: string;
+  topics: string[];
+  region?: string;
+  sourceBoosts: Record<string, number>;
+}
+
 function applyKeywordBoost(
   results: SearchResult[],
   query: string,
-  options: Required<SearchOptions>
+  options: ResolvedSearchOptions
 ): SearchResult[] {
   const keywords = extractKeywords(query);
   const crop = options.crop?.toLowerCase();
