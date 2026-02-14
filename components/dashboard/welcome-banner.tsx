@@ -1,4 +1,8 @@
+"use client";
+
 import { format } from "date-fns";
+import { motion } from "framer-motion";
+import { Sprout } from "lucide-react";
 
 interface WelcomeBannerProps {
   userName?: string | null;
@@ -10,15 +14,37 @@ export function WelcomeBanner({ userName, location }: WelcomeBannerProps) {
   const formattedDate = format(new Date(), "EEEE, MMMM d, yyyy");
 
   return (
-    <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 text-white">
-      <h1 className="text-2xl font-bold mb-1">
-        {greeting}, {userName || "there"}!
-      </h1>
-      <p className="text-green-100 text-sm">
-        {formattedDate}
-        {location && <span className="ml-2">• {location}</span>}
-      </p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-earth-900 via-earth-800 to-earth-900 p-6 text-white border border-lime-400/10"
+    >
+      {/* Accent top border */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400/0 via-lime-400/60 to-lime-400/0" />
+
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-48 h-48 opacity-5">
+        <div className="w-full h-full rounded-full bg-lime-400 blur-3xl" />
+      </div>
+
+      <div className="relative flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">
+            {greeting},{" "}
+            <span className="text-gradient">{userName || "there"}</span>!
+          </h1>
+          <p className="text-white/40 text-sm">
+            {formattedDate}
+            {location && <span className="ml-2">&bull; {location}</span>}
+          </p>
+        </div>
+
+        <div className="hidden sm:flex items-center justify-center w-14 h-14 rounded-2xl bg-lime-400/10 border border-lime-400/20">
+          <Sprout className="w-7 h-7 text-lime-400 animate-float" />
+        </div>
+      </div>
+    </motion.div>
   );
 }
 

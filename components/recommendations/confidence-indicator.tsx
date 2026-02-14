@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   formatConfidence,
   getConfidenceLevel,
@@ -63,29 +64,70 @@ export function ConfidenceBar({ confidence }: ConfidenceBarProps) {
   const level = getConfidenceLevel(confidence);
 
   const barColors = {
-    low: "bg-amber-500",
-    medium: "bg-blue-500",
-    high: "bg-green-500",
+    low: "text-amber-500",
+    medium: "text-blue-500",
+    high: "text-lime-400",
   };
 
+  const strokeColors = {
+    low: "#f59e0b",
+    medium: "#3b82f6",
+    high: "#76C043",
+  };
+
+  const percentage = confidence * 100;
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
   return (
-    <div className="w-full">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-700">Confidence</span>
-        <span className="text-sm font-semibold text-gray-900">
-          {formatConfidence(confidence)}
-        </span>
+    <div className="flex items-center gap-4">
+      {/* Ring gauge */}
+      <div className="relative w-24 h-24 shrink-0">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+          {/* Background ring */}
+          <circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="6"
+            className="text-gray-200"
+          />
+          {/* Animated fill ring */}
+          <motion.circle
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            stroke={strokeColors[level]}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+          />
+        </svg>
+        {/* Center text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <motion.span
+            className={`text-lg font-bold ${barColors[level]}`}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, type: "spring" }}
+          >
+            {formatConfidence(confidence)}
+          </motion.span>
+        </div>
       </div>
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${barColors[level]} transition-all duration-300`}
-          style={{ width: `${confidence * 100}%` }}
-        />
-      </div>
-      <div className="flex justify-between mt-1 text-xs text-gray-500">
-        <span>50%</span>
-        <span>75%</span>
-        <span>95%</span>
+
+      <div>
+        <div className="text-sm font-medium text-gray-700">Confidence</div>
+        <div className={`text-sm font-semibold capitalize ${barColors[level]}`}>
+          {level}
+        </div>
       </div>
     </div>
   );
