@@ -1,0 +1,30 @@
+{
+  "name": "tools",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test:ingestion": "tsx scripts/ingestion/test-ingestion.ts",
+    "eval": "tsx eval/eval-uat.ts",
+    "eval:rules-only": "tsx eval/eval-uat.ts --skip-llm",
+    "eval:summary": "tsx eval/eval-uat.ts --summary-only",
+    "eval:loop": "tsx eval/run-feedback-loop.ts",
+    "eval:loop:dry": "tsx eval/run-feedback-loop.ts --dry-run",
+    "eval:loop:rules": "tsx eval/run-feedback-loop.ts --skip-llm",
+    "eval:seed": "tsx eval/seed-scenarios.ts"
+  },
+  "devDependencies": {
+    "@dqbd/tiktoken": "^1.0.22",
+    "@mozilla/readability": "^0.6.0",
+    "@types/jsdom": "^27.0.0",
+    "@types/pdf-parse": "^1.1.5",
+    "cheerio": "^1.1.2",
+    "commander": "^14.0.2",
+    "jsdom": "^27.4.0",
+    "pdf-parse": "^2.4.5",
+    "playwright": "^1.57.0",
+    "tiktoken": "^1.0.22",
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "uuid": "^13.0.0"
+  }
+}
