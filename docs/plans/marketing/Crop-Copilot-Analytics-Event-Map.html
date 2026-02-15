@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Copilot - Analytics Event Tracking Specification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-green: #2E7D32;
+            --dark-bg: #0f1419;
+            --sidebar-bg: #1a1f26;
+            --content-bg: #1e2329;
+            --border-color: #2a3038;
+            --text-light: #e0e0e0;
+            --text-muted: #9a9a9a;
+            --accent-green: #4caf50;
+            --success-green: #66bb6a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 24px 0;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 0 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title::before {
+            content: '🌾';
+            font-size: 20px;
+        }
+
+        .sidebar-search {
+            padding: 0 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 13px;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .nav-section {
+            margin-bottom: 8px;
+        }
+
+        .nav-section-title {
+            padding: 12px 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            padding: 10px 20px;
+            color: var(--text-light);
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(46, 125, 50, 0.1);
+            border-left-color: var(--primary-green);
+        }
+
+        .nav-item.active {
+            background-color: rgba(46, 125, 50, 0.15);
+            border-left-color: var(--accent-green);
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-container {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: var(--content-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+            color: var(--text-light);
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-green);
+        }
+
+        .btn-secondary {
+            background-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(46, 125, 50, 0.2);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subsection {
+            margin-bottom: 32px;
+        }
+
+        .subsection-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-light);
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: rgba(46, 125, 50, 0.1);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--accent-green);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        tr:hover {
+            background-color: rgba(46, 125, 50, 0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .event-name {
+            font-family: 'Monaco', 'Courier New', monospace;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .properties-list {
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Code Blocks */
+        .code-block-wrapper {
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .code-block-header {
+            padding: 12px 16px;
+            background-color: rgba(46, 125, 50, 0.08);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-block-language {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--accent-green);
+        }
+
+        .copy-btn.copied {
+            background-color: var(--success-green);
+        }
+
+        code {
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            margin: 0;
+        }
+
+        pre code {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        /* Collapsible Sections */
+        .collapsible {
+            cursor: pointer;
+            padding: 16px;
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .collapsible:hover {
+            background-color: rgba(46, 125, 50, 0.05);
+        }
+
+        .collapsible.active {
+            background-color: rgba(46, 125, 50, 0.1);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.active + .collapsible-content {
+            max-height: 3000px;
+        }
+
+        .collapsible-inner {
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .chevron {
+            display: inline-block;
+            transition: transform 0.3s;
+            color: var(--accent-green);
+        }
+
+        .collapsible.active .chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .metric-card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-card-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-green);
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .metric-card-description {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        /* Dashboard Preview */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-widget {
+            background-color: var(--content-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .widget-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-light);
+        }
+
+        .widget-type {
+            font-size: 11px;
+            color: var(--text-muted);
+            background-color: rgba(46, 125, 50, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .widget-preview {
+            height: 120px;
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(46, 125, 50, 0.05) 100%);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        /* Alert Section */
+        .alert {
+            background-color: rgba(46, 125, 50, 0.1);
+            border-left: 4px solid var(--primary-green);
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--accent-green);
+        }
+
+        .alert-description {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background-color: var(--content-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--primary-green);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .main-container {
+                margin-left: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                width: 200px;
+                height: auto;
+                max-height: calc(100vh - 60px);
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                z-index: 999;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-container {
+                margin-left: 0;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: rgba(46, 125, 50, 0.2);
+            color: var(--accent-green);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Crop Copilot Analytics</div>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" class="search-input" id="eventSearch" placeholder="Search events...">
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Specification</div>
+            <div class="nav-item active" data-section="taxonomy">📊 Event Taxonomy</div>
+            <div class="nav-item" data-section="implementation">💻 Implementation Code</div>
+            <div class="nav-item" data-section="dashboards">📈 Dashboard Configs</div>
+            <div class="nav-item" data-section="alerts">🚨 Alert Thresholds</div>
+            <div class="nav-item" data-section="metrics">📐 Computed Metrics</div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Event Categories</div>
+            <div class="nav-item" data-category="Acquisition">🎯 Acquisition</div>
+            <div class="nav-item" data-category="Diagnosis">🔬 Diagnosis</div>
+            <div class="nav-item" data-category="Conversion">💰 Conversion</div>
+            <div class="nav-item" data-category="Engagement">👥 Engagement</div>
+            <div class="nav-item" data-category="Revenue">💳 Revenue</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="header">
+            <div class="header-title">
+                <h1>Analytics Event Tracking Specification</h1>
+                <div class="header-subtitle">Crop Copilot - Product Analytics Blueprint</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="exportBtn">📥 Export Spec</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- SECTION 1: Event Taxonomy -->
+            <section id="taxonomy" class="section active">
+                <div class="section-title">
+                    <span>📊 Event Taxonomy</span>
+                </div>
+
+                <!-- Acquisition Events -->
+                <div class="subsection">
+                    <div class="subsection-title">Acquisition Events</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event Name</th>
+                                    <th>Description</th>
+                                    <th>Key Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="event-name">page_view</span></td>
+                                    <td>User visits any page in the application</td>
+                                    <td><span class="properties-list">page, referrer, utm_source, utm_medium, utm_campaign</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">signup_started</span></td>
+                                    <td>User initiates signup process</td>
+                                    <td><span class="properties-list">source, method (email|google|facebook)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">signup_completed</span></td>
+                                    <td>User successfully completes signup</td>
+                                    <td><span class="properties-list">source, method, referrer</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">login</span></td>
+                                    <td>User logs into account</td>
+                                    <td><span class="properties-list">method (email|google|facebook)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Diagnosis Events -->
+                <div class="subsection">
+                    <div class="subsection-title">Diagnosis Events</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event Name</th>
+                                    <th>Description</th>
+                                    <th>Key Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="event-name">diagnosis_started</span></td>
+                                    <td>User begins new diagnosis process</td>
+                                    <td><span class="properties-list">input_type (photo|lab|hybrid), crop, state, source_page</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">photo_uploaded</span></td>
+                                    <td>User uploads crop photo for analysis</td>
+                                    <td><span class="properties-list">file_size, camera_vs_upload (camera|upload)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">lab_data_entered</span></td>
+                                    <td>User enters lab test results manually</td>
+                                    <td><span class="properties-list">fields_count, crop</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">diagnosis_completed</span></td>
+                                    <td>Diagnosis analysis finishes successfully</td>
+                                    <td><span class="properties-list">input_type, crop, state, confidence_score, processing_time_ms, diagnosis_category</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">diagnosis_viewed</span></td>
+                                    <td>User views completed diagnosis results</td>
+                                    <td><span class="properties-list">diagnosis_id, time_on_page</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">source_citation_clicked</span></td>
+                                    <td>User clicks source citation from diagnosis</td>
+                                    <td><span class="properties-list">source_type, source_url, diagnosis_id</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">product_recommendation_viewed</span></td>
+                                    <td>User views recommended product in diagnosis</td>
+                                    <td><span class="properties-list">product_id, diagnosis_id</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">product_link_clicked</span></td>
+                                    <td>User clicks to purchase recommended product</td>
+                                    <td><span class="properties-list">product_id, retailer, price</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Conversion Events -->
+                <div class="subsection">
+                    <div class="subsection-title">Conversion Events</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event Name</th>
+                                    <th>Description</th>
+                                    <th>Key Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="event-name">free_limit_reached</span></td>
+                                    <td>User exhausts free diagnosis quota</td>
+                                    <td><span class="properties-list">diagnoses_used, days_since_signup</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">upgrade_prompt_shown</span></td>
+                                    <td>Upgrade promotion displayed to user</td>
+                                    <td><span class="properties-list">prompt_type (limit|feature|seasonal), location</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">upgrade_started</span></td>
+                                    <td>User begins upgrade checkout flow</td>
+                                    <td><span class="properties-list">plan, source</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">upgrade_completed</span></td>
+                                    <td>User successfully upgrades to paid plan</td>
+                                    <td><span class="properties-list">plan, price, billing_cycle (monthly|annual), promo_code</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">downgrade_initiated</span></td>
+                                    <td>User starts downgrade process</td>
+                                    <td><span class="properties-list">from_plan, reason</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">subscription_cancelled</span></td>
+                                    <td>User cancels active subscription</td>
+                                    <td><span class="properties-list">plan, tenure_months, reason</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Engagement Events -->
+                <div class="subsection">
+                    <div class="subsection-title">Engagement Events</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event Name</th>
+                                    <th>Description</th>
+                                    <th>Key Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="event-name">feedback_submitted</span></td>
+                                    <td>User provides feedback on diagnosis results</td>
+                                    <td><span class="properties-list">diagnosis_id, rating (1-5), has_comment (boolean)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">seasonal_alert_opened</span></td>
+                                    <td>User opens seasonal/regional alert notification</td>
+                                    <td><span class="properties-list">alert_type, crop, region</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">content_viewed</span></td>
+                                    <td>User views educational content or guide</td>
+                                    <td><span class="properties-list">content_type (guide|article|tutorial), content_id, crop, region</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">search_performed</span></td>
+                                    <td>User performs search within app</td>
+                                    <td><span class="properties-list">query, results_count</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">profile_updated</span></td>
+                                    <td>User updates account or profile settings</td>
+                                    <td><span class="properties-list">fields_changed (comma-separated field names)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Revenue Events -->
+                <div class="subsection">
+                    <div class="subsection-title">Revenue Events</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Event Name</th>
+                                    <th>Description</th>
+                                    <th>Key Properties</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="event-name">payment_succeeded</span></td>
+                                    <td>Payment transaction completes successfully</td>
+                                    <td><span class="properties-list">amount, plan, billing_cycle (monthly|annual)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">payment_failed</span></td>
+                                    <td>Payment transaction fails</td>
+                                    <td><span class="properties-list">amount, plan, error_type (insufficient_funds|expired_card|declined|network)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">trial_started</span></td>
+                                    <td>User starts free trial for a plan</td>
+                                    <td><span class="properties-list">plan, trial_duration_days</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">trial_converted</span></td>
+                                    <td>Trial user converts to paid subscription</td>
+                                    <td><span class="properties-list">plan, trial_duration_days_used</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="event-name">trial_expired</span></td>
+                                    <td>Trial period ends without conversion</td>
+                                    <td><span class="properties-list">plan, trial_duration_days_used</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Implementation Code -->
+            <section id="implementation" class="section">
+                <div class="section-title">
+                    <span>💻 Implementation Code Snippets</span>
+                </div>
+
+                <p style="margin-bottom: 24px; color: var(--text-muted); font-size: 14px;">
+                    Copy-paste ready code for integrating each event into your tracking infrastructure. 
+                    PostHog is the recommended primary solution for product analytics at Crop Copilot.
+                </p>
+
+                <!-- Acquisition Events Code -->
+                <div class="subsection">
+                    <div class="subsection-title">Acquisition Events</div>
+
+                    <!-- page_view -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">page_view</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Track page navigation</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'page_view_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="page_view_posthog">// PostHog
+posthog.capture('page_view', {
+  page: window.location.pathname,
+  referrer: document.referrer,
+  utm_source: new URLSearchParams(window.location.search).get('utm_source'),
+  utm_medium: new URLSearchParams(window.location.search).get('utm_medium'),
+  utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign')
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'page_view_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="page_view_mixpanel">// Mixpanel
+mixpanel.track('page_view', {
+  'page': window.location.pathname,
+  'referrer': document.referrer,
+  'utm_source': new URLSearchParams(window.location.search).get('utm_source'),
+  'utm_medium': new URLSearchParams(window.location.search).get('utm_medium'),
+  'utm_campaign': new URLSearchParams(window.location.search).get('utm_campaign')
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'page_view_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="page_view_ga4">// Google Analytics 4
+gtag('event', 'page_view', {
+  'page_path': window.location.pathname,
+  'page_referrer': document.referrer,
+  'utm_source': new URLSearchParams(window.location.search).get('utm_source'),
+  'utm_medium': new URLSearchParams(window.location.search).get('utm_medium'),
+  'utm_campaign': new URLSearchParams(window.location.search).get('utm_campaign')
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- signup_started -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">signup_started</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">User initiates signup</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'signup_started_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="signup_started_posthog">// PostHog
+posthog.capture('signup_started', {
+  source: 'landing_page', // or 'in_app', 'email', etc.
+  method: 'email' // or 'google', 'facebook'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'signup_started_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="signup_started_mixpanel">// Mixpanel
+mixpanel.track('signup_started', {
+  'source': 'landing_page',
+  'method': 'email'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'signup_started_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="signup_started_ga4">// Google Analytics 4
+gtag('event', 'signup_started', {
+  'signup_source': 'landing_page',
+  'signup_method': 'email'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- signup_completed -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">signup_completed</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Signup process successful</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'signup_completed_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="signup_completed_posthog">// PostHog
+posthog.capture('signup_completed', {
+  source: 'landing_page',
+  method: 'email',
+  referrer: document.referrer,
+  timestamp: new Date().toISOString()
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'signup_completed_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="signup_completed_mixpanel">// Mixpanel
+mixpanel.track('signup_completed', {
+  'source': 'landing_page',
+  'method': 'email',
+  'referrer': document.referrer
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'signup_completed_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="signup_completed_ga4">// Google Analytics 4
+gtag('event', 'sign_up', {
+  'signup_source': 'landing_page',
+  'signup_method': 'email'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- login -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">login</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">User authentication event</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'login_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="login_posthog">// PostHog
+posthog.capture('login', {
+  method: 'email' // or 'google', 'facebook'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'login_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="login_mixpanel">// Mixpanel
+mixpanel.track('login', {
+  'method': 'email'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'login_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="login_ga4">// Google Analytics 4
+gtag('event', 'login', {
+  'login_method': 'email'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagnosis Events Code -->
+                <div class="subsection">
+                    <div class="subsection-title">Diagnosis Events</div>
+
+                    <!-- diagnosis_started -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">diagnosis_started</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Begin diagnosis process</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'diagnosis_started_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="diagnosis_started_posthog">// PostHog
+posthog.capture('diagnosis_started', {
+  input_type: 'photo', // or 'lab', 'hybrid'
+  crop: 'corn',
+  state: 'iowa',
+  source_page: 'dashboard', // or 'landing', 'app_home', etc.
+  timestamp: new Date().toISOString()
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'diagnosis_started_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="diagnosis_started_mixpanel">// Mixpanel
+mixpanel.track('diagnosis_started', {
+  'input_type': 'photo',
+  'crop': 'corn',
+  'state': 'iowa',
+  'source_page': 'dashboard'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'diagnosis_started_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="diagnosis_started_ga4">// Google Analytics 4
+gtag('event', 'diagnosis_started', {
+  'input_type': 'photo',
+  'crop': 'corn',
+  'state': 'iowa'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- photo_uploaded -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">photo_uploaded</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Photo submission tracking</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'photo_uploaded_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="photo_uploaded_posthog">// PostHog
+posthog.capture('photo_uploaded', {
+  file_size: 2048576, // in bytes
+  camera_vs_upload: 'camera' // or 'upload'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'photo_uploaded_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="photo_uploaded_mixpanel">// Mixpanel
+mixpanel.track('photo_uploaded', {
+  'file_size_kb': 2048.576,
+  'source': 'camera'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'photo_uploaded_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="photo_uploaded_ga4">// Google Analytics 4
+gtag('event', 'photo_uploaded', {
+  'file_size': 2048576,
+  'source': 'camera'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- diagnosis_completed -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">diagnosis_completed</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Diagnosis results ready</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'diagnosis_completed_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="diagnosis_completed_posthog">// PostHog
+posthog.capture('diagnosis_completed', {
+  input_type: 'photo',
+  crop: 'corn',
+  state: 'iowa',
+  confidence_score: 0.92,
+  processing_time_ms: 1200,
+  diagnosis_category: 'nutrient_deficiency' // or 'disease', 'pest', 'stress'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'diagnosis_completed_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="diagnosis_completed_mixpanel">// Mixpanel
+mixpanel.track('diagnosis_completed', {
+  'input_type': 'photo',
+  'crop': 'corn',
+  'state': 'iowa',
+  'confidence_score': 0.92,
+  'processing_time_ms': 1200,
+  'diagnosis_category': 'nutrient_deficiency'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'diagnosis_completed_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="diagnosis_completed_ga4">// Google Analytics 4
+gtag('event', 'diagnosis_completed', {
+  'crop': 'corn',
+  'confidence_score': 0.92,
+  'processing_time_ms': 1200,
+  'diagnosis_category': 'nutrient_deficiency'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- product_link_clicked -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">product_link_clicked</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Product recommendation engagement</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'product_link_clicked_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="product_link_clicked_posthog">// PostHog
+posthog.capture('product_link_clicked', {
+  product_id: 'PROD_12345',
+  product_name: 'Nitrogen Fertilizer XYZ',
+  retailer: 'Amazon',
+  price: 45.99
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'product_link_clicked_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="product_link_clicked_mixpanel">// Mixpanel
+mixpanel.track('product_link_clicked', {
+  'product_id': 'PROD_12345',
+  'product_name': 'Nitrogen Fertilizer XYZ',
+  'retailer': 'Amazon',
+  'price': 45.99
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'product_link_clicked_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="product_link_clicked_ga4">// Google Analytics 4
+gtag('event', 'view_item', {
+  'items': [{
+    'item_id': 'PROD_12345',
+    'item_name': 'Nitrogen Fertilizer XYZ',
+    'price': 45.99
+  }]
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversion Events Code -->
+                <div class="subsection">
+                    <div class="subsection-title">Conversion Events</div>
+
+                    <!-- upgrade_completed -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">upgrade_completed</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Critical revenue event</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'upgrade_completed_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="upgrade_completed_posthog">// PostHog
+posthog.capture('upgrade_completed', {
+  plan: 'pro', // or 'premium', 'enterprise'
+  price: 9.99,
+  billing_cycle: 'monthly', // or 'annual'
+  promo_code: 'SPRING20' // optional
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'upgrade_completed_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="upgrade_completed_mixpanel">// Mixpanel
+mixpanel.track('upgrade_completed', {
+  'plan': 'pro',
+  'price': 9.99,
+  'billing_cycle': 'monthly',
+  'revenue': 9.99
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'upgrade_completed_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="upgrade_completed_ga4">// Google Analytics 4
+gtag('event', 'purchase', {
+  'transaction_id': 'TXN_12345',
+  'value': 9.99,
+  'currency': 'USD',
+  'items': [{
+    'item_name': 'Pro Plan',
+    'price': 9.99
+  }]
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- free_limit_reached -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">free_limit_reached</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Conversion trigger</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'free_limit_reached_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="free_limit_reached_posthog">// PostHog
+posthog.capture('free_limit_reached', {
+  diagnoses_used: 5, // free tier limit
+  days_since_signup: 12
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'free_limit_reached_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="free_limit_reached_mixpanel">// Mixpanel
+mixpanel.track('free_limit_reached', {
+  'diagnoses_used': 5,
+  'days_since_signup': 12
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'free_limit_reached_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="free_limit_reached_ga4">// Google Analytics 4
+gtag('event', 'free_limit_reached', {
+  'diagnoses_used': 5,
+  'days_since_signup': 12
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Events Code -->
+                <div class="subsection">
+                    <div class="subsection-title">Revenue Events</div>
+
+                    <!-- payment_succeeded -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">payment_succeeded</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Payment processing</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'payment_succeeded_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="payment_succeeded_posthog">// PostHog
+posthog.capture('payment_succeeded', {
+  amount: 9.99,
+  plan: 'pro',
+  billing_cycle: 'monthly',
+  transaction_id: 'TXN_12345'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'payment_succeeded_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="payment_succeeded_mixpanel">// Mixpanel
+mixpanel.track('payment_succeeded', {
+  'amount': 9.99,
+  'plan': 'pro',
+  'billing_cycle': 'monthly',
+  'transaction_id': 'TXN_12345'
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'payment_succeeded_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="payment_succeeded_ga4">// Google Analytics 4
+gtag('event', 'purchase', {
+  'transaction_id': 'TXN_12345',
+  'value': 9.99,
+  'currency': 'USD'
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- trial_started -->
+                    <div class="collapsible" onclick="this.classList.toggle('active')">
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <code style="color: var(--accent-green); font-size: 14px;">trial_started</code>
+                            <span style="margin-left: auto; color: var(--text-muted); font-size: 12px; font-weight: 400;">Free trial activation</span>
+                        </div>
+                        <span class="chevron">▼</span>
+                    </div>
+                    <div class="collapsible-content">
+                        <div class="collapsible-inner">
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">PostHog (Recommended)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'trial_started_posthog')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="trial_started_posthog">// PostHog
+posthog.capture('trial_started', {
+  plan: 'pro',
+  trial_duration_days: 14
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Mixpanel (Alternative)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'trial_started_mixpanel')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="trial_started_mixpanel">// Mixpanel
+mixpanel.track('trial_started', {
+  'plan': 'pro',
+  'trial_duration_days': 14
+});</code></pre>
+                            </div>
+
+                            <div class="code-block-wrapper">
+                                <div class="code-block-header">
+                                    <span class="code-block-language">Google Analytics 4 (Supplementary)</span>
+                                    <button class="copy-btn" onclick="copyCode(this, 'trial_started_ga4')">Copy</button>
+                                </div>
+                                <pre><code class="language-javascript" id="trial_started_ga4">// Google Analytics 4
+gtag('event', 'begin_trial', {
+  'plan': 'pro',
+  'trial_duration_days': 14
+});</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Integration Best Practices</div>
+                    <div class="alert-description">
+                        • Always capture events server-side for mission-critical events (payments, signups)<br>
+                        • Use timestamps consistently across all tracking implementations<br>
+                        • Sanitize user-provided data before tracking<br>
+                        • Implement rate limiting for high-frequency events<br>
+                        • Test events thoroughly in development before deploying to production<br>
+                        • Use distinct_id or user_id consistently for user identity
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: Dashboard Configurations -->
+            <section id="dashboards" class="section">
+                <div class="section-title">
+                    <span>📈 Dashboard Configurations</span>
+                </div>
+
+                <p style="margin-bottom: 24px; color: var(--text-muted); font-size: 14px;">
+                    Three specialized dashboards designed for different stakeholder needs. Each widget includes specific metric definitions and refresh intervals.
+                </p>
+
+                <!-- Weekly Operations Dashboard -->
+                <div class="subsection">
+                    <div class="subsection-title">Weekly Operations Dashboard</div>
+                    <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 13px;">
+                        Refresh interval: Every 4 hours | Audience: Product & Operations Teams
+                    </p>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Line Chart</span>
+                            <div class="widget-title">New Sign-ups (7-day trend)</div>
+                            <div class="widget-preview">📊 Trend visualization</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(signup_completed)<br>
+                                <strong>Dimensions:</strong> Day<br>
+                                <strong>Filter:</strong> Last 7 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Bar Chart</span>
+                            <div class="widget-title">Diagnoses Run (by day)</div>
+                            <div class="widget-preview">📈 Daily volume</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(diagnosis_completed)<br>
+                                <strong>Dimensions:</strong> Day<br>
+                                <strong>Filter:</strong> Last 7 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Single Number</span>
+                            <div class="widget-title">Free→Paid Conversion Rate</div>
+                            <div class="widget-preview">7.2% ↑ +0.4%</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(upgrade_completed) / COUNT(signup_completed)<br>
+                                <strong>Filter:</strong> Last 7 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Horizontal Bar</span>
+                            <div class="widget-title">Top 5 Crops Diagnosed</div>
+                            <div class="widget-preview">🌽 Corn, 🌾 Wheat, ...</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(diagnosis_completed)<br>
+                                <strong>Dimensions:</strong> crop<br>
+                                <strong>Limit:</strong> Top 5
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Horizontal Bar</span>
+                            <div class="widget-title">Top 5 States</div>
+                            <div class="widget-preview">🗺️ Geographic distribution</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(diagnosis_completed)<br>
+                                <strong>Dimensions:</strong> state<br>
+                                <strong>Limit:</strong> Top 5
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Dual Axis</span>
+                            <div class="widget-title">Ad Spend vs Sign-ups</div>
+                            <div class="widget-preview">💵 📊 Correlation</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Left Axis:</strong> Ad spend (external source)<br>
+                                <strong>Right Axis:</strong> COUNT(signup_completed)<br>
+                                <strong>Filter:</strong> Last 7 days
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Executive Dashboard -->
+                <div class="subsection">
+                    <div class="subsection-title">Monthly Executive Dashboard</div>
+                    <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 13px;">
+                        Refresh interval: Daily | Audience: C-suite, Board, Finance
+                    </p>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Line + Area</span>
+                            <div class="widget-title">MRR & Growth Rate</div>
+                            <div class="widget-preview">💰 Revenue trend</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> SUM(amount) WHERE event='payment_succeeded'<br>
+                                <strong>Dimensions:</strong> Month<br>
+                                <strong>Growth Rate:</strong> MoM %
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Gauge</span>
+                            <div class="widget-title">LTV:CAC Ratio</div>
+                            <div class="widget-preview">3.2 (Good)</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> LTV / CAC<br>
+                                <strong>Benchmark:</strong> > 3.0<br>
+                                <strong>Color Zones:</strong> <span class="tag">Good > 3</span> <span class="tag">Caution 2-3</span>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Stacked Bar</span>
+                            <div class="widget-title">Churn Rate by Plan</div>
+                            <div class="widget-preview">📊 Plan comparison</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(subscription_cancelled) / COUNT(active_subscriptions)<br>
+                                <strong>Dimensions:</strong> plan<br>
+                                <strong>Filter:</strong> Last 30 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Map / Bar</span>
+                            <div class="widget-title">Revenue by Territory</div>
+                            <div class="widget-preview">🗺️ Geographic revenue</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> SUM(amount) GROUP BY state<br>
+                                <strong>Filter:</strong> Last 30 days<br>
+                                <strong>Viz:</strong> Choropleth map of USA
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Funnel</span>
+                            <div class="widget-title">Conversion Funnel</div>
+                            <div class="widget-preview">Visit → Signup → Diag → Paid</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Steps:</strong><br>
+                                1. page_view<br>
+                                2. signup_completed<br>
+                                3. diagnosis_completed<br>
+                                4. upgrade_completed
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Table</span>
+                            <div class="widget-title">Experiment Results</div>
+                            <div class="widget-preview">📊 A/B test summary</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Columns:</strong> Experiment, Variant, Conversion %, Uplift, Confidence<br>
+                                <strong>Filter:</strong> Active & recent experiments
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Health Dashboard -->
+                <div class="subsection">
+                    <div class="subsection-title">Product Health Dashboard</div>
+                    <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 13px;">
+                        Refresh interval: Every 1 hour | Audience: Product, Engineering, Data Teams
+                    </p>
+                    <div class="dashboard-grid">
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Pie Chart</span>
+                            <div class="widget-title">Diagnosis Volume by Input Type</div>
+                            <div class="widget-preview">📸 Photo / 🧪 Lab / 🔗 Hybrid</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(diagnosis_completed)<br>
+                                <strong>Dimensions:</strong> input_type<br>
+                                <strong>Filter:</strong> Last 30 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Line</span>
+                            <div class="widget-title">Average Confidence Score Trend</div>
+                            <div class="widget-preview">85% ↑ +2%</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> AVG(confidence_score)<br>
+                                <strong>Dimensions:</strong> Day<br>
+                                <strong>Filter:</strong> Last 30 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Line</span>
+                            <div class="widget-title">Processing Time P50/P95</div>
+                            <div class="widget-preview">⏱️ Performance metrics</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metrics:</strong> PERCENTILE(processing_time_ms, 50) & PERCENTILE(processing_time_ms, 95)<br>
+                                <strong>Dimensions:</strong> Day<br>
+                                <strong>SLA:</strong> P50 < 2s, P95 < 5s
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Line</span>
+                            <div class="widget-title">Citation Click-Through Rate</div>
+                            <div class="widget-preview">12.5% ↓ -1%</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(source_citation_clicked) / COUNT(diagnosis_viewed)<br>
+                                <strong>Dimensions:</strong> Day<br>
+                                <strong>Filter:</strong> Last 30 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Bar</span>
+                            <div class="widget-title">Product Link Click Rate</div>
+                            <div class="widget-preview">18% engagement</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(product_link_clicked) / COUNT(product_recommendation_viewed)<br>
+                                <strong>Dimensions:</strong> Day, product category<br>
+                                <strong>Filter:</strong> Last 30 days
+                            </div>
+                        </div>
+
+                        <div class="dashboard-widget">
+                            <span class="widget-type">Histogram</span>
+                            <div class="widget-title">Feedback Distribution</div>
+                            <div class="widget-preview">⭐ Rating distribution</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                                <strong>Metric:</strong> COUNT(feedback_submitted)<br>
+                                <strong>Dimensions:</strong> rating (1-5)<br>
+                                <strong>Filter:</strong> Last 30 days<br>
+                                <strong>Avg:</strong> Target > 4.0
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Alert Thresholds -->
+            <section id="alerts" class="section">
+                <div class="section-title">
+                    <span>🚨 Alert Thresholds & Automated Monitoring</span>
+                </div>
+
+                <p style="margin-bottom: 24px; color: var(--text-muted); font-size: 14px;">
+                    Automated alerts trigger when key metrics fall outside healthy ranges. Configure notifications in PostHog, Slack, or PagerDuty.
+                </p>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Free→Paid Conversion Drop</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Conversion rate drops below 6% for 7 consecutive days<br>
+                        <strong>Metric:</strong> COUNT(upgrade_completed) / COUNT(signup_completed)<br>
+                        <strong>Severity:</strong> 🔴 High<br>
+                        <strong>Action:</strong> Review pricing, onboarding flow, and feature access restrictions<br>
+                        <strong>Notification:</strong> Slack #alerts, PagerDuty
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Monthly Churn Exceeds Threshold</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Churn rate exceeds 6% in a calendar month<br>
+                        <strong>Metric:</strong> COUNT(subscription_cancelled) / COUNT(avg_active_subscriptions)<br>
+                        <strong>Severity:</strong> 🔴 High<br>
+                        <strong>Action:</strong> Trigger customer success outreach, review product issues<br>
+                        <strong>Notification:</strong> Slack #alerts, Email operations@
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Customer Acquisition Cost Exceeds Budget</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> CAC exceeds $60 (monthly rolling average)<br>
+                        <strong>Metric:</strong> (ad_spend + marketing_costs) / COUNT(upgrade_completed)<br>
+                        <strong>Severity:</strong> 🟡 Medium<br>
+                        <strong>Action:</strong> Review ad spend efficiency, adjust targeting<br>
+                        <strong>Notification:</strong> Slack #marketing, Email finance@
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Diagnosis Processing Time Degradation</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Average processing time exceeds 5 seconds<br>
+                        <strong>Metric:</strong> AVG(processing_time_ms) > 5000<br>
+                        <strong>Severity:</strong> 🟡 Medium<br>
+                        <strong>Action:</strong> Check API performance, database queries, model inference<br>
+                        <strong>Notification:</strong> Slack #engineering, PagerDuty (on-call)
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Payment Failure Rate Spike</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Payment failure rate exceeds 2%<br>
+                        <strong>Metric:</strong> COUNT(payment_failed) / (COUNT(payment_failed) + COUNT(payment_succeeded)) > 0.02<br>
+                        <strong>Severity:</strong> 🔴 High<br>
+                        <strong>Action:</strong> Check payment processor status, contact support<br>
+                        <strong>Notification:</strong> Slack #alerts, PagerDuty, Email ops@
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Signup Volume Drop</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Daily sign-ups drop below 50% of 7-day average<br>
+                        <strong>Metric:</strong> COUNT(signup_completed, today) < 0.5 * AVG(COUNT(signup_completed), last 7 days)<br>
+                        <strong>Severity:</strong> 🟡 Medium<br>
+                        <strong>Action:</strong> Check for site issues, review traffic sources<br>
+                        <strong>Notification:</strong> Slack #alerts, Email product@
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Feature Degradation (Diagnosis Confidence)</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Average confidence score drops below 75%<br>
+                        <strong>Metric:</strong> AVG(confidence_score) < 0.75 over last 24 hours<br>
+                        <strong>Severity:</strong> 🟡 Medium<br>
+                        <strong>Action:</strong> Review model performance, check for data quality issues<br>
+                        <strong>Notification:</strong> Slack #ml-team, PagerDuty
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <div class="alert-title">Alert: Trial Conversion Below Target</div>
+                    <div class="alert-description">
+                        <strong>Condition:</strong> Trial conversion rate drops below 30% (rolling 7 days)<br>
+                        <strong>Metric:</strong> COUNT(trial_converted) / COUNT(trial_started) < 0.30<br>
+                        <strong>Severity:</strong> 🟡 Medium<br>
+                        <strong>Action:</strong> Review trial experience, check onboarding flow<br>
+                        <strong>Notification:</strong> Slack #alerts, Email product@
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Computed Metrics -->
+            <section id="metrics" class="section">
+                <div class="section-title">
+                    <span>📐 Computed Metrics & Formulas</span>
+                </div>
+
+                <p style="margin-bottom: 24px; color: var(--text-muted); font-size: 14px;">
+                    Derived metrics calculated from raw events. Implement these as query definitions in PostHog or create as custom metrics in your BI tool.
+                </p>
+
+                <div class="subsection">
+                    <div class="subsection-title">Funnel & Conversion Metrics</div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Free-to-Paid Conversion Rate</div>
+                        <div class="metric-card-value">6.2%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(upgrade_completed) / COUNT(signup_completed)<br><br>
+                            <strong>Lookback Window:</strong> Last 30 days<br>
+                            <strong>Target:</strong> > 6%<br>
+                            <strong>Calculation:</strong> Case-insensitive event name matching
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Activation Rate (1+ Diagnosis in 7 Days)</div>
+                        <div class="metric-card-value">42%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(DISTINCT users where diagnosis_completed within 7 days of signup) / COUNT(signup_completed)<br><br>
+                            <strong>Lookback Window:</strong> Last 30 days<br>
+                            <strong>Target:</strong> > 40%<br>
+                            <strong>Note:</strong> Strongest indicator of product-market fit
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Aha Moment Velocity</div>
+                        <div class="metric-card-value">3.2 days</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            AVG(days between signup_completed and first diagnosis_completed)<br><br>
+                            <strong>Lookback Window:</strong> Last 30 days<br>
+                            <strong>Target:</strong> < 5 days<br>
+                            <strong>Action:</strong> If > 7 days, improve onboarding
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Paid User Retention (M1)</div>
+                        <div class="metric-card-value">94%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(active_subscriptions in month N) / COUNT(active_subscriptions in month N-1)<br><br>
+                            <strong>Lookback Window:</strong> Month-over-month<br>
+                            <strong>Target:</strong> > 92%<br>
+                            <strong>Calculation:</strong> Include users on all paid plans
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <div class="subsection-title">Revenue Metrics</div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Monthly Recurring Revenue (MRR)</div>
+                        <div class="metric-card-value">$42,500</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            SUM(subscription_value where status='active') for monthly billing<br>
+                            + (SUM(annual_plan_value) / 12 where status='active')<br><br>
+                            <strong>Frequency:</strong> Calculate daily<br>
+                            <strong>Includes:</strong> All active subscriptions<br>
+                            <strong>Excludes:</strong> One-time purchases, trials
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Customer Lifetime Value (LTV)</div>
+                        <div class="metric-card-value">$285</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            AVG(ARPU) × AVG(subscription_months)<br>
+                            = (Total Revenue / Total Customers) × (1 / Monthly Churn Rate)<br><br>
+                            <strong>ARPU:</strong> $45/month<br>
+                            <strong>Avg Lifetime:</strong> 6.3 months<br>
+                            <strong>Lookback:</strong> 90 days minimum
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Customer Acquisition Cost (CAC)</div>
+                        <div class="metric-card-value">$48</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            (Marketing Spend + Sales Team Costs) / COUNT(upgrade_completed)<br><br>
+                            <strong>Lookback:</strong> Monthly<br>
+                            <strong>Target:</strong> < $60<br>
+                            <strong>Note:</strong> Separate calculation for each channel (paid ads, organic, etc.)
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">LTV:CAC Ratio</div>
+                        <div class="metric-card-value">5.9x</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            Customer Lifetime Value / Customer Acquisition Cost<br><br>
+                            <strong>Target:</strong> > 3.0x<br>
+                            <strong>Healthy Range:</strong> 3-5x<br>
+                            <strong>Excellent:</strong> > 5x
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">CAC Payback Period</div>
+                        <div class="metric-card-value">1.1 months</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            CAC / (Monthly Revenue Per Customer)<br>
+                            = CAC / ARPU<br><br>
+                            <strong>Target:</strong> < 12 months<br>
+                            <strong>Excellent:</strong> < 3 months<br>
+                            <strong>Note:</strong> Faster payback = more efficient growth
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Average Revenue Per User (ARPU)</div>
+                        <div class="metric-card-value">$45.20</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            Total MRR / COUNT(DISTINCT active_subscription_users)<br><br>
+                            <strong>Frequency:</strong> Monthly<br>
+                            <strong>Usage:</strong> Benchmark against LTV calculations<br>
+                            <strong>Segmentation:</strong> Calculate separately by plan level
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <div class="subsection-title">Churn & Retention Metrics</div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Monthly Churn Rate</div>
+                        <div class="metric-card-value">5.2%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(subscription_cancelled in month N) / COUNT(active_subscriptions at start of month N)<br><br>
+                            <strong>Target:</strong> < 6%<br>
+                            <strong>Excellent:</strong> < 5%<br>
+                            <strong>Calculation:</strong> Net churn (accounts leaving) vs gross churn
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Expansion Revenue</div>
+                        <div class="metric-card-value">$8,400</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            SUM(upgrade_amount) for existing customers<br><br>
+                            <strong>Lookback:</strong> Monthly<br>
+                            <strong>Includes:</strong> Upgrades, add-ons, cross-sells<br>
+                            <strong>Target:</strong> > 15% of new revenue
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Net Revenue Retention (NRR)</div>
+                        <div class="metric-card-value">105%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            (MRR at end of period - Churn + Expansion) / MRR at start of period<br><br>
+                            <strong>Target:</strong> > 100% (indicates growth from existing customers)<br>
+                            <strong>Excellent:</strong> > 110%<br>
+                            <strong>Frequency:</strong> Monthly
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <div class="subsection-title">Product Quality Metrics</div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Diagnosis Confidence Score (Avg)</div>
+                        <div class="metric-card-value">0.847</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            AVG(confidence_score) WHERE confidence_score > 0<br><br>
+                            <strong>Lookback:</strong> Last 7 days (rolling)<br>
+                            <strong>Target:</strong> > 0.85<br>
+                            <strong>Segments:</strong> By crop type, input method
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Processing Time (P95)</div>
+                        <div class="metric-card-value">3.2s</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            PERCENTILE(processing_time_ms, 0.95)<br><br>
+                            <strong>Target:</strong> < 5 seconds<br>
+                            <strong>Frequency:</strong> Real-time monitoring<br>
+                            <strong>Segments:</strong> By input type (photo, lab, hybrid)
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Feedback Average Rating</div>
+                        <div class="metric-card-value">4.3/5.0</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            AVG(rating) WHERE rating > 0<br><br>
+                            <strong>Lookback:</strong> Last 30 days<br>
+                            <strong>Target:</strong> > 4.0<br>
+                            <strong>Engagement:</strong> % who submitted feedback
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Citation Click-Through Rate</div>
+                        <div class="metric-card-value">13.2%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(source_citation_clicked) / COUNT(diagnosis_viewed)<br><br>
+                            <strong>Lookback:</strong> Last 30 days<br>
+                            <strong>Target:</strong> > 10%<br>
+                            <strong>Note:</strong> Indicates user trust in sources
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Product Recommendation Click Rate</div>
+                        <div class="metric-card-value">18.5%</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(product_link_clicked) / COUNT(product_recommendation_viewed)<br><br>
+                            <strong>Lookback:</strong> Last 30 days<br>
+                            <strong>Target:</strong> > 15%<br>
+                            <strong>Revenue Impact:</strong> Track affiliate commission
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <div class="subsection-title">Engagement Metrics</div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Diagnosis Frequency (Weekly Active Users)</div>
+                        <div class="metric-card-value">2,847</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(DISTINCT users with >= 1 diagnosis_completed in last 7 days)<br><br>
+                            <strong>Frequency:</strong> Weekly<br>
+                            <strong>Target:</strong> > 70% of active subscription users<br>
+                            <strong>Segments:</strong> By plan level, region
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Time to First Diagnosis</div>
+                        <div class="metric-card-value">3.2 days</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            MEDIAN(days between signup_completed and first diagnosis_completed)<br><br>
+                            <strong>Lookback:</strong> Last 30 days<br>
+                            <strong>Target:</strong> < 5 days<br>
+                            <strong>Action:</strong> If high, improve onboarding UX
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-title">Avg Diagnoses Per User (Monthly)</div>
+                        <div class="metric-card-value">8.4</div>
+                        <div class="metric-card-description">
+                            <strong>Formula:</strong><br>
+                            COUNT(diagnosis_completed) / COUNT(DISTINCT active_users)<br><br>
+                            <strong>Lookback:</strong> Monthly<br>
+                            <strong>Target:</strong> > 6 (paid) | < 2 (free)<br>
+                            <strong>Segments:</strong> By plan level, crop type
+                        </div>
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <div class="subsection-title">Implementation Guide</div>
+                    <div class="alert">
+                        <div class="alert-title">Setting Up Computed Metrics</div>
+                        <div class="alert-description">
+                            <strong>PostHog Approach:</strong><br>
+                            1. Create insights for each metric above<br>
+                            2. Use formulas in dashboard widgets<br>
+                            3. Set up recurring calculations for expensive metrics<br><br>
+
+                            <strong>SQL Query Approach:</strong><br>
+                            1. Create materialized views for daily snapshots<br>
+                            2. Join events with user subscription tables<br>
+                            3. Schedule hourly/daily refreshes<br><br>
+
+                            <strong>BI Tool Approach (Looker/Mode):</strong><br>
+                            1. Create derived tables with base event queries<br>
+                            2. Build measures for aggregations<br>
+                            3. Design dashboards with filters for segmentation
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Initialize syntax highlighting
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+
+        // Navigation
+        document.querySelectorAll('[data-section]').forEach(item => {
+            item.addEventListener('click', function() {
+                const sectionId = this.dataset.section;
+                showSection(sectionId);
+                setActiveNav(this);
+            });
+        });
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function setActiveNav(element) {
+            document.querySelectorAll('[data-section]').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // Copy to clipboard
+        function copyCode(button, codeId) {
+            const codeElement = document.getElementById(codeId);
+            const text = codeElement.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                button.textContent = '✓ Copied';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Event search
+        document.getElementById('eventSearch').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.event-name, .collapsible').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    item.parentElement.style.display = '';
+                } else {
+                    item.parentElement.style.display = 'none';
+                }
+            });
+        });
+
+        // Export functionality
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            const html = document.documentElement.outerHTML;
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'crop-copilot-analytics-spec.html';
+            a.click();
+        });
+
+        // Category filtering
+        document.querySelectorAll('[data-category]').forEach(item => {
+            item.addEventListener('click', function() {
+                const category = this.dataset.category;
+                alert(`Filtering by ${category} category - implement specific table filtering`);
+            });
+        });
+    </script>
+</body>
+</html>
