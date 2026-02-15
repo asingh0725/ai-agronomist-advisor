@@ -309,3 +309,33 @@ export async function getRecommendation(
 
   return response;
 }
+
+/**
+ * Delete a recommendation
+ */
+export async function deleteRecommendation(
+  params: GetRecommendationParams
+): Promise<void> {
+  const { userId, id } = params;
+
+  // Find the recommendation
+  const recommendation = await prisma.recommendation.findUnique({
+    where: { id },
+    include: {
+      input: true,
+    },
+  });
+
+  if (!recommendation) {
+    throw new Error('Recommendation not found');
+  }
+
+  if (recommendation.input.userId !== userId) {
+    throw new Error('Forbidden: Recommendation does not belong to user');
+  }
+
+  // Delete the recommendation (cascade deletes sources and feedback)
+  await prisma.recommendation.delete({
+    where: { id },
+  });
+}

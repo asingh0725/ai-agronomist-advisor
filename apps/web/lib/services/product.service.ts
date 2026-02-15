@@ -319,3 +319,76 @@ export async function compareProducts(
     comparison,
   };
 }
+
+export interface GetBatchPricingParams {
+  productIds: string[];
+}
+
+export interface GetBatchPricingResult {
+  pricing: Array<{
+    productId: string;
+    productName: string;
+    brand: string;
+    pricing: {
+      currency: string;
+      retailPrice: number | null;
+      wholesalePrice: number | null;
+      unit: string | null;
+      availability: string | null;
+      lastUpdated: string | null;
+    };
+  }>;
+}
+
+/**
+ * Get batch pricing information for multiple products
+ */
+export async function getBatchPricing(
+  params: GetBatchPricingParams
+): Promise<GetBatchPricingResult> {
+  const { productIds } = params;
+
+  // Validate input
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    throw new Error('Please provide at least one product ID');
+  }
+
+  if (productIds.length > 50) {
+    throw new Error('Maximum 50 products allowed per batch request');
+  }
+
+  // Fetch products with metadata that may contain pricing
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: productIds },
+    },
+    select: {
+      id: true,
+      name: true,
+      brand: true,
+      metadata: true,
+    },
+  });
+
+  // Transform products into pricing format
+  const pricing = products.map((product) => {
+    const metadata = product.metadata as any || {};
+    const pricingData = metadata.pricing || {};
+
+    return {
+      productId: product.id,
+      productName: product.name,
+      brand: product.brand,
+      pricing: {
+        currency: pricingData.currency || 'USD',
+        retailPrice: pricingData.retailPrice || null,
+        wholesalePrice: pricingData.wholesalePrice || null,
+        unit: pricingData.unit || null,
+        availability: pricingData.availability || null,
+        lastUpdated: pricingData.lastUpdated || null,
+      },
+    };
+  });
+
+  return { pricing };
+}
