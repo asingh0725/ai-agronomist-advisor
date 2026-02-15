@@ -66,6 +66,7 @@
 		752D76CD1AC4BB52FBC4FAC1 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		80EB98051D053CA3F580C2C2 /* Fonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fonts.swift; sourceTree = "<group>"; };
 		88A9F3585BF1872F92BD3A8F /* APIEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIEndpoint.swift; sourceTree = "<group>"; };
+		A2E69AEA3D3720CE6431A125 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		A6483550149E5ABA75D82F9C /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		BADC17F0CE3F677D7A09FBA6 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		BC087263537FE66649F069F7 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -162,6 +163,14 @@
 			path = Network;
 			sourceTree = "<group>";
 		};
+		7276BD3AE5C2E5CF6E4A603E /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A2E69AEA3D3720CE6431A125 /* Secrets.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		76F066B071BC636AEB5D30A2 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
@@ -232,6 +241,7 @@
 		CA13E1A31CADCD9B40526A8D = {
 			isa = PBXGroup;
 			children = (
+				7276BD3AE5C2E5CF6E4A603E /* Config */,
 				8FD53C250BBB1D5ABC40860E /* CropCopilot */,
 				20E5E033BB2AC1FCCBA83741 /* CropCopilotTests */,
 				B0DEC4B68A55855FE80BC2F9 /* Products */,
@@ -462,6 +472,7 @@
 		};
 		E970363E09A9310CEACFB4C1 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A2E69AEA3D3720CE6431A125 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -550,6 +561,7 @@
 		};
 		FDEA51CA8131387C2A557B20 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A2E69AEA3D3720CE6431A125 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;

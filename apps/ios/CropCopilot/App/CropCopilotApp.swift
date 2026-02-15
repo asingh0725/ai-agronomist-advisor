@@ -37,9 +37,16 @@ struct CropCopilotApp: App {
 
 // MARK: - Configuration
 struct Configuration {
-    static let supabaseURL = ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? "https://your-project.supabase.co"
-    static let supabaseAnonKey = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"] ?? ""
-    static let apiBaseURL = ProcessInfo.processInfo.environment["API_BASE_URL"] ?? "http://localhost:3000/api/v1"
+    static let supabaseURL: String = {
+        Bundle.main.infoDictionary?["SUPABASE_URL"] as? String ?? "https://your-project.supabase.co"
+    }()
+    static let supabaseAnonKey: String = {
+        Bundle.main.infoDictionary?["SUPABASE_ANON_KEY"] as? String ?? ""
+    }()
+    static let apiBaseURL: String = {
+        Bundle.main.infoDictionary?["API_BASE_URL"] as? String ?? "http://localhost:3000/api/v1"
+    }()
+
 }
 
 // MARK: - Environment Key for Supabase Client

@@ -53,6 +53,9 @@ tools/data/testing/
 # OS files
 .DS_Store
 
+# iOS secrets
+apps/ios/Config/Secrets.xcconfig
+
 # Xcode
 apps/ios/DerivedData/
 apps/ios/**/*.xcuserdata

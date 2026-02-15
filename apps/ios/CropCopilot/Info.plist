@@ -56,6 +56,12 @@
 	<string>Crop Copilot uses your location to provide region-specific crop recommendations.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Crop Copilot uses Face ID to securely authenticate your account.</string>
+	<key>SUPABASE_URL</key>
+	<string>$(SUPABASE_URL)</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>$(SUPABASE_ANON_KEY)</string>
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

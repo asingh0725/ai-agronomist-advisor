@@ -6,6 +6,10 @@ options:
   xcodeVersion: "15.0"
   generateEmptyDirectories: true
 
+configFiles:
+  Debug: Config/Secrets.xcconfig
+  Release: Config/Secrets.xcconfig
+
 settings:
   base:
     SWIFT_VERSION: "5.9"
