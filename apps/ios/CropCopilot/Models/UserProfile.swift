@@ -30,15 +30,17 @@ struct UserProfile: Codable, Identifiable {
 }
 
 enum ExperienceLevel: String, Codable, CaseIterable {
-    case beginner = "BEGINNER"
-    case intermediate = "INTERMEDIATE"
-    case expert = "EXPERT"
+    case beginner = "beginner"
+    case intermediate = "intermediate"
+    case advanced = "advanced"
+    case professional = "professional"
 
     var displayName: String {
         switch self {
         case .beginner: return "Beginner"
         case .intermediate: return "Intermediate"
-        case .expert: return "Expert"
+        case .advanced: return "Advanced"
+        case .professional: return "Professional"
         }
     }
 }

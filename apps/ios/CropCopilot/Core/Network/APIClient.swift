@@ -37,7 +37,9 @@ class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         // Add auth header
-        await authInterceptor.addAuthHeader(to: &request)
+        if let token = await authInterceptor.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         // Encode body if present
         if let body = body {
@@ -109,7 +111,9 @@ class APIClient {
         request.httpMethod = "POST"
 
         // Add auth header
-        await authInterceptor.addAuthHeader(to: &request)
+        if let token = await authInterceptor.getAccessToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
 
         // Create multipart form data
         let boundary = UUID().uuidString
