@@ -1,0 +1,20 @@
+{
+  "name": "@crop-copilot/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm --filter @crop-copilot/contracts build && pnpm --filter @crop-copilot/domain build && tsc -p tsconfig.build.json",
+    "typecheck": "pnpm --filter @crop-copilot/contracts build && pnpm --filter @crop-copilot/domain build && tsc -p tsconfig.json",
+    "test": "pnpm --filter @crop-copilot/contracts build && pnpm --filter @crop-copilot/domain build && tsx --test src/**/*.test.ts"
+  },
+  "dependencies": {
+    "@crop-copilot/contracts": "workspace:*",
+    "@crop-copilot/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.150",
+    "@types/node": "^22.13.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.8.2"
+  }
+}
