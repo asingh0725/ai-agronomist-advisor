@@ -22,7 +22,7 @@ export interface SearchProductsResult {
   products: Array<{
     id: string;
     name: string;
-    brand: string;
+    brand: string | null;
     type: ProductType;
     analysis: any;
     applicationRate: string | null;
@@ -44,7 +44,7 @@ export interface GetProductParams {
 export interface GetProductResult {
   id: string;
   name: string;
-  brand: string;
+  brand: string | null;
   type: ProductType;
   analysis: any;
   applicationRate: string | null;
@@ -56,7 +56,7 @@ export interface GetProductResult {
   relatedProducts: Array<{
     id: string;
     name: string;
-    brand: string;
+    brand: string | null;
     type: ProductType;
     analysis: any;
     crops: string[];
@@ -72,7 +72,7 @@ export interface CompareProductsResult {
   products: Array<{
     id: string;
     name: string;
-    brand: string;
+    brand: string | null;
     type: ProductType;
     analysis: any;
     applicationRate: string | null;
@@ -328,7 +328,7 @@ export interface GetBatchPricingResult {
   pricing: Array<{
     productId: string;
     productName: string;
-    brand: string;
+    brand: string | null;
     pricing: {
       currency: string;
       retailPrice: number | null;

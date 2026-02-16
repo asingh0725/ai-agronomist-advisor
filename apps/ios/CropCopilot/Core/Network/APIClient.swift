@@ -130,7 +130,7 @@ class APIClient {
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+              (200...201).contains(httpResponse.statusCode) else {
             throw NetworkError.serverError(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 500)
         }
 

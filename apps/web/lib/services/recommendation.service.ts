@@ -68,7 +68,7 @@ export interface GetRecommendationResult {
     type: 'text' | 'image';
     content: string | null;
     imageUrl: string | null;
-    relevanceScore: number;
+    relevanceScore: number | null;
     source: {
       id: string;
       title: string;

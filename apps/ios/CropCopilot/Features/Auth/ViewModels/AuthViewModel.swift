@@ -27,6 +27,7 @@ class AuthViewModel: ObservableObject {
 
     func setRepository(_ repository: AuthRepository) {
         self.authRepository = repository
+        checkAuthStatus()
     }
 
     // MARK: - Check Auth Status

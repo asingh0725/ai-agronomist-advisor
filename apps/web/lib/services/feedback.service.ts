@@ -134,7 +134,13 @@ export async function submitFeedback(
     outcomeSuccess: validated.outcomeSuccess,
   });
 
-  return { success: true, feedback };
+  return {
+    success: true,
+    feedback: {
+      ...feedback,
+      issues: (feedback.issues as string[]) ?? [],
+    },
+  };
 }
 
 /**
@@ -149,5 +155,10 @@ export async function getFeedback(
     where: { recommendationId },
   });
 
-  return feedback;
+  if (!feedback) return null;
+
+  return {
+    ...feedback,
+    issues: (feedback.issues as string[]) ?? [],
+  };
 }
