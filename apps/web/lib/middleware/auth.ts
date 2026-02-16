@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { maybeProxyToAwsApi } from '@/lib/middleware/aws-cutover-proxy'
 import { NextRequest, NextResponse } from 'next/server'
 import { User } from '@supabase/supabase-js'
 
@@ -25,6 +26,11 @@ export type AuthHandler = (
 export function withAuth(handler: AuthHandler) {
   return async (request: NextRequest, context?: any) => {
     try {
+      const proxied = await maybeProxyToAwsApi(request)
+      if (proxied) {
+        return proxied
+      }
+
       // Check for Bearer token first (mobile clients)
       const authHeader = request.headers.get('Authorization')
 
@@ -75,6 +81,11 @@ export function withAuth(handler: AuthHandler) {
 export function withOptionalAuth(handler: AuthHandler) {
   return async (request: NextRequest, context?: any) => {
     try {
+      const proxied = await maybeProxyToAwsApi(request)
+      if (proxied) {
+        return proxied
+      }
+
       const authHeader = request.headers.get('Authorization')
 
       if (authHeader?.startsWith('Bearer ')) {
