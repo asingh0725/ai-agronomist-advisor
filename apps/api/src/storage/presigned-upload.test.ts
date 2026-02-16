@@ -8,7 +8,7 @@ test('createPresignedUploadUrl returns upload metadata with deterministic timest
   let observedContentLength: number | undefined;
 
   const response = await createPresignedUploadUrl(
-    '11111111-1111-1111-1111-111111111111',
+    '11111111-1111-4111-8111-111111111111',
     {
       fileName: 'leaf photo.jpg',
       contentType: 'image/jpeg',
@@ -26,7 +26,7 @@ test('createPresignedUploadUrl returns upload metadata with deterministic timest
 
   assert.equal(response.uploadUrl, 'https://example.com/upload-url');
   assert.equal(response.expiresInSeconds, 900);
-  assert.match(response.objectKey, /^11111111-1111-1111-1111-111111111111\/1700000000000-/);
+  assert.match(response.objectKey, /^11111111-1111-4111-8111-111111111111\/1700000000000-/);
   assert.match(response.objectKey, /leaf_photo.jpg$/);
   assert.equal(observedContentLength, 2048);
 });

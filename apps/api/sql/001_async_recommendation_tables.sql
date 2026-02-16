@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS app_recommendation_job (
   user_id UUID NOT NULL,
   status TEXT NOT NULL,
   failure_reason TEXT,
+  result_payload JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

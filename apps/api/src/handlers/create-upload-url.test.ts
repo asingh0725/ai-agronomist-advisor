@@ -18,12 +18,12 @@ test('create upload url handler returns signed url payload', async () => {
 
   const handler = buildCreateUploadUrlHandler(
     async () => ({
-      userId: '11111111-1111-1111-1111-111111111111',
+      userId: '11111111-1111-4111-8111-111111111111',
       scopes: ['upload:write'],
     }),
     async (_userId, _payload) => ({
       uploadUrl: 'https://example.com/upload',
-      objectKey: '11111111-1111-1111-1111-111111111111/object.jpg',
+      objectKey: '11111111-1111-4111-8111-111111111111/object.jpg',
       expiresInSeconds: 900,
     })
   );

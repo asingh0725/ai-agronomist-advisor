@@ -22,7 +22,19 @@ export const RecommendationReadyEventSchema = z.object({
   recommendationId: z.string().uuid(),
 });
 
+export const RecommendationJobRequestedSchema = z.object({
+  messageType: z.literal('recommendation.job.requested'),
+  messageVersion: z.literal('1'),
+  requestedAt: z.string().datetime(),
+  userId: z.string().uuid(),
+  inputId: z.string().uuid(),
+  jobId: z.string().uuid(),
+});
+
 export type RecommendationJobStatusChangedEvent = z.infer<
   typeof RecommendationJobStatusChangedEventSchema
 >;
 export type RecommendationReadyEvent = z.infer<typeof RecommendationReadyEventSchema>;
+export type RecommendationJobRequested = z.infer<
+  typeof RecommendationJobRequestedSchema
+>;

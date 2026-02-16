@@ -73,6 +73,7 @@ test('PostgresRecommendationStore returns existing job for idempotent retries', 
   assert.equal(accepted.jobId, 'deab17cf-f109-43f2-b95b-7d2f328a7720');
   assert.equal(accepted.status, 'queued');
   assert.equal(accepted.acceptedAt, acceptedAt.toISOString());
+  assert.equal(accepted.wasCreated, false);
 });
 
 test('PostgresRecommendationStore inserts job for new input commands', async () => {
@@ -102,6 +103,7 @@ test('PostgresRecommendationStore inserts job for new input commands', async () 
   assert.equal(accepted.inputId, '9f2644c5-a906-4739-9fca-a6f4078dc8c7');
   assert.equal(accepted.status, 'queued');
   assert.equal(accepted.acceptedAt, acceptedAt.toISOString());
+  assert.equal(accepted.wasCreated, true);
   assert.match(
     accepted.jobId,
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i

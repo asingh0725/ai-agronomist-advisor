@@ -33,6 +33,7 @@ Storage and persistence env:
 - `DATABASE_URL` (required when `DATA_BACKEND=postgres`)
 - `S3_UPLOAD_BUCKET`
 - `S3_UPLOAD_URL_EXPIRY_SECONDS` (optional, default 900)
+- `SQS_RECOMMENDATION_QUEUE_URL` (optional; if set, create-input publishes async job messages)
 
 Upload URL request contract:
 

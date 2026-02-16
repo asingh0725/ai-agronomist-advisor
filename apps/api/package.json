@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.971.0",
+    "@aws-sdk/client-sqs": "^3.971.0",
     "@aws-sdk/s3-request-presigner": "^3.971.0",
     "@crop-copilot/contracts": "workspace:*",
     "@crop-copilot/domain": "workspace:*",

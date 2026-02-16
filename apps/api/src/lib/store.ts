@@ -4,6 +4,7 @@ import type {
   CreateInputAccepted,
   CreateInputCommand,
   JobStatus,
+  RecommendationResult,
   RecommendationJobStatusResponse,
 } from '@crop-copilot/contracts';
 import { PostgresRecommendationStore } from './postgres-store';
@@ -23,6 +24,7 @@ interface StoredJob {
   status: JobStatus;
   updatedAt: string;
   failureReason?: string;
+  result?: RecommendationResult;
 }
 
 function buildIdempotencyLookupKey(userId: string, idempotencyKey: string): string {
@@ -30,11 +32,26 @@ function buildIdempotencyLookupKey(userId: string, idempotencyKey: string): stri
 }
 
 export interface RecommendationStore {
-  enqueueInput(userId: string, payload: CreateInputCommand): Promise<CreateInputAccepted>;
+  enqueueInput(userId: string, payload: CreateInputCommand): Promise<EnqueueInputResult>;
   getJobStatus(
     jobId: string,
     userId: string
   ): Promise<RecommendationJobStatusResponse | null>;
+  updateJobStatus(
+    jobId: string,
+    userId: string,
+    status: JobStatus,
+    failureReason?: string
+  ): Promise<void>;
+  saveRecommendationResult(
+    jobId: string,
+    userId: string,
+    result: RecommendationResult
+  ): Promise<void>;
+}
+
+export interface EnqueueInputResult extends CreateInputAccepted {
+  wasCreated: boolean;
 }
 
 export class InMemoryRecommendationStore implements RecommendationStore {
@@ -45,7 +62,7 @@ export class InMemoryRecommendationStore implements RecommendationStore {
   async enqueueInput(
     userId: string,
     payload: CreateInputCommand
-  ): Promise<CreateInputAccepted> {
+  ): Promise<EnqueueInputResult> {
     const idempotencyLookupKey = buildIdempotencyLookupKey(
       userId,
       payload.idempotencyKey
@@ -62,6 +79,7 @@ export class InMemoryRecommendationStore implements RecommendationStore {
           jobId: existingInput.jobId,
           status: existingJob?.status ?? 'queued',
           acceptedAt: existingInput.createdAt,
+          wasCreated: false,
         };
       }
 
@@ -93,6 +111,7 @@ export class InMemoryRecommendationStore implements RecommendationStore {
       jobId,
       status: 'queued',
       acceptedAt: now,
+      wasCreated: true,
     };
   }
 
@@ -115,7 +134,40 @@ export class InMemoryRecommendationStore implements RecommendationStore {
       status: job.status,
       updatedAt: job.updatedAt,
       failureReason: job.failureReason,
+      result: job.result,
     };
+  }
+
+  async updateJobStatus(
+    jobId: string,
+    userId: string,
+    status: JobStatus,
+    failureReason?: string
+  ): Promise<void> {
+    const job = this.jobById.get(jobId);
+    if (!job || job.userId !== userId) {
+      return;
+    }
+
+    job.status = status;
+    job.updatedAt = new Date().toISOString();
+    job.failureReason = failureReason;
+    this.jobById.set(jobId, job);
+  }
+
+  async saveRecommendationResult(
+    jobId: string,
+    userId: string,
+    result: RecommendationResult
+  ): Promise<void> {
+    const job = this.jobById.get(jobId);
+    if (!job || job.userId !== userId) {
+      return;
+    }
+
+    job.result = result;
+    job.updatedAt = new Date().toISOString();
+    this.jobById.set(jobId, job);
   }
 }
 

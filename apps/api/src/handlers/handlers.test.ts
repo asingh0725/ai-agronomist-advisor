@@ -6,6 +6,7 @@ import { buildGetJobStatusHandler } from './get-job-status';
 import type { RecommendationStore } from '../lib/store';
 import { setRecommendationStore } from '../lib/store';
 import { AuthError } from '../auth/errors';
+import type { RecommendationQueue } from '../queue/recommendation-queue';
 
 interface HandlerResponse {
   statusCode: number;
@@ -35,10 +36,16 @@ test('health handler returns 200', async () => {
 test('create input returns 202 and job id, then get status returns queued', async () => {
   setRecommendationStore(null);
   const authVerifier = async () => ({
-    userId: '11111111-1111-1111-1111-111111111111',
+    userId: '11111111-1111-4111-8111-111111111111',
     scopes: ['recommendation:write'],
   });
-  const createInputHandler = buildCreateInputHandler(authVerifier);
+  let published = 0;
+  const queue: RecommendationQueue = {
+    publishRecommendationJob: async () => {
+      published += 1;
+    },
+  };
+  const createInputHandler = buildCreateInputHandler(authVerifier, queue);
   const getJobStatusHandler = buildGetJobStatusHandler(authVerifier);
 
   const createRes = asHandlerResponse(
@@ -61,6 +68,7 @@ test('create input returns 202 and job id, then get status returns queued', asyn
   const accepted = parseBody<{ jobId: string; inputId: string }>(createRes.body);
   assert.ok(accepted.jobId);
   assert.ok(accepted.inputId);
+  assert.equal(published, 1);
 
   const statusRes = asHandlerResponse(
     await getJobStatusHandler(
@@ -82,10 +90,15 @@ test('create input returns 202 and job id, then get status returns queued', asyn
 
 test('create input returns 400 for invalid body', async () => {
   setRecommendationStore(null);
-  const createInputHandler = buildCreateInputHandler(async () => ({
-    userId: '11111111-1111-1111-1111-111111111111',
-    scopes: ['recommendation:write'],
-  }));
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '11111111-1111-4111-8111-111111111111',
+      scopes: ['recommendation:write'],
+    }),
+    {
+      publishRecommendationJob: async () => undefined,
+    }
+  );
 
   const response = asHandlerResponse(
     await createInputHandler(
@@ -107,9 +120,14 @@ test('create input returns 400 for invalid body', async () => {
 
 test('create input returns 401 for failed auth', async () => {
   setRecommendationStore(null);
-  const createInputHandler = buildCreateInputHandler(async () => {
-    throw new AuthError('Token missing');
-  });
+  const createInputHandler = buildCreateInputHandler(
+    async () => {
+      throw new AuthError('Token missing');
+    },
+    {
+      publishRecommendationJob: async () => undefined,
+    }
+  );
 
   const response = asHandlerResponse(
     await createInputHandler(
@@ -128,12 +146,22 @@ test('create input returns 401 for failed auth', async () => {
   assert.equal(response.statusCode, 401);
 });
 
-test('create input returns same job for idempotent retry by same user', async () => {
+test('create input idempotent retry returns same job and publishes once', async () => {
   setRecommendationStore(null);
-  const createInputHandler = buildCreateInputHandler(async () => ({
-    userId: '33333333-3333-3333-3333-333333333333',
-    scopes: ['recommendation:write'],
-  }));
+
+  let published = 0;
+  const queue: RecommendationQueue = {
+    publishRecommendationJob: async () => {
+      published += 1;
+    },
+  };
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '33333333-3333-4333-8333-333333333333',
+      scopes: ['recommendation:write'],
+    }),
+    queue
+  );
 
   const event = {
     body: JSON.stringify({
@@ -156,6 +184,7 @@ test('create input returns same job for idempotent retry by same user', async ()
 
   assert.equal(firstBody.jobId, secondBody.jobId);
   assert.equal(firstBody.inputId, secondBody.inputId);
+  assert.equal(published, 1);
 });
 
 test('create input idempotency key is scoped by user', async () => {
@@ -167,14 +196,20 @@ test('create input idempotency key is scoped by user', async () => {
     imageUrl: 'https://example.com/image.jpg',
   });
 
-  const firstHandler = buildCreateInputHandler(async () => ({
-    userId: '44444444-4444-4444-4444-444444444444',
-    scopes: ['recommendation:write'],
-  }));
-  const secondHandler = buildCreateInputHandler(async () => ({
-    userId: '55555555-5555-5555-5555-555555555555',
-    scopes: ['recommendation:write'],
-  }));
+  const firstHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '44444444-4444-4444-8444-444444444444',
+      scopes: ['recommendation:write'],
+    }),
+    { publishRecommendationJob: async () => undefined }
+  );
+  const secondHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '55555555-5555-4555-8555-555555555555',
+      scopes: ['recommendation:write'],
+    }),
+    { publishRecommendationJob: async () => undefined }
+  );
 
   const firstResponse = asHandlerResponse(
     await firstHandler(
@@ -204,6 +239,39 @@ test('create input idempotency key is scoped by user', async () => {
   assert.notEqual(first.inputId, second.inputId);
 });
 
+test('create input returns 500 when queue publish fails', async () => {
+  setRecommendationStore(null);
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '11111111-1111-4111-8111-111111111111',
+      scopes: ['recommendation:write'],
+    }),
+    {
+      publishRecommendationJob: async () => {
+        throw new Error('queue unavailable');
+      },
+    }
+  );
+
+  const response = asHandlerResponse(
+    await createInputHandler(
+      {
+        body: JSON.stringify({
+          idempotencyKey: 'ios-device-01:abc12345',
+          type: 'PHOTO',
+        }),
+        headers: { authorization: 'Bearer fake-token' },
+      } as any,
+      {} as any,
+      () => undefined
+    )
+  );
+
+  assert.equal(response.statusCode, 500);
+  const body = parseBody<{ error: { code: string } }>(response.body);
+  assert.equal(body.error.code, 'PIPELINE_ENQUEUE_FAILED');
+});
+
 test('create input returns 500 when store enqueue fails', async () => {
   const failingStore: RecommendationStore = {
     enqueueInput() {
@@ -212,13 +280,22 @@ test('create input returns 500 when store enqueue fails', async () => {
     async getJobStatus(_jobId, _userId) {
       return null;
     },
+    async updateJobStatus() {
+      return undefined;
+    },
+    async saveRecommendationResult() {
+      return undefined;
+    },
   };
   setRecommendationStore(failingStore);
 
-  const createInputHandler = buildCreateInputHandler(async () => ({
-    userId: '66666666-6666-6666-6666-666666666666',
-    scopes: ['recommendation:write'],
-  }));
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '66666666-6666-4666-8666-666666666666',
+      scopes: ['recommendation:write'],
+    }),
+    { publishRecommendationJob: async () => undefined }
+  );
 
   const response = asHandlerResponse(
     await createInputHandler(
