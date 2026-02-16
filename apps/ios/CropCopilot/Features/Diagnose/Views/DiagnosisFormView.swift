@@ -33,16 +33,27 @@ struct DiagnosisFormView: View {
                     }
                 }
 
-                TextField("Growth Stage (optional)", text: $viewModel.growthStage)
+                Picker("Growth Stage", selection: $viewModel.growthStage) {
+                    Text("Select stage (optional)").tag("")
+                    ForEach(viewModel.growthStageOptions, id: \.self) { stage in
+                        Text(stage).tag(stage)
+                    }
+                }
             }
 
             Section("Location") {
-                TextField("Location", text: $viewModel.location)
-                    .onAppear {
-                        if viewModel.location.isEmpty, let loc = locationManager.locationString {
-                            viewModel.location = loc
-                        }
+                Picker("Location", selection: $viewModel.location) {
+                    Text("Select location...").tag("")
+                    ForEach(AppConstants.allLocations, id: \.self) { loc in
+                        Text(loc).tag(loc)
                     }
+                }
+                .onAppear {
+                    if viewModel.location.isEmpty, let loc = locationManager.locationString,
+                       AppConstants.allLocations.contains(loc) {
+                        viewModel.location = loc
+                    }
+                }
             }
 
             Section("Description") {
@@ -106,10 +117,9 @@ class LocationHelper: NSObject, ObservableObject, CLLocationManagerDelegate {
         guard let location = locations.first else { return }
         let geocoder = CLGeocoder()
         geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
-            if let placemark = placemarks?.first {
-                let parts = [placemark.locality, placemark.administrativeArea].compactMap { $0 }
+            if let placemark = placemarks?.first, let state = placemark.administrativeArea {
                 DispatchQueue.main.async {
-                    self?.locationString = parts.joined(separator: ", ")
+                    self?.locationString = state
                 }
             }
         }

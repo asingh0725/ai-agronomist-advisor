@@ -18,7 +18,7 @@ class ProfileViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var successMessage: String?
 
-    let availableCrops = ["Corn", "Soybeans", "Wheat", "Cotton", "Rice", "Alfalfa", "Barley", "Sorghum"]
+    let availableCrops = AppConstants.cropLabels
 
     private let apiClient = APIClient.shared
 
@@ -39,9 +39,7 @@ class ProfileViewModel: ObservableObject {
             let profile = response.profile
 
             location = profile.location ?? ""
-            if let size = profile.farmSize {
-                farmSize = String(format: "%.0f", size)
-            }
+            farmSize = profile.farmSize ?? ""
             if let crops = profile.cropsOfInterest {
                 selectedCrops = Set(crops)
             }
@@ -69,14 +67,14 @@ class ProfileViewModel: ObservableObject {
         do {
             struct ProfileUpdate: Encodable {
                 let location: String?
-                let farmSize: Double?
+                let farmSize: String?
                 let cropsOfInterest: [String]?
                 let experienceLevel: String?
             }
 
             let update = ProfileUpdate(
                 location: location.isEmpty ? nil : location,
-                farmSize: Double(farmSize),
+                farmSize: farmSize.isEmpty ? nil : farmSize,
                 cropsOfInterest: selectedCrops.isEmpty ? nil : Array(selectedCrops),
                 experienceLevel: experienceLevel?.rawValue
             )

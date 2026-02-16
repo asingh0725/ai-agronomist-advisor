@@ -47,9 +47,21 @@ final class ProfileViewModelTests: XCTestCase {
         XCTAssertFalse(viewModel.selectedCrops.contains("Soybeans"))
     }
 
-    func testAvailableCropsNotEmpty() {
+    func testAvailableCropsMatchWebApp() {
         let viewModel = ProfileViewModel()
-        XCTAssertFalse(viewModel.availableCrops.isEmpty)
+        XCTAssertEqual(viewModel.availableCrops.count, 31)
         XCTAssertTrue(viewModel.availableCrops.contains("Corn"))
+        XCTAssertTrue(viewModel.availableCrops.contains("Tomatoes"))
+        XCTAssertTrue(viewModel.availableCrops.contains("Soybeans"))
+        XCTAssertTrue(viewModel.availableCrops.contains("Sugar Beets"))
+    }
+
+    func testExperienceLevelsMatchWebApp() {
+        let levels = ExperienceLevel.allCases
+        XCTAssertEqual(levels.count, 4)
+        XCTAssertEqual(levels[0].rawValue, "beginner")
+        XCTAssertEqual(levels[1].rawValue, "intermediate")
+        XCTAssertEqual(levels[2].rawValue, "advanced")
+        XCTAssertEqual(levels[3].rawValue, "professional")
     }
 }

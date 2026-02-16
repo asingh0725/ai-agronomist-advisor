@@ -7,35 +7,45 @@
 
 import SwiftUI
 
+enum AppTab: Int {
+    case dashboard, diagnose, history, products, settings
+}
+
 struct MainTabView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @State private var selectedTab: AppTab = .dashboard
 
     var body: some View {
-        TabView {
-            DashboardView()
+        TabView(selection: $selectedTab) {
+            DashboardView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Dashboard", systemImage: "house.fill")
                 }
+                .tag(AppTab.dashboard)
 
             DiagnoseTabView()
                 .tabItem {
                     Label("Diagnose", systemImage: "camera.fill")
                 }
+                .tag(AppTab.diagnose)
 
             RecommendationsListView()
                 .tabItem {
                     Label("History", systemImage: "clock.fill")
                 }
+                .tag(AppTab.history)
 
             Text("Products")
                 .tabItem {
                     Label("Products", systemImage: "leaf.fill")
                 }
+                .tag(AppTab.products)
 
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
+                .tag(AppTab.settings)
         }
         .tint(.appPrimary)
     }

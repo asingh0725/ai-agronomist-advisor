@@ -47,7 +47,7 @@ class LabReportViewModel: ObservableObject {
     @Published var showResult = false
     @Published var resultRecommendationId: String?
 
-    let cropOptions = ["Corn", "Soybeans", "Wheat", "Cotton", "Rice", "Alfalfa", "Barley", "Sorghum", "Other"]
+    let cropOptions = AppConstants.cropLabels
 
     private let apiClient = APIClient.shared
 

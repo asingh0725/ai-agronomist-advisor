@@ -23,10 +23,17 @@ final class DiagnosisViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.resultRecommendationId)
     }
 
-    func testCropOptionsNotEmpty() {
+    func testCropOptionsMatchWebApp() {
         let viewModel = DiagnosisViewModel()
         XCTAssertFalse(viewModel.cropOptions.isEmpty)
         XCTAssertTrue(viewModel.cropOptions.contains("Corn"))
-        XCTAssertTrue(viewModel.cropOptions.contains("Other"))
+        XCTAssertTrue(viewModel.cropOptions.contains("Tomatoes"))
+        XCTAssertTrue(viewModel.cropOptions.contains("Soybeans"))
+        XCTAssertEqual(viewModel.cropOptions.count, 31)
+    }
+
+    func testGrowthStageOptionsMatchWebApp() {
+        let viewModel = DiagnosisViewModel()
+        XCTAssertEqual(viewModel.growthStageOptions, ["Seedling", "Vegetative", "Flowering", "Fruiting", "Mature", "Harvest"])
     }
 }

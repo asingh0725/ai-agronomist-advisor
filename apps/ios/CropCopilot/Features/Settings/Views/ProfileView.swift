@@ -14,9 +14,18 @@ struct ProfileView: View {
     var body: some View {
         Form {
             Section("Farm Details") {
-                TextField("Location (e.g. Iowa)", text: $viewModel.location)
-                TextField("Farm Size (acres)", text: $viewModel.farmSize)
-                    .keyboardType(.decimalPad)
+                Picker("Location", selection: $viewModel.location) {
+                    Text("Select location...").tag("")
+                    ForEach(AppConstants.allLocations, id: \.self) { loc in
+                        Text(loc).tag(loc)
+                    }
+                }
+                Picker("Farm Size", selection: $viewModel.farmSize) {
+                    Text("Select size...").tag("")
+                    ForEach(AppConstants.farmSizes, id: \.self) { size in
+                        Text(AppConstants.farmSizeLabels[size] ?? size).tag(size)
+                    }
+                }
             }
 
             Section("Crops of Interest") {
@@ -64,7 +73,7 @@ struct ProfileView: View {
             if let message = viewModel.successMessage {
                 Section {
                     Text(message)
-                        .foregroundColor(.green)
+                        .foregroundColor(.appPrimary)
                         .font(.subheadline)
                 }
             }

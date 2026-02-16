@@ -25,10 +25,12 @@ final class LabReportViewModelTests: XCTestCase {
         XCTAssertNil(viewModel.resultRecommendationId)
     }
 
-    func testCropOptionsNotEmpty() {
+    func testCropOptionsMatchWebApp() {
         let viewModel = LabReportViewModel()
         XCTAssertFalse(viewModel.cropOptions.isEmpty)
         XCTAssertTrue(viewModel.cropOptions.contains("Corn"))
+        XCTAssertTrue(viewModel.cropOptions.contains("Tomatoes"))
+        XCTAssertEqual(viewModel.cropOptions.count, 31)
     }
 
     func testAllFieldsInitiallyEmpty() {

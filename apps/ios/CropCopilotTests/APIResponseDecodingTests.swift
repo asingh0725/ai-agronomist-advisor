@@ -84,10 +84,9 @@ final class APIResponseDecodingTests: XCTestCase {
         let json = """
         {
             "profile": {
-                "id": "prof1",
                 "userId": "user1",
                 "location": "Iowa",
-                "farmSize": 500.0,
+                "farmSize": "500",
                 "cropsOfInterest": ["Corn", "Soybeans"],
                 "experienceLevel": "INTERMEDIATE",
                 "createdAt": "2026-01-01T00:00:00.000Z",
@@ -97,9 +96,9 @@ final class APIResponseDecodingTests: XCTestCase {
         """.data(using: .utf8)!
 
         let response = try decoder.decode(ProfileResponse.self, from: json)
-        XCTAssertEqual(response.profile.id, "prof1")
+        XCTAssertEqual(response.profile.userId, "user1")
         XCTAssertEqual(response.profile.location, "Iowa")
-        XCTAssertEqual(response.profile.farmSize, 500.0)
+        XCTAssertEqual(response.profile.farmSize, "500")
         XCTAssertEqual(response.profile.cropsOfInterest, ["Corn", "Soybeans"])
         XCTAssertEqual(response.profile.experienceLevel, "INTERMEDIATE")
     }

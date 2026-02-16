@@ -10,6 +10,7 @@ import SwiftUI
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Binding var selectedTab: AppTab
 
     var body: some View {
         NavigationStack {
@@ -64,17 +65,17 @@ struct DashboardView: View {
                 .font(.headline)
 
             HStack(spacing: 12) {
-                NavigationLink {
-                    CameraView()
+                Button {
+                    selectedTab = .diagnose
                 } label: {
-                    quickActionCard(icon: "camera.fill", title: "Photo", color: .blue)
+                    quickActionCard(icon: "camera.fill", title: "Photo", color: .appPrimary)
                 }
                 .buttonStyle(.plain)
 
-                NavigationLink {
-                    LabReportFormView()
+                Button {
+                    selectedTab = .diagnose
                 } label: {
-                    quickActionCard(icon: "doc.text.fill", title: "Lab Report", color: .orange)
+                    quickActionCard(icon: "doc.text.fill", title: "Lab Report", color: .appAccent)
                 }
                 .buttonStyle(.plain)
             }
@@ -103,10 +104,11 @@ struct DashboardView: View {
                 Text("Recent Recommendations")
                     .font(.headline)
                 Spacer()
-                NavigationLink("See All") {
-                    RecommendationsListView()
+                Button("See All") {
+                    selectedTab = .history
                 }
                 .font(.subheadline)
+                .foregroundColor(.appPrimary)
             }
 
             if viewModel.isLoading {

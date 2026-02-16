@@ -12,10 +12,8 @@ actor AuthInterceptor {
     private var isRefreshing = false
     private var pendingContinuations: [CheckedContinuation<String, Error>] = []
 
-    func addAuthHeader(to request: inout URLRequest) {
-        if let token = keychainManager.get(for: .accessToken) {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+    func getAccessToken() -> String? {
+        return keychainManager.get(for: .accessToken)
     }
 
     func handleUnauthorized() async throws -> String {

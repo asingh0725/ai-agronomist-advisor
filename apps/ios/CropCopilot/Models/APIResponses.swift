@@ -108,10 +108,9 @@ struct ProfileResponse: Codable {
 }
 
 struct ProfileData: Codable {
-    let id: String
     let userId: String
     let location: String?
-    let farmSize: Double?
+    let farmSize: String?
     let cropsOfInterest: [String]?
     let experienceLevel: String?
     let createdAt: String

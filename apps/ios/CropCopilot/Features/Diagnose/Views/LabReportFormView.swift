@@ -21,7 +21,12 @@ struct LabReportFormView: View {
                         Text(crop).tag(crop)
                     }
                 }
-                TextField("Location", text: $viewModel.location)
+                Picker("Location", selection: $viewModel.location) {
+                    Text("Select location...").tag("")
+                    ForEach(AppConstants.allLocations, id: \.self) { loc in
+                        Text(loc).tag(loc)
+                    }
+                }
                 TextField("Sample Date", text: $viewModel.sampleDate)
             }
 
