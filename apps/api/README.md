@@ -35,6 +35,7 @@ Storage and persistence env:
 - `S3_UPLOAD_BUCKET`
 - `S3_UPLOAD_URL_EXPIRY_SECONDS` (optional, default 900)
 - `SQS_RECOMMENDATION_QUEUE_URL` (optional; if set, create-input publishes async job messages)
+- `SQS_INGESTION_QUEUE_URL` (optional; if set, ingestion scheduler publishes ingestion batches)
 
 Upload URL request contract:
 
