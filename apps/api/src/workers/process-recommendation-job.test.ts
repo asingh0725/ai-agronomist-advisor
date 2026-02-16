@@ -1,8 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import type { SQSEvent } from 'aws-lambda';
+import type { SQSBatchResponse, SQSEvent } from 'aws-lambda';
 import { handler } from './process-recommendation-job';
 import { InMemoryRecommendationStore, setRecommendationStore } from '../lib/store';
+
+function expectBatchResponse(response: void | SQSBatchResponse): SQSBatchResponse {
+  assert.ok(response && typeof response === 'object' && 'batchItemFailures' in response);
+  return response;
+}
 
 test('process-recommendation-job worker moves job to completed', async () => {
   const store = new InMemoryRecommendationStore();
@@ -42,7 +47,9 @@ test('process-recommendation-job worker moves job to completed', async () => {
     ],
   };
 
-  const response = await handler(event, {} as any, () => undefined);
+  const response = expectBatchResponse(
+    await handler(event, {} as any, () => undefined)
+  );
   assert.equal(response.batchItemFailures.length, 0);
 
   const status = await store.getJobStatus(accepted.jobId, '11111111-1111-4111-8111-111111111111');

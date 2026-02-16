@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import type { APIGatewayProxyResultV2 } from 'aws-lambda';
 import { buildCreateUploadUrlHandler } from './create-upload-url';
+
+function expectApiResponse(
+  response: void | APIGatewayProxyResultV2<never>
+): Exclude<APIGatewayProxyResultV2<never>, string> {
+  assert.ok(response && typeof response === 'object' && 'statusCode' in response);
+  return response as Exclude<APIGatewayProxyResultV2<never>, string>;
+}
 
 test('create upload url handler returns signed url payload', async () => {
   process.env.S3_UPLOAD_BUCKET = 'crop-copilot-dev-uploads';
@@ -17,16 +25,18 @@ test('create upload url handler returns signed url payload', async () => {
     })
   );
 
-  const response = await handler(
-    {
-      body: JSON.stringify({
-        fileName: 'field-photo.jpg',
-        contentType: 'image/jpeg',
-      }),
-      headers: { authorization: 'Bearer fake-token' },
-    } as any,
-    {} as any,
-    () => undefined
+  const response = expectApiResponse(
+    await handler(
+      {
+        body: JSON.stringify({
+          fileName: 'field-photo.jpg',
+          contentType: 'image/jpeg',
+        }),
+        headers: { authorization: 'Bearer fake-token' },
+      } as any,
+      {} as any,
+      () => undefined
+    )
   );
 
   assert.equal(response.statusCode, 200);
