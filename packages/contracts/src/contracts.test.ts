@@ -4,6 +4,7 @@ import {
   CreateInputCommandSchema,
   CreateUploadUrlRequestSchema,
   RecommendationJobStatusResponseSchema,
+  SyncPullRequestSchema,
   SyncPullResponseSchema,
 } from './index';
 
@@ -66,4 +67,22 @@ test('CreateUploadUrlRequestSchema validates upload payload', () => {
 
   assert.equal(parsed.fileName, 'leaf-photo.jpg');
   assert.equal(parsed.contentType, 'image/jpeg');
+});
+
+test('SyncPullRequestSchema parses includeCompletedJobs=false correctly', () => {
+  const parsed = SyncPullRequestSchema.parse({
+    includeCompletedJobs: 'false',
+    limit: '10',
+  });
+
+  assert.equal(parsed.includeCompletedJobs, false);
+  assert.equal(parsed.limit, 10);
+});
+
+test('SyncPullRequestSchema parses includeCompletedJobs=0 correctly', () => {
+  const parsed = SyncPullRequestSchema.parse({
+    includeCompletedJobs: '0',
+  });
+
+  assert.equal(parsed.includeCompletedJobs, false);
 });
