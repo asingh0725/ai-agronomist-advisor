@@ -4,6 +4,7 @@ import type {
   CreateInputAccepted,
   CreateInputCommand,
   JobStatus,
+  RecommendationResult,
   RecommendationJobStatusResponse,
 } from '@crop-copilot/contracts';
 import { PostgresRecommendationStore } from './postgres-store';
@@ -23,6 +24,7 @@ interface StoredJob {
   status: JobStatus;
   updatedAt: string;
   failureReason?: string;
+  result?: RecommendationResult;
 }
 
 export interface RecommendationStore {
@@ -31,6 +33,17 @@ export interface RecommendationStore {
     jobId: string,
     userId: string
   ): Promise<RecommendationJobStatusResponse | null>;
+  updateJobStatus(
+    jobId: string,
+    userId: string,
+    status: JobStatus,
+    failureReason?: string
+  ): Promise<void>;
+  saveRecommendationResult(
+    jobId: string,
+    userId: string,
+    result: RecommendationResult
+  ): Promise<void>;
 }
 
 export class InMemoryRecommendationStore implements RecommendationStore {
@@ -88,7 +101,40 @@ export class InMemoryRecommendationStore implements RecommendationStore {
       status: job.status,
       updatedAt: job.updatedAt,
       failureReason: job.failureReason,
+      result: job.result,
     };
+  }
+
+  async updateJobStatus(
+    jobId: string,
+    userId: string,
+    status: JobStatus,
+    failureReason?: string
+  ): Promise<void> {
+    const job = this.jobById.get(jobId);
+    if (!job || job.userId !== userId) {
+      return;
+    }
+
+    job.status = status;
+    job.updatedAt = new Date().toISOString();
+    job.failureReason = failureReason;
+    this.jobById.set(jobId, job);
+  }
+
+  async saveRecommendationResult(
+    jobId: string,
+    userId: string,
+    result: RecommendationResult
+  ): Promise<void> {
+    const job = this.jobById.get(jobId);
+    if (!job || job.userId !== userId) {
+      return;
+    }
+
+    job.result = result;
+    job.updatedAt = new Date().toISOString();
+    this.jobById.set(jobId, job);
   }
 }
 

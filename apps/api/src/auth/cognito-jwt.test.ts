@@ -23,7 +23,7 @@ test('verifies Cognito-compatible JWT payload with local keyset', async () => {
     token_use: 'access',
   })
     .setProtectedHeader({ alg: 'RS256', kid: 'local-key' })
-    .setSubject('11111111-1111-1111-1111-111111111111')
+    .setSubject('11111111-1111-4111-8111-111111111111')
     .setIssuer(issuer)
     .setAudience('test-client-id')
     .setExpirationTime('5m')
@@ -42,7 +42,7 @@ test('verifies Cognito-compatible JWT payload with local keyset', async () => {
     localJwks
   );
 
-  assert.equal(auth.userId, '11111111-1111-1111-1111-111111111111');
+  assert.equal(auth.userId, '11111111-1111-4111-8111-111111111111');
   assert.equal(auth.email, 'grower@example.com');
   assert.deepEqual(auth.scopes, ['recommendation:read', 'recommendation:write']);
 });

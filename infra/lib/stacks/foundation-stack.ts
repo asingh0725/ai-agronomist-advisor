@@ -1,9 +1,11 @@
-import { CfnOutput, RemovalPolicy, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, StackProps, Tags } from 'aws-cdk-lib';
 import * as budgets from 'aws-cdk-lib/aws-budgets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import { Construct } from 'constructs';
 import type { EnvironmentConfig } from '../config';
 
@@ -79,6 +81,37 @@ export class FoundationStack extends Stack {
 
     const parameterPrefix = `/${config.projectSlug}/${config.envName}`;
 
+    const recommendationDlq = new sqs.Queue(this, 'RecommendationJobDlq', {
+      queueName: `${config.projectSlug}-${config.envName}-recommendation-dlq`,
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(14),
+    });
+
+    const recommendationQueue = new sqs.Queue(this, 'RecommendationJobQueue', {
+      queueName: `${config.projectSlug}-${config.envName}-recommendation-jobs`,
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      visibilityTimeout: Duration.seconds(120),
+      deadLetterQueue: {
+        queue: recommendationDlq,
+        maxReceiveCount: 5,
+      },
+    });
+
+    const pipelineDefinition = new sfn.Pass(this, 'RetrievingContext')
+      .next(new sfn.Pass(this, 'GeneratingRecommendation'))
+      .next(new sfn.Pass(this, 'ValidatingOutput'))
+      .next(new sfn.Pass(this, 'PersistingResult'))
+      .next(new sfn.Succeed(this, 'RecommendationCompleted'));
+
+    const recommendationPipelineStateMachine = new sfn.StateMachine(
+      this,
+      'RecommendationPipelineStateMachine',
+      {
+        stateMachineName: `${config.projectSlug}-${config.envName}-recommendation-pipeline`,
+        definitionBody: sfn.DefinitionBody.fromChainable(pipelineDefinition),
+      }
+    );
+
     new ssm.StringParameter(this, 'ParameterApiBaseUrl', {
       parameterName: `${parameterPrefix}/platform/api/base-url`,
       stringValue: 'https://api.example.com',
@@ -95,6 +128,18 @@ export class FoundationStack extends Stack {
       parameterName: `${parameterPrefix}/ai/bedrock/model-id`,
       stringValue: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
       description: 'Primary Bedrock generation model identifier.',
+    });
+
+    new ssm.StringParameter(this, 'ParameterRecommendationQueueUrl', {
+      parameterName: `${parameterPrefix}/pipeline/recommendation-queue-url`,
+      stringValue: recommendationQueue.queueUrl,
+      description: 'SQS queue URL for recommendation job requests.',
+    });
+
+    new ssm.StringParameter(this, 'ParameterRecommendationStateMachineArn', {
+      parameterName: `${parameterPrefix}/pipeline/recommendation-state-machine-arn`,
+      stringValue: recommendationPipelineStateMachine.stateMachineArn,
+      description: 'Step Functions ARN for recommendation pipeline orchestration.',
     });
 
     if (config.costAlertEmail) {
@@ -118,6 +163,16 @@ export class FoundationStack extends Stack {
     new CfnOutput(this, 'SsmParameterPrefix', {
       value: parameterPrefix,
       description: 'Prefix for environment-scoped runtime configuration.',
+    });
+
+    new CfnOutput(this, 'RecommendationQueueUrl', {
+      value: recommendationQueue.queueUrl,
+      description: 'SQS queue URL for recommendation job requests.',
+    });
+
+    new CfnOutput(this, 'RecommendationStateMachineArn', {
+      value: recommendationPipelineStateMachine.stateMachineArn,
+      description: 'Step Functions state machine ARN for async recommendation pipeline.',
     });
   }
 }

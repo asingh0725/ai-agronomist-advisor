@@ -3,6 +3,8 @@ import { Pool, type PoolClient } from 'pg';
 import type {
   CreateInputAccepted,
   CreateInputCommand,
+  JobStatus,
+  RecommendationResult,
   RecommendationJobStatusResponse,
 } from '@crop-copilot/contracts';
 import type { RecommendationStore } from './store';
@@ -20,6 +22,7 @@ interface JobStatusRow {
   status: RecommendationJobStatusResponse['status'];
   updated_at: Date;
   failure_reason: string | null;
+  result_payload: RecommendationResult | null;
 }
 
 export class PostgresRecommendationStore implements RecommendationStore {
@@ -93,7 +96,8 @@ export class PostgresRecommendationStore implements RecommendationStore {
                id AS job_id,
                status,
                updated_at,
-               failure_reason
+               failure_reason,
+               result_payload
         FROM app_recommendation_job
         WHERE id = $1
           AND user_id = $2
@@ -113,7 +117,44 @@ export class PostgresRecommendationStore implements RecommendationStore {
       status: row.status,
       updatedAt: row.updated_at.toISOString(),
       failureReason: row.failure_reason ?? undefined,
+      result: row.result_payload ?? undefined,
     };
+  }
+
+  async updateJobStatus(
+    jobId: string,
+    userId: string,
+    status: JobStatus,
+    failureReason?: string
+  ): Promise<void> {
+    await this.pool.query(
+      `
+        UPDATE app_recommendation_job
+        SET status = $3,
+            failure_reason = $4,
+            updated_at = NOW()
+        WHERE id = $1
+          AND user_id = $2
+      `,
+      [jobId, userId, status, failureReason ?? null]
+    );
+  }
+
+  async saveRecommendationResult(
+    jobId: string,
+    userId: string,
+    result: RecommendationResult
+  ): Promise<void> {
+    await this.pool.query(
+      `
+        UPDATE app_recommendation_job
+        SET result_payload = $3::jsonb,
+            updated_at = NOW()
+        WHERE id = $1
+          AND user_id = $2
+      `,
+      [jobId, userId, JSON.stringify(result)]
+    );
   }
 
   private async withTransaction<T>(callback: (client: PoolClient) => Promise<T>): Promise<T> {

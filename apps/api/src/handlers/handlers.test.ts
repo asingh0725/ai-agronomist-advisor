@@ -5,6 +5,7 @@ import { buildCreateInputHandler } from './create-input';
 import { buildGetJobStatusHandler } from './get-job-status';
 import { setRecommendationStore } from '../lib/store';
 import { AuthError } from '../auth/errors';
+import type { RecommendationQueue } from '../queue/recommendation-queue';
 
 function parseBody<T>(body: string | undefined): T {
   assert.ok(body, 'response body is missing');
@@ -21,10 +22,16 @@ test('health handler returns 200', async () => {
 test('create input returns 202 and job id, then get status returns queued', async () => {
   setRecommendationStore(null);
   const authVerifier = async () => ({
-    userId: '11111111-1111-1111-1111-111111111111',
+    userId: '11111111-1111-4111-8111-111111111111',
     scopes: ['recommendation:write'],
   });
-  const createInputHandler = buildCreateInputHandler(authVerifier);
+  let published = 0;
+  const queue: RecommendationQueue = {
+    publishRecommendationJob: async () => {
+      published += 1;
+    },
+  };
+  const createInputHandler = buildCreateInputHandler(authVerifier, queue);
   const getJobStatusHandler = buildGetJobStatusHandler(authVerifier);
 
   const createRes = await createInputHandler(
@@ -45,6 +52,7 @@ test('create input returns 202 and job id, then get status returns queued', asyn
   const accepted = parseBody<{ jobId: string; inputId: string }>(createRes.body);
   assert.ok(accepted.jobId);
   assert.ok(accepted.inputId);
+  assert.equal(published, 1);
 
   const statusRes = await getJobStatusHandler(
     {
@@ -64,10 +72,15 @@ test('create input returns 202 and job id, then get status returns queued', asyn
 
 test('create input returns 400 for invalid body', async () => {
   setRecommendationStore(null);
-  const createInputHandler = buildCreateInputHandler(async () => ({
-    userId: '11111111-1111-1111-1111-111111111111',
-    scopes: ['recommendation:write'],
-  }));
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '11111111-1111-4111-8111-111111111111',
+      scopes: ['recommendation:write'],
+    }),
+    {
+      publishRecommendationJob: async () => undefined,
+    }
+  );
 
   const response = await createInputHandler(
     {
@@ -87,9 +100,14 @@ test('create input returns 400 for invalid body', async () => {
 
 test('create input returns 401 for failed auth', async () => {
   setRecommendationStore(null);
-  const createInputHandler = buildCreateInputHandler(async () => {
-    throw new AuthError('Token missing');
-  });
+  const createInputHandler = buildCreateInputHandler(
+    async () => {
+      throw new AuthError('Token missing');
+    },
+    {
+      publishRecommendationJob: async () => undefined,
+    }
+  );
 
   const response = await createInputHandler(
     {
@@ -104,4 +122,35 @@ test('create input returns 401 for failed auth', async () => {
   );
 
   assert.equal(response.statusCode, 401);
+});
+
+test('create input returns 500 when queue publish fails', async () => {
+  setRecommendationStore(null);
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '11111111-1111-4111-8111-111111111111',
+      scopes: ['recommendation:write'],
+    }),
+    {
+      publishRecommendationJob: async () => {
+        throw new Error('queue unavailable');
+      },
+    }
+  );
+
+  const response = await createInputHandler(
+    {
+      body: JSON.stringify({
+        idempotencyKey: 'ios-device-01:abc12345',
+        type: 'PHOTO',
+      }),
+      headers: { authorization: 'Bearer fake-token' },
+    } as any,
+    {} as any,
+    () => undefined
+  );
+
+  assert.equal(response.statusCode, 500);
+  const body = parseBody<{ error: { code: string } }>(response.body);
+  assert.equal(body.error.code, 'PIPELINE_ENQUEUE_FAILED');
 });

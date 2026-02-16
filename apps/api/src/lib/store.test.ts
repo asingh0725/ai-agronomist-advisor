@@ -17,4 +17,18 @@ test('InMemoryRecommendationStore enforces user scoping on job status', async ()
   assert.ok(ownStatus);
   assert.equal(ownStatus?.status, 'queued');
   assert.equal(otherStatus, null);
+
+  await store.updateJobStatus(accepted.jobId, 'user-a', 'retrieving_context');
+  await store.saveRecommendationResult(accepted.jobId, 'user-a', {
+    recommendationId: '8b679b28-877f-48db-b3c6-b4e50273ef79',
+    confidence: 0.74,
+    diagnosis: { condition: 'test' },
+    sources: [],
+    modelUsed: 'pipeline-scaffold-v1',
+  });
+  await store.updateJobStatus(accepted.jobId, 'user-a', 'completed');
+
+  const completed = await store.getJobStatus(accepted.jobId, 'user-a');
+  assert.equal(completed?.status, 'completed');
+  assert.equal(completed?.result?.modelUsed, 'pipeline-scaffold-v1');
 });
