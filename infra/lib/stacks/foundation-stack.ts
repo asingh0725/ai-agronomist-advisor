@@ -99,6 +99,11 @@ export class FoundationStack extends Stack {
       },
     });
 
+    const mobilePushEventsTopic = new sns.Topic(this, 'MobilePushEventsTopic', {
+      displayName: `Crop Copilot ${config.envName} mobile push events`,
+      topicName: `${config.projectSlug}-${config.envName}-mobile-push-events`,
+    });
+
     const ingestionDlq = new sqs.Queue(this, 'IngestionDlq', {
       queueName: `${config.projectSlug}-${config.envName}-ingestion-dlq`,
       encryption: sqs.QueueEncryption.SQS_MANAGED,
@@ -193,6 +198,12 @@ export class FoundationStack extends Stack {
       description: 'Step Functions ARN for recommendation pipeline orchestration.',
     });
 
+    new ssm.StringParameter(this, 'ParameterPushEventsTopicArn', {
+      parameterName: `${parameterPrefix}/notifications/push-events-topic-arn`,
+      stringValue: mobilePushEventsTopic.topicArn,
+      description: 'SNS topic ARN for recommendation-ready push event fanout.',
+    });
+
     new ssm.StringParameter(this, 'ParameterIngestionQueueUrl', {
       parameterName: `${parameterPrefix}/pipeline/ingestion-queue-url`,
       stringValue: ingestionQueue.queueUrl,
@@ -236,6 +247,11 @@ export class FoundationStack extends Stack {
     new CfnOutput(this, 'RecommendationStateMachineArn', {
       value: recommendationPipelineStateMachine.stateMachineArn,
       description: 'Step Functions state machine ARN for async recommendation pipeline.',
+    });
+
+    new CfnOutput(this, 'PushEventsTopicArn', {
+      value: mobilePushEventsTopic.topicArn,
+      description: 'SNS topic ARN for recommendation-ready push event fanout.',
     });
 
     new CfnOutput(this, 'IngestionQueueUrl', {

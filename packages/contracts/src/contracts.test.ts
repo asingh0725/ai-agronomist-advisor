@@ -6,6 +6,7 @@ import {
   IngestionBatchMessageSchema,
   RecommendationJobRequestedSchema,
   RecommendationJobStatusResponseSchema,
+  SyncPullRequestSchema,
   SyncPullResponseSchema,
 } from './index';
 
@@ -57,6 +58,23 @@ test('SyncPullResponseSchema requires server timestamp and next cursor', () => {
   });
 
   assert.equal(parsed.hasMore, false);
+});
+
+test('SyncPullRequestSchema applies defaults for mobile poll requests', () => {
+  const parsed = SyncPullRequestSchema.parse({
+    limit: '25',
+  });
+
+  assert.equal(parsed.limit, 25);
+  assert.equal(parsed.includeCompletedJobs, true);
+});
+
+test('SyncPullRequestSchema parses includeCompletedJobs query string', () => {
+  const parsed = SyncPullRequestSchema.parse({
+    includeCompletedJobs: 'false',
+  });
+
+  assert.equal(parsed.includeCompletedJobs, false);
 });
 
 test('CreateUploadUrlRequestSchema validates upload payload', () => {

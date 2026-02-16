@@ -6,7 +6,12 @@ import type {
   JobStatus,
   RecommendationResult,
   RecommendationJobStatusResponse,
+  SyncInputRecord,
+  SyncPullRequest,
+  SyncPullResponse,
 } from '@crop-copilot/contracts';
+import { SyncPullRequestSchema } from '@crop-copilot/contracts';
+import { decodeSyncCursor, encodeSyncCursor, normalizeIdempotencyKey } from '@crop-copilot/domain';
 import type { RecommendationStore } from './store';
 
 interface ExistingCommandRow {
@@ -25,6 +30,18 @@ interface JobStatusRow {
   result_payload: RecommendationResult | null;
 }
 
+interface SyncRow {
+  input_id: string;
+  input_created_at: Date;
+  input_updated_at: Date;
+  job_updated_at: Date;
+  input_type: 'PHOTO' | 'LAB_REPORT' | null;
+  crop: string | null;
+  location: string | null;
+  status: RecommendationJobStatusResponse['status'];
+  recommendation_id: string | null;
+}
+
 export class PostgresRecommendationStore implements RecommendationStore {
   constructor(private readonly pool: Pool) {}
 
@@ -32,42 +49,39 @@ export class PostgresRecommendationStore implements RecommendationStore {
     userId: string,
     payload: CreateInputCommand
   ): Promise<CreateInputAccepted> {
-    return this.withTransaction(async (client) => {
-      const existing = await client.query<ExistingCommandRow>(
-        `
-          SELECT i.id AS input_id,
-                 j.id AS job_id,
-                 j.status,
-                 j.created_at AS accepted_at
-          FROM app_input_command i
-          JOIN app_recommendation_job j ON j.input_id = i.id
-          WHERE i.user_id = $1
-            AND i.idempotency_key = $2
-          LIMIT 1
-        `,
-        [userId, payload.idempotencyKey]
-      );
+    const normalizedKey = normalizeIdempotencyKey(payload.idempotencyKey);
+    const normalizedPayload: CreateInputCommand = {
+      ...payload,
+      idempotencyKey: normalizedKey,
+    };
 
-      if (existing.rows.length > 0) {
-        const row = existing.rows[0];
-        return {
-          inputId: row.input_id,
-          jobId: row.job_id,
-          status: row.status,
-          acceptedAt: row.accepted_at.toISOString(),
-        };
+    return this.withTransaction(async (client) => {
+      const existing = await this.findExistingCommand(client, userId, normalizedKey);
+      if (existing) {
+        return existing;
       }
 
       const inputId = randomUUID();
       const jobId = randomUUID();
 
-      await client.query(
-        `
-          INSERT INTO app_input_command (id, user_id, idempotency_key, payload, created_at, updated_at)
-          VALUES ($1, $2, $3, $4::jsonb, NOW(), NOW())
-        `,
-        [inputId, userId, payload.idempotencyKey, JSON.stringify(payload)]
-      );
+      try {
+        await client.query(
+          `
+            INSERT INTO app_input_command (id, user_id, idempotency_key, payload, created_at, updated_at)
+            VALUES ($1, $2, $3, $4::jsonb, NOW(), NOW())
+          `,
+          [inputId, userId, normalizedKey, JSON.stringify(normalizedPayload)]
+        );
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          const deduped = await this.findExistingCommand(client, userId, normalizedKey);
+          if (deduped) {
+            return deduped;
+          }
+        }
+
+        throw error;
+      }
 
       await client.query(
         `
@@ -121,6 +135,70 @@ export class PostgresRecommendationStore implements RecommendationStore {
     };
   }
 
+  async pullSyncRecords(userId: string, request: SyncPullRequest): Promise<SyncPullResponse> {
+    const parsedRequest = SyncPullRequestSchema.parse(request);
+    const values: Array<string | number> = [userId];
+    const conditions = ['i.user_id = $1'];
+
+    if (!parsedRequest.includeCompletedJobs) {
+      values.push('completed');
+      conditions.push(`j.status <> $${values.length}`);
+    }
+
+    if (parsedRequest.cursor) {
+      const cursor = decodeSyncCursor(parsedRequest.cursor);
+      values.push(cursor.createdAt);
+      const createdAtIndex = values.length;
+      values.push(cursor.inputId);
+      const inputIdIndex = values.length;
+      conditions.push(
+        `(i.created_at < $${createdAtIndex}::timestamptz OR (i.created_at = $${createdAtIndex}::timestamptz AND i.id < $${inputIdIndex}::uuid))`
+      );
+    }
+
+    values.push(parsedRequest.limit + 1);
+    const limitIndex = values.length;
+
+    const result = await this.pool.query<SyncRow>(
+      `
+        SELECT i.id AS input_id,
+               i.created_at AS input_created_at,
+               i.updated_at AS input_updated_at,
+               j.updated_at AS job_updated_at,
+               i.payload->>'type' AS input_type,
+               i.payload->>'crop' AS crop,
+               i.payload->>'location' AS location,
+               j.status,
+               j.result_payload->>'recommendationId' AS recommendation_id
+        FROM app_input_command i
+        JOIN app_recommendation_job j ON j.input_id = i.id
+        WHERE ${conditions.join('\n          AND ')}
+        ORDER BY i.created_at DESC, i.id DESC
+        LIMIT $${limitIndex}
+      `,
+      values
+    );
+
+    const hasMore = result.rows.length > parsedRequest.limit;
+    const rows = hasMore ? result.rows.slice(0, parsedRequest.limit) : result.rows;
+    const items = rows.map((row) => this.toSyncRecord(row));
+    const lastItem = items.at(-1);
+    const nextCursor =
+      hasMore && lastItem
+        ? encodeSyncCursor({
+            createdAt: lastItem.createdAt,
+            inputId: lastItem.inputId,
+          })
+        : null;
+
+    return {
+      items,
+      nextCursor,
+      hasMore,
+      serverTimestamp: new Date().toISOString(),
+    };
+  }
+
   async updateJobStatus(
     jobId: string,
     userId: string,
@@ -171,4 +249,62 @@ export class PostgresRecommendationStore implements RecommendationStore {
       client.release();
     }
   }
+
+  private async findExistingCommand(
+    client: PoolClient,
+    userId: string,
+    idempotencyKey: string
+  ): Promise<CreateInputAccepted | null> {
+    const existing = await client.query<ExistingCommandRow>(
+      `
+        SELECT i.id AS input_id,
+               j.id AS job_id,
+               j.status,
+               j.created_at AS accepted_at
+        FROM app_input_command i
+        JOIN app_recommendation_job j ON j.input_id = i.id
+        WHERE i.user_id = $1
+          AND i.idempotency_key = $2
+        LIMIT 1
+      `,
+      [userId, idempotencyKey]
+    );
+
+    if (existing.rows.length === 0) {
+      return null;
+    }
+
+    const row = existing.rows[0];
+    return {
+      inputId: row.input_id,
+      jobId: row.job_id,
+      status: row.status,
+      acceptedAt: row.accepted_at.toISOString(),
+    };
+  }
+
+  private toSyncRecord(row: SyncRow): SyncInputRecord {
+    const updatedAt =
+      row.job_updated_at > row.input_updated_at ? row.job_updated_at : row.input_updated_at;
+    const type = row.input_type === 'LAB_REPORT' ? 'LAB_REPORT' : 'PHOTO';
+
+    return {
+      inputId: row.input_id,
+      createdAt: row.input_created_at.toISOString(),
+      updatedAt: updatedAt.toISOString(),
+      type,
+      crop: row.crop,
+      location: row.location,
+      status: row.status,
+      recommendationId: row.recommendation_id,
+    };
+  }
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  return 'code' in error && error.code === '23505';
 }

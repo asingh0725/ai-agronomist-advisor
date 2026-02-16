@@ -2,8 +2,24 @@ import { z } from 'zod';
 import { PaginationSchema } from './common';
 import { JobStatusSchema } from './diagnosis';
 
+const QueryBooleanSchema = z.preprocess((value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') {
+    return true;
+  }
+  if (normalized === 'false') {
+    return false;
+  }
+
+  return value;
+}, z.boolean());
+
 export const SyncPullRequestSchema = PaginationSchema.extend({
-  includeCompletedJobs: z.coerce.boolean().default(true),
+  includeCompletedJobs: QueryBooleanSchema.default(true),
 });
 
 export const SyncInputRecordSchema = z.object({

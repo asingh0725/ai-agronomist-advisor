@@ -32,3 +32,62 @@ test('InMemoryRecommendationStore enforces user scoping on job status', async ()
   assert.equal(completed?.status, 'completed');
   assert.equal(completed?.result?.modelUsed, 'pipeline-scaffold-v1');
 });
+
+test('InMemoryRecommendationStore enforces idempotency by user and key', async () => {
+  const store = new InMemoryRecommendationStore();
+
+  const first = await store.enqueueInput('user-a', {
+    idempotencyKey: 'IOS-DEVICE-A:KEY-9999',
+    type: 'PHOTO',
+  });
+  const second = await store.enqueueInput('user-a', {
+    idempotencyKey: 'ios-device-a:key-9999',
+    type: 'PHOTO',
+  });
+
+  assert.equal(first.inputId, second.inputId);
+  assert.equal(first.jobId, second.jobId);
+});
+
+test('InMemoryRecommendationStore pullSyncRecords paginates with cursor', async () => {
+  const store = new InMemoryRecommendationStore();
+
+  const acceptedA = await store.enqueueInput('user-a', {
+    idempotencyKey: 'ios-device-a:key-sync-1',
+    type: 'PHOTO',
+    crop: 'corn',
+  });
+  await store.updateJobStatus(acceptedA.jobId, 'user-a', 'completed');
+
+  await new Promise((resolve) => setTimeout(resolve, 5));
+
+  await store.enqueueInput('user-a', {
+    idempotencyKey: 'ios-device-a:key-sync-2',
+    type: 'LAB_REPORT',
+    crop: 'wheat',
+  });
+
+  const pageOne = await store.pullSyncRecords('user-a', {
+    limit: 1,
+    includeCompletedJobs: true,
+  });
+  assert.equal(pageOne.items.length, 1);
+  assert.equal(pageOne.hasMore, true);
+  assert.ok(pageOne.nextCursor);
+
+  const pageTwo = await store.pullSyncRecords('user-a', {
+    limit: 1,
+    includeCompletedJobs: true,
+    cursor: pageOne.nextCursor ?? undefined,
+  });
+  assert.equal(pageTwo.items.length, 1);
+  assert.equal(pageTwo.hasMore, false);
+  assert.notEqual(pageOne.items[0].inputId, pageTwo.items[0].inputId);
+
+  const withoutCompleted = await store.pullSyncRecords('user-a', {
+    limit: 10,
+    includeCompletedJobs: false,
+  });
+  assert.equal(withoutCompleted.items.length, 1);
+  assert.equal(withoutCompleted.items[0].status, 'queued');
+});
