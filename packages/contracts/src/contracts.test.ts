@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   CreateInputCommandSchema,
   RecommendationJobStatusResponseSchema,
+  SyncPullRequestSchema,
   SyncPullResponseSchema,
 } from './index';
 
@@ -54,4 +55,22 @@ test('SyncPullResponseSchema requires server timestamp and next cursor', () => {
   });
 
   assert.equal(parsed.hasMore, false);
+});
+
+test('SyncPullRequestSchema parses includeCompletedJobs=false correctly', () => {
+  const parsed = SyncPullRequestSchema.parse({
+    includeCompletedJobs: 'false',
+    limit: '10',
+  });
+
+  assert.equal(parsed.includeCompletedJobs, false);
+  assert.equal(parsed.limit, 10);
+});
+
+test('SyncPullRequestSchema parses includeCompletedJobs=0 correctly', () => {
+  const parsed = SyncPullRequestSchema.parse({
+    includeCompletedJobs: '0',
+  });
+
+  assert.equal(parsed.includeCompletedJobs, false);
 });
