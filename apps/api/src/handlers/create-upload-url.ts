@@ -1,28 +1,32 @@
 import type { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { CreateInputCommandSchema } from '@crop-copilot/contracts';
-import { isBadRequestError, jsonResponse, parseJsonBody } from '../lib/http';
-import { getRecommendationStore } from '../lib/store';
+import {
+  CreateUploadUrlRequestSchema,
+  CreateUploadUrlResponseSchema,
+} from '@crop-copilot/contracts';
 import { withAuth } from '../auth/with-auth';
 import type { AuthVerifier } from '../auth/types';
+import { isBadRequestError, jsonResponse, parseJsonBody } from '../lib/http';
+import { createPresignedUploadUrl } from '../storage/presigned-upload';
+
+type UploadUrlFactory = typeof createPresignedUploadUrl;
 
 function isValidationError(error: unknown): error is Error {
   return error instanceof Error && error.name === 'ZodError';
 }
 
-export function buildCreateInputHandler(
-  verifier?: AuthVerifier
+export function buildCreateUploadUrlHandler(
+  verifier?: AuthVerifier,
+  uploadFactory: UploadUrlFactory = createPresignedUploadUrl
 ): APIGatewayProxyHandlerV2 {
   return withAuth(async (event, auth) => {
     try {
-      const payload = parseJsonBody<unknown>(event.body);
-      const command = CreateInputCommandSchema.parse(payload);
+      const body = parseJsonBody<unknown>(event.body);
+      const request = CreateUploadUrlRequestSchema.parse(body);
+      const upload = await uploadFactory(auth.userId, request);
 
-      const response = await getRecommendationStore().enqueueInput(
-        auth.userId,
-        command
-      );
-
-      return jsonResponse(response, { statusCode: 202 });
+      return jsonResponse(CreateUploadUrlResponseSchema.parse(upload), {
+        statusCode: 200,
+      });
     } catch (error) {
       if (isValidationError(error) || isBadRequestError(error)) {
         return jsonResponse(
@@ -36,7 +40,7 @@ export function buildCreateInputHandler(
         );
       }
 
-      console.error('Failed to enqueue recommendation input', error);
+      console.error('Failed to create presigned upload URL', error);
 
       return jsonResponse(
         {
@@ -51,4 +55,4 @@ export function buildCreateInputHandler(
   }, verifier);
 }
 
-export const handler = buildCreateInputHandler();
+export const handler = buildCreateUploadUrlHandler();
