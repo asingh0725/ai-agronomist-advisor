@@ -6,6 +6,8 @@ import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { Construct } from 'constructs';
 import type { EnvironmentConfig } from '../config';
 
@@ -97,6 +99,22 @@ export class FoundationStack extends Stack {
       },
     });
 
+    const ingestionDlq = new sqs.Queue(this, 'IngestionDlq', {
+      queueName: `${config.projectSlug}-${config.envName}-ingestion-dlq`,
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      retentionPeriod: Duration.days(14),
+    });
+
+    const ingestionQueue = new sqs.Queue(this, 'IngestionQueue', {
+      queueName: `${config.projectSlug}-${config.envName}-ingestion-batches`,
+      encryption: sqs.QueueEncryption.SQS_MANAGED,
+      visibilityTimeout: Duration.seconds(300),
+      deadLetterQueue: {
+        queue: ingestionDlq,
+        maxReceiveCount: 5,
+      },
+    });
+
     const pipelineDefinition = new sfn.Pass(this, 'RetrievingContext')
       .next(new sfn.Pass(this, 'GeneratingRecommendation'))
       .next(new sfn.Pass(this, 'ValidatingOutput'))
@@ -110,6 +128,39 @@ export class FoundationStack extends Stack {
         stateMachineName: `${config.projectSlug}-${config.envName}-recommendation-pipeline`,
         definitionBody: sfn.DefinitionBody.fromChainable(pipelineDefinition),
       }
+    );
+
+    const ingestionPipelineDefinition = new sfn.Pass(this, 'DiscoverSources')
+      .next(new sfn.Pass(this, 'ScrapeSources'))
+      .next(new sfn.Pass(this, 'ParseAndChunk'))
+      .next(new sfn.Pass(this, 'EmbedAndUpsert'))
+      .next(new sfn.Succeed(this, 'IngestionCompleted'));
+
+    const ingestionPipelineStateMachine = new sfn.StateMachine(
+      this,
+      'IngestionPipelineStateMachine',
+      {
+        stateMachineName: `${config.projectSlug}-${config.envName}-ingestion-pipeline`,
+        definitionBody: sfn.DefinitionBody.fromChainable(ingestionPipelineDefinition),
+      }
+    );
+
+    const ingestionScheduleRule = new events.Rule(this, 'IngestionScheduleRule', {
+      ruleName: `${config.projectSlug}-${config.envName}-ingestion-schedule`,
+      schedule: events.Schedule.cron({
+        minute: '0',
+        hour: '6',
+      }),
+      description: 'Triggers ingestion orchestration every day at 06:00 UTC.',
+    });
+
+    ingestionScheduleRule.addTarget(
+      new targets.SfnStateMachine(ingestionPipelineStateMachine, {
+        input: events.RuleTargetInput.fromObject({
+          trigger: 'scheduled',
+          source: 'eventbridge',
+        }),
+      })
     );
 
     new ssm.StringParameter(this, 'ParameterApiBaseUrl', {
@@ -140,6 +191,18 @@ export class FoundationStack extends Stack {
       parameterName: `${parameterPrefix}/pipeline/recommendation-state-machine-arn`,
       stringValue: recommendationPipelineStateMachine.stateMachineArn,
       description: 'Step Functions ARN for recommendation pipeline orchestration.',
+    });
+
+    new ssm.StringParameter(this, 'ParameterIngestionQueueUrl', {
+      parameterName: `${parameterPrefix}/pipeline/ingestion-queue-url`,
+      stringValue: ingestionQueue.queueUrl,
+      description: 'SQS queue URL for ingestion batch requests.',
+    });
+
+    new ssm.StringParameter(this, 'ParameterIngestionStateMachineArn', {
+      parameterName: `${parameterPrefix}/pipeline/ingestion-state-machine-arn`,
+      stringValue: ingestionPipelineStateMachine.stateMachineArn,
+      description: 'Step Functions ARN for ingestion pipeline orchestration.',
     });
 
     if (config.costAlertEmail) {
@@ -173,6 +236,16 @@ export class FoundationStack extends Stack {
     new CfnOutput(this, 'RecommendationStateMachineArn', {
       value: recommendationPipelineStateMachine.stateMachineArn,
       description: 'Step Functions state machine ARN for async recommendation pipeline.',
+    });
+
+    new CfnOutput(this, 'IngestionQueueUrl', {
+      value: ingestionQueue.queueUrl,
+      description: 'SQS queue URL for ingestion batch processing.',
+    });
+
+    new CfnOutput(this, 'IngestionStateMachineArn', {
+      value: ingestionPipelineStateMachine.stateMachineArn,
+      description: 'Step Functions state machine ARN for ingestion orchestration.',
     });
   }
 }

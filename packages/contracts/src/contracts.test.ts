@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   CreateInputCommandSchema,
   CreateUploadUrlRequestSchema,
+  IngestionBatchMessageSchema,
   RecommendationJobRequestedSchema,
   RecommendationJobStatusResponseSchema,
   SyncPullResponseSchema,
@@ -80,4 +81,23 @@ test('RecommendationJobRequestedSchema validates queue message', () => {
   });
 
   assert.equal(parsed.messageType, 'recommendation.job.requested');
+});
+
+test('IngestionBatchMessageSchema validates batch ingestion request', () => {
+  const parsed = IngestionBatchMessageSchema.parse({
+    messageType: 'ingestion.batch.requested',
+    messageVersion: '1',
+    requestedAt: '2026-02-16T12:00:00.000Z',
+    sources: [
+      {
+        sourceId: 'uc-extension-tomato',
+        url: 'https://extension.example.edu/tomato-blight',
+        priority: 'high',
+        freshnessHours: 24,
+        tags: ['tomato', 'disease'],
+      },
+    ],
+  });
+
+  assert.equal(parsed.sources[0].priority, 'high');
 });

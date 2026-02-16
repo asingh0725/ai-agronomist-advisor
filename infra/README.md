@@ -8,7 +8,9 @@ This package provisions the AWS foundation stack for Crop Copilot.
 - SNS billing alerts topic
 - AWS Budget with 50/80/100% monthly spend thresholds
 - SQS recommendation job queue + DLQ
+- SQS ingestion queue + DLQ
 - Step Functions recommendation pipeline scaffold
+- Step Functions ingestion pipeline scaffold + EventBridge schedule trigger
 - SSM parameter namespace for platform runtime config
 
 ## Environment variables
