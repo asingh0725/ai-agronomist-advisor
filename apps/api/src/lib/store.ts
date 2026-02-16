@@ -22,6 +22,10 @@ interface StoredJob {
   failureReason?: string;
 }
 
+function buildIdempotencyLookupKey(userId: string, idempotencyKey: string): string {
+  return `${userId}:${idempotencyKey.trim().toLowerCase()}`;
+}
+
 export interface RecommendationStore {
   enqueueInput(userId: string, payload: CreateInputCommand): CreateInputAccepted;
   getJobStatus(jobId: string): RecommendationJobStatusResponse | null;
@@ -30,8 +34,31 @@ export interface RecommendationStore {
 export class InMemoryRecommendationStore implements RecommendationStore {
   private readonly inputsById = new Map<string, StoredInput>();
   private readonly jobById = new Map<string, StoredJob>();
+  private readonly inputIdByIdempotencyKey = new Map<string, string>();
 
   enqueueInput(userId: string, payload: CreateInputCommand): CreateInputAccepted {
+    const idempotencyLookupKey = buildIdempotencyLookupKey(
+      userId,
+      payload.idempotencyKey
+    );
+    const existingInputId =
+      this.inputIdByIdempotencyKey.get(idempotencyLookupKey);
+    if (existingInputId) {
+      const existingInput = this.inputsById.get(existingInputId);
+      if (existingInput) {
+        const existingJob = this.jobById.get(existingInput.jobId);
+
+        return {
+          inputId: existingInput.inputId,
+          jobId: existingInput.jobId,
+          status: existingJob?.status ?? 'queued',
+          acceptedAt: existingInput.createdAt,
+        };
+      }
+
+      this.inputIdByIdempotencyKey.delete(idempotencyLookupKey);
+    }
+
     const now = new Date().toISOString();
     const inputId = randomUUID();
     const jobId = randomUUID();
@@ -50,6 +77,7 @@ export class InMemoryRecommendationStore implements RecommendationStore {
       status: 'queued',
       updatedAt: now,
     });
+    this.inputIdByIdempotencyKey.set(idempotencyLookupKey, inputId);
 
     return {
       inputId,
