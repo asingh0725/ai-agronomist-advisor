@@ -51,6 +51,8 @@ Build a production-ready AWS backend for Crop Copilot that supports web + native
 11. PR-11 Production Cutover
 - Canary rollout
 - Supabase dependency removal after parity checks
+- Cutover runbook (`docs/plans/aws-production-cutover.md`)
+- Parity + dependency audit tooling (`pnpm cutover:parity`, `pnpm cutover:supabase-audit`)
 
 ## Test and Release Strategy
 
