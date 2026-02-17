@@ -199,9 +199,10 @@ test('verifyAccessTokenFromEvent extracts Supabase access token from auth cookie
   process.env.SUPABASE_URL = 'https://example.supabase.co';
   process.env.SUPABASE_ANON_KEY = 'anon-test-key';
 
+  const accessToken = 'header.payload.signature';
   globalThis.fetch = async (_input, init) => {
     const authHeader = (init?.headers as Record<string, string> | undefined)?.authorization;
-    assert.equal(authHeader, 'Bearer cookie-access-token');
+    assert.equal(authHeader, `Bearer ${accessToken}`);
     return new Response(
       JSON.stringify({
         id: '33333333-3333-4333-8333-333333333333',
@@ -211,7 +212,7 @@ test('verifyAccessTokenFromEvent extracts Supabase access token from auth cookie
     );
   };
 
-  const cookieValue = encodeURIComponent(JSON.stringify(['cookie-access-token', 'refresh-token']));
+  const cookieValue = encodeURIComponent(JSON.stringify([accessToken, 'refresh-token']));
 
   try {
     const auth = await verifyAccessTokenFromEvent({
@@ -220,6 +221,57 @@ test('verifyAccessTokenFromEvent extracts Supabase access token from auth cookie
 
     assert.equal(auth.userId, '33333333-3333-4333-8333-333333333333');
     assert.equal(auth.email, 'cookie@example.com');
+    assert.deepEqual(auth.scopes, []);
+    assert.equal(auth.tokenUse, 'access');
+  } finally {
+    process.env.COGNITO_REGION = previousRegion;
+    process.env.COGNITO_USER_POOL_ID = previousUserPoolId;
+    process.env.COGNITO_APP_CLIENT_ID = previousClientId;
+    process.env.SUPABASE_URL = previousSupabaseUrl;
+    process.env.SUPABASE_ANON_KEY = previousSupabaseAnonKey;
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('verifyAccessTokenFromEvent extracts Supabase access token from API Gateway cookies array', async () => {
+  const previousRegion = process.env.COGNITO_REGION;
+  const previousUserPoolId = process.env.COGNITO_USER_POOL_ID;
+  const previousClientId = process.env.COGNITO_APP_CLIENT_ID;
+  const previousSupabaseUrl = process.env.SUPABASE_URL;
+  const previousSupabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  const originalFetch = globalThis.fetch;
+
+  process.env.COGNITO_REGION = '';
+  process.env.COGNITO_USER_POOL_ID = '';
+  process.env.COGNITO_APP_CLIENT_ID = '';
+  process.env.SUPABASE_URL = 'https://example.supabase.co';
+  process.env.SUPABASE_ANON_KEY = 'anon-test-key';
+
+  const accessToken = 'array.header.payload';
+  globalThis.fetch = async (_input, init) => {
+    const authHeader = (init?.headers as Record<string, string> | undefined)?.authorization;
+    assert.equal(authHeader, `Bearer ${accessToken}`);
+    return new Response(
+      JSON.stringify({
+        id: '44444444-4444-4444-8444-444444444444',
+        email: 'cookies-array@example.com',
+      }),
+      { status: 200, headers: { 'content-type': 'application/json' } }
+    );
+  };
+
+  const cookieValue = encodeURIComponent(
+    JSON.stringify([accessToken, 'refresh-token'])
+  );
+
+  try {
+    const auth = await verifyAccessTokenFromEvent({
+      headers: {},
+      cookies: [`sb-test-auth-token=${cookieValue}`],
+    } as any);
+
+    assert.equal(auth.userId, '44444444-4444-4444-8444-444444444444');
+    assert.equal(auth.email, 'cookies-array@example.com');
     assert.deepEqual(auth.scopes, []);
     assert.equal(auth.tokenUse, 'access');
   } finally {

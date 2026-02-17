@@ -60,6 +60,10 @@ function maybeBase64Decode(value: string): string | null {
   }
 }
 
+function isLikelyJwt(value: string): boolean {
+  return /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(value);
+}
+
 function parseSupabaseCookieValue(value: string): string | undefined {
   const decoded = decodeURIComponent(value);
   const candidates = [decoded];
@@ -77,12 +81,13 @@ function parseSupabaseCookieValue(value: string): string | undefined {
   }
 
   for (const candidate of candidates) {
-    if (candidate.includes('.')) {
-      return candidate;
+    const trimmed = candidate.trim();
+    if (isLikelyJwt(trimmed)) {
+      return trimmed;
     }
 
     try {
-      const parsed = JSON.parse(candidate) as unknown;
+      const parsed = JSON.parse(trimmed) as unknown;
       if (Array.isArray(parsed) && typeof parsed[0] === 'string') {
         return parsed[0];
       }
@@ -151,11 +156,17 @@ function extractSupabaseTokenFromCookieHeader(cookieHeader: string | undefined):
   return parseSupabaseCookieValue(combined);
 }
 
-function resolveAccessToken(headers: Record<string, string | undefined>): string {
+function resolveAccessToken(event: APIGatewayProxyEventV2): string {
+  const headers = event.headers ?? {};
+
   try {
     return getBearerToken(headers);
   } catch (error) {
-    const cookieToken = extractSupabaseTokenFromCookieHeader(headers.cookie);
+    const cookieHeader =
+      headers.cookie ??
+      headers.Cookie ??
+      (Array.isArray(event.cookies) ? event.cookies.join('; ') : undefined);
+    const cookieToken = extractSupabaseTokenFromCookieHeader(cookieHeader);
     if (cookieToken) {
       return cookieToken;
     }
@@ -256,7 +267,7 @@ export async function verifyAccessTokenFromEvent(
   event: APIGatewayProxyEventV2,
   getKey?: JWTVerifyGetKey
 ): Promise<AuthContext> {
-  const token = resolveAccessToken(event.headers ?? {});
+  const token = resolveAccessToken(event);
   const region = process.env.COGNITO_REGION;
   const userPoolId = process.env.COGNITO_USER_POOL_ID;
   const clientId = process.env.COGNITO_APP_CLIENT_ID;
