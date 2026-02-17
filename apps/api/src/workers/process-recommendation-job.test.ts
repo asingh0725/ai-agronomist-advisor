@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { SQSEvent } from 'aws-lambda';
-import { handler } from './process-recommendation-job';
-import { InMemoryRecommendationStore, setRecommendationStore } from '../lib/store';
+import { buildProcessRecommendationJobHandler } from './process-recommendation-job';
+import { InMemoryRecommendationStore } from '../lib/store';
 
 interface WorkerResponse {
   batchItemFailures: Array<{ itemIdentifier: string }>;
@@ -49,7 +49,22 @@ function buildSqsEvent(jobId: string, inputId: string): SQSEvent {
 
 test('process-recommendation-job worker moves job to completed', async () => {
   const store = new InMemoryRecommendationStore();
-  setRecommendationStore(store);
+  let publishedEvents = 0;
+  const handler = buildProcessRecommendationJobHandler(
+    store,
+    async () => ({
+      recommendationId: 'b6c17a92-4fb6-44d8-90e7-6af8fd6f5a09',
+      confidence: 0.88,
+      diagnosis: { condition: 'test' },
+      sources: [],
+      modelUsed: 'rag-v2-scaffold',
+    }),
+    {
+      publishRecommendationReady: async () => {
+        publishedEvents += 1;
+      },
+    }
+  );
 
   const accepted = await store.enqueueInput('11111111-1111-4111-8111-111111111111', {
     idempotencyKey: 'ios-device-01:key-0001',
@@ -57,29 +72,88 @@ test('process-recommendation-job worker moves job to completed', async () => {
     imageUrl: 'https://example.com/crop.jpg',
   });
 
-  const event = buildSqsEvent(accepted.jobId, accepted.inputId);
-
-  const response = asWorkerResponse(await handler(event, {} as any, () => undefined));
+  const response = asWorkerResponse(
+    await handler(buildSqsEvent(accepted.jobId, accepted.inputId), {} as any, () => undefined)
+  );
   assert.equal(response.batchItemFailures.length, 0);
 
   const status = await store.getJobStatus(accepted.jobId, '11111111-1111-4111-8111-111111111111');
   assert.equal(status?.status, 'completed');
   assert.ok(status?.result);
   assert.equal(status?.result?.modelUsed, 'rag-v2-scaffold');
+  assert.equal(publishedEvents, 1);
 });
 
-test('process-recommendation-job worker skips duplicate delivery after completion', async () => {
+test('process-recommendation-job skips processing for already completed jobs', async () => {
   const store = new InMemoryRecommendationStore();
-  setRecommendationStore(store);
-
   const accepted = await store.enqueueInput('11111111-1111-4111-8111-111111111111', {
     idempotencyKey: 'ios-device-01:key-0002',
+    type: 'PHOTO',
+  });
+  await store.updateJobStatus(accepted.jobId, '11111111-1111-4111-8111-111111111111', 'completed');
+
+  let pipelineInvocations = 0;
+  let publishedEvents = 0;
+  const handler = buildProcessRecommendationJobHandler(
+    store,
+    async () => {
+      pipelineInvocations += 1;
+      return {
+        recommendationId: '669e6f95-8b85-4b78-8518-c4bc3794f7ab',
+        confidence: 0.5,
+        diagnosis: { condition: 'should-not-run' },
+        sources: [],
+        modelUsed: 'test',
+      };
+    },
+    {
+      publishRecommendationReady: async () => {
+        publishedEvents += 1;
+      },
+    }
+  );
+
+  const response = asWorkerResponse(
+    await handler(buildSqsEvent(accepted.jobId, accepted.inputId), {} as any, () => undefined)
+  );
+  assert.equal(response.batchItemFailures.length, 0);
+  assert.equal(pipelineInvocations, 0);
+  assert.equal(publishedEvents, 0);
+});
+
+test('process-recommendation-job skips duplicate delivery after completion', async () => {
+  const store = new InMemoryRecommendationStore();
+  let pipelineInvocations = 0;
+  let publishedEvents = 0;
+  const handler = buildProcessRecommendationJobHandler(
+    store,
+    async () => {
+      pipelineInvocations += 1;
+      return {
+        recommendationId:
+          pipelineInvocations === 1
+            ? '8d1f415c-7d00-4f8e-b909-cbd85f15d730'
+            : 'bcf37065-25e6-4ea0-94f6-5e67dfa57a23',
+        confidence: 0.77,
+        diagnosis: { condition: 'ok' },
+        sources: [],
+        modelUsed: 'rag-v2-scaffold',
+      };
+    },
+    {
+      publishRecommendationReady: async () => {
+        publishedEvents += 1;
+      },
+    }
+  );
+
+  const accepted = await store.enqueueInput('11111111-1111-4111-8111-111111111111', {
+    idempotencyKey: 'ios-device-01:key-0004',
     type: 'PHOTO',
     imageUrl: 'https://example.com/crop.jpg',
   });
 
   const event = buildSqsEvent(accepted.jobId, accepted.inputId);
-
   const first = asWorkerResponse(await handler(event, {} as any, () => undefined));
   assert.equal(first.batchItemFailures.length, 0);
 
@@ -99,4 +173,35 @@ test('process-recommendation-job worker skips duplicate delivery after completio
   );
   assert.equal(secondStatus?.status, 'completed');
   assert.equal(secondStatus?.result?.recommendationId, firstRecommendationId);
+  assert.equal(pipelineInvocations, 1);
+  assert.equal(publishedEvents, 1);
+});
+
+test('process-recommendation-job does not fail batch when push publish fails', async () => {
+  const store = new InMemoryRecommendationStore();
+  const accepted = await store.enqueueInput('11111111-1111-4111-8111-111111111111', {
+    idempotencyKey: 'ios-device-01:key-0003',
+    type: 'PHOTO',
+  });
+
+  const handler = buildProcessRecommendationJobHandler(
+    store,
+    async () => ({
+      recommendationId: '6fc66603-c4d8-47a3-8e21-52a434112b4c',
+      confidence: 0.75,
+      diagnosis: { condition: 'ok' },
+      sources: [],
+      modelUsed: 'rag-v2-scaffold',
+    }),
+    {
+      publishRecommendationReady: async () => {
+        throw new Error('sns unavailable');
+      },
+    }
+  );
+
+  const response = asWorkerResponse(
+    await handler(buildSqsEvent(accepted.jobId, accepted.inputId), {} as any, () => undefined)
+  );
+  assert.equal(response.batchItemFailures.length, 0);
 });

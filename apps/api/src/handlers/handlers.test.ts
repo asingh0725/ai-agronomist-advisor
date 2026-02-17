@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { handler as healthHandler } from './health';
 import { buildCreateInputHandler } from './create-input';
 import { buildGetJobStatusHandler } from './get-job-status';
+import { buildSyncPullHandler } from './sync-pull';
 import type { RecommendationStore } from '../lib/store';
 import { setRecommendationStore } from '../lib/store';
 import { AuthError } from '../auth/errors';
@@ -280,6 +281,14 @@ test('create input returns 500 when store enqueue fails', async () => {
     async getJobStatus(_jobId, _userId) {
       return null;
     },
+    async pullSyncRecords() {
+      return {
+        items: [],
+        nextCursor: null,
+        hasMore: false,
+        serverTimestamp: new Date().toISOString(),
+      };
+    },
     async updateJobStatus() {
       return undefined;
     },
@@ -317,4 +326,110 @@ test('create input returns 500 when store enqueue fails', async () => {
   assert.equal(bodyResponse.error.code, 'INTERNAL_SERVER_ERROR');
 
   setRecommendationStore(null);
+});
+
+test('sync pull returns paginated records and supports cursor', async () => {
+  setRecommendationStore(null);
+  const authVerifier = async () => ({
+    userId: '11111111-1111-4111-8111-111111111111',
+    scopes: ['recommendation:read'],
+  });
+  const queue: RecommendationQueue = {
+    publishRecommendationJob: async () => undefined,
+  };
+  const createInputHandler = buildCreateInputHandler(authVerifier, queue);
+  const syncPullHandler = buildSyncPullHandler(authVerifier);
+
+  await createInputHandler(
+    {
+      body: JSON.stringify({
+        idempotencyKey: 'ios-device-01:sync-a',
+        type: 'PHOTO',
+      }),
+      headers: { authorization: 'Bearer fake-token' },
+    } as any,
+    {} as any,
+    () => undefined
+  );
+  await createInputHandler(
+    {
+      body: JSON.stringify({
+        idempotencyKey: 'ios-device-01:sync-b',
+        type: 'LAB_REPORT',
+      }),
+      headers: { authorization: 'Bearer fake-token' },
+    } as any,
+    {} as any,
+    () => undefined
+  );
+
+  const pageOne = asHandlerResponse(
+    await syncPullHandler(
+      {
+        queryStringParameters: {
+          limit: '1',
+        },
+        headers: { authorization: 'Bearer fake-token' },
+      } as any,
+      {} as any,
+      () => undefined
+    )
+  );
+  assert.equal(pageOne.statusCode, 200);
+  const pageOneBody = parseBody<{
+    items: Array<{ inputId: string }>;
+    nextCursor: string | null;
+    hasMore: boolean;
+  }>(pageOne.body);
+  assert.equal(pageOneBody.items.length, 1);
+  assert.equal(pageOneBody.hasMore, true);
+  assert.ok(pageOneBody.nextCursor);
+
+  const pageTwo = asHandlerResponse(
+    await syncPullHandler(
+      {
+        queryStringParameters: {
+          limit: '1',
+          cursor: pageOneBody.nextCursor ?? undefined,
+        },
+        headers: { authorization: 'Bearer fake-token' },
+      } as any,
+      {} as any,
+      () => undefined
+    )
+  );
+  assert.equal(pageTwo.statusCode, 200);
+  const pageTwoBody = parseBody<{
+    items: Array<{ inputId: string }>;
+    hasMore: boolean;
+  }>(pageTwo.body);
+  assert.equal(pageTwoBody.items.length, 1);
+  assert.notEqual(pageTwoBody.items[0].inputId, pageOneBody.items[0].inputId);
+  assert.equal(pageTwoBody.hasMore, false);
+});
+
+test('sync pull returns 400 when cursor is invalid', async () => {
+  setRecommendationStore(null);
+  const authVerifier = async () => ({
+    userId: '11111111-1111-4111-8111-111111111111',
+    scopes: ['recommendation:read'],
+  });
+  const syncPullHandler = buildSyncPullHandler(authVerifier);
+
+  const response = asHandlerResponse(
+    await syncPullHandler(
+      {
+        queryStringParameters: {
+          cursor: 'not-base64',
+        },
+        headers: { authorization: 'Bearer fake-token' },
+      } as any,
+      {} as any,
+      () => undefined
+    )
+  );
+
+  assert.equal(response.statusCode, 400);
+  const body = parseBody<{ error: { code: string } }>(response.body);
+  assert.equal(body.error.code, 'BAD_REQUEST');
 });

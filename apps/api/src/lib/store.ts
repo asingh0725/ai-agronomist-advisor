@@ -6,7 +6,16 @@ import type {
   JobStatus,
   RecommendationResult,
   RecommendationJobStatusResponse,
+  SyncInputRecord,
+  SyncPullRequest,
+  SyncPullResponse,
 } from '@crop-copilot/contracts';
+import { SyncPullRequestSchema } from '@crop-copilot/contracts';
+import {
+  decodeSyncCursor,
+  encodeSyncCursor,
+  normalizeIdempotencyKey,
+} from '@crop-copilot/domain';
 import { PostgresRecommendationStore } from './postgres-store';
 
 interface StoredInput {
@@ -14,6 +23,7 @@ interface StoredInput {
   userId: string;
   payload: CreateInputCommand;
   createdAt: string;
+  updatedAt: string;
   jobId: string;
 }
 
@@ -28,7 +38,11 @@ interface StoredJob {
 }
 
 function buildIdempotencyLookupKey(userId: string, idempotencyKey: string): string {
-  return `${userId}:${idempotencyKey.trim().toLowerCase()}`;
+  return `${userId}:${normalizeIdempotencyKey(idempotencyKey)}`;
+}
+
+export interface EnqueueInputResult extends CreateInputAccepted {
+  wasCreated: boolean;
 }
 
 export interface RecommendationStore {
@@ -37,6 +51,7 @@ export interface RecommendationStore {
     jobId: string,
     userId: string
   ): Promise<RecommendationJobStatusResponse | null>;
+  pullSyncRecords(userId: string, request: SyncPullRequest): Promise<SyncPullResponse>;
   updateJobStatus(
     jobId: string,
     userId: string,
@@ -48,10 +63,6 @@ export interface RecommendationStore {
     userId: string,
     result: RecommendationResult
   ): Promise<void>;
-}
-
-export interface EnqueueInputResult extends CreateInputAccepted {
-  wasCreated: boolean;
 }
 
 export class InMemoryRecommendationStore implements RecommendationStore {
@@ -67,8 +78,7 @@ export class InMemoryRecommendationStore implements RecommendationStore {
       userId,
       payload.idempotencyKey
     );
-    const existingInputId =
-      this.inputIdByIdempotencyKey.get(idempotencyLookupKey);
+    const existingInputId = this.inputIdByIdempotencyKey.get(idempotencyLookupKey);
     if (existingInputId) {
       const existingInput = this.inputsById.get(existingInputId);
       if (existingInput) {
@@ -85,15 +95,21 @@ export class InMemoryRecommendationStore implements RecommendationStore {
 
       this.inputIdByIdempotencyKey.delete(idempotencyLookupKey);
     }
+
     const now = new Date().toISOString();
     const inputId = randomUUID();
     const jobId = randomUUID();
+    const normalizedPayload: CreateInputCommand = {
+      ...payload,
+      idempotencyKey: normalizeIdempotencyKey(payload.idempotencyKey),
+    };
 
     this.inputsById.set(inputId, {
       inputId,
       userId,
-      payload,
+      payload: normalizedPayload,
       createdAt: now,
+      updatedAt: now,
       jobId,
     });
 
@@ -138,6 +154,66 @@ export class InMemoryRecommendationStore implements RecommendationStore {
     };
   }
 
+  async pullSyncRecords(userId: string, request: SyncPullRequest): Promise<SyncPullResponse> {
+    const parsedRequest = SyncPullRequestSchema.parse(request);
+    const items: SyncInputRecord[] = [];
+
+    for (const input of this.inputsById.values()) {
+      if (input.userId !== userId) {
+        continue;
+      }
+
+      const job = this.jobById.get(input.jobId);
+      if (!job) {
+        continue;
+      }
+
+      if (!parsedRequest.includeCompletedJobs && job.status === 'completed') {
+        continue;
+      }
+
+      const updatedAt = job.updatedAt > input.updatedAt ? job.updatedAt : input.updatedAt;
+
+      items.push({
+        inputId: input.inputId,
+        createdAt: input.createdAt,
+        updatedAt,
+        type: input.payload.type,
+        crop: input.payload.crop ?? null,
+        location: input.payload.location ?? null,
+        status: job.status,
+        recommendationId: job.result?.recommendationId ?? null,
+      });
+    }
+
+    items.sort(compareSyncRecords);
+
+    const cursor = parsedRequest.cursor ? decodeSyncCursor(parsedRequest.cursor) : null;
+    const filtered = cursor
+      ? items.filter((item) => isAfterCursor(item, cursor.createdAt, cursor.inputId))
+      : items;
+
+    const paged = filtered.slice(0, parsedRequest.limit + 1);
+    const hasMore = paged.length > parsedRequest.limit;
+    const visibleItems = hasMore ? paged.slice(0, parsedRequest.limit) : paged;
+
+    const lastItem = visibleItems.at(-1);
+    const nextCursor =
+      hasMore && lastItem
+        ? encodeSyncCursor({
+            createdAt: lastItem.createdAt,
+            inputId: lastItem.inputId,
+          })
+        : null;
+
+    return {
+      items: visibleItems,
+      nextCursor,
+      hasMore,
+      serverTimestamp: new Date().toISOString(),
+    };
+  }
+
   async updateJobStatus(
     jobId: string,
     userId: string,
@@ -153,6 +229,12 @@ export class InMemoryRecommendationStore implements RecommendationStore {
     job.updatedAt = new Date().toISOString();
     job.failureReason = failureReason;
     this.jobById.set(jobId, job);
+
+    const input = this.inputsById.get(job.inputId);
+    if (input) {
+      input.updatedAt = job.updatedAt;
+      this.inputsById.set(input.inputId, input);
+    }
   }
 
   async saveRecommendationResult(
@@ -168,7 +250,39 @@ export class InMemoryRecommendationStore implements RecommendationStore {
     job.result = result;
     job.updatedAt = new Date().toISOString();
     this.jobById.set(jobId, job);
+
+    const input = this.inputsById.get(job.inputId);
+    if (input) {
+      input.updatedAt = job.updatedAt;
+      this.inputsById.set(input.inputId, input);
+    }
   }
+}
+
+function compareSyncRecords(a: SyncInputRecord, b: SyncInputRecord): number {
+  if (a.createdAt > b.createdAt) {
+    return -1;
+  }
+  if (a.createdAt < b.createdAt) {
+    return 1;
+  }
+
+  return b.inputId.localeCompare(a.inputId);
+}
+
+function isAfterCursor(
+  item: SyncInputRecord,
+  cursorCreatedAt: string,
+  cursorInputId: string
+): boolean {
+  if (item.createdAt < cursorCreatedAt) {
+    return true;
+  }
+  if (item.createdAt > cursorCreatedAt) {
+    return false;
+  }
+
+  return item.inputId < cursorInputId;
 }
 
 let singletonStore: RecommendationStore | null = null;
