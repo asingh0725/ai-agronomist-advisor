@@ -133,24 +133,42 @@ export class FoundationStack extends Stack {
     });
 
     const recommendationLatencyMetric = new cloudwatch.Metric({
-      namespace: 'CropCopilot/Pipeline',
+      namespace: config.metricsNamespace,
       metricName: 'RecommendationDurationMs',
       statistic: 'Average',
       period: Duration.minutes(5),
+      dimensionsMap: {
+        Service: 'api',
+        Environment: config.envName,
+        Pipeline: 'recommendation',
+        Status: 'completed',
+      },
     });
 
     const recommendationCostMetric = new cloudwatch.Metric({
-      namespace: 'CropCopilot/Pipeline',
+      namespace: config.metricsNamespace,
       metricName: 'RecommendationEstimatedCostUsd',
       statistic: 'Average',
       period: Duration.minutes(5),
+      dimensionsMap: {
+        Service: 'api',
+        Environment: config.envName,
+        Pipeline: 'recommendation',
+        Status: 'completed',
+      },
     });
 
     const recommendationFailureMetric = new cloudwatch.Metric({
-      namespace: 'CropCopilot/Pipeline',
+      namespace: config.metricsNamespace,
       metricName: 'RecommendationFailedCount',
       statistic: 'Sum',
       period: Duration.minutes(5),
+      dimensionsMap: {
+        Service: 'api',
+        Environment: config.envName,
+        Pipeline: 'recommendation',
+        Status: 'failed',
+      },
     });
 
     const queueBacklogAlarm = new cloudwatch.Alarm(this, 'RecommendationQueueBacklogAlarm', {

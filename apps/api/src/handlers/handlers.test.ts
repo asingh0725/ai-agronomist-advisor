@@ -125,6 +125,45 @@ test('create input returns 400 for invalid body', async () => {
   assert.equal(body.error.code, 'BAD_REQUEST');
 });
 
+test('create input ignores invalid trace headers and still enqueues', async () => {
+  setRecommendationStore(null);
+  let published = 0;
+  let publishedTraceId: string | undefined;
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '77777777-7777-4777-8777-777777777777',
+      scopes: ['recommendation:write'],
+    }),
+    {
+      publishRecommendationJob: async (message) => {
+        published += 1;
+        publishedTraceId = message.traceId;
+      },
+    }
+  );
+
+  const response = asHandlerResponse(
+    await createInputHandler(
+      {
+        body: JSON.stringify({
+          idempotencyKey: 'ios-device-07:trace-ignore',
+          type: 'PHOTO',
+        }),
+        headers: {
+          authorization: 'Bearer fake-token',
+          'x-request-id': 'short',
+        },
+      } as any,
+      {} as any,
+      () => undefined
+    )
+  );
+
+  assert.equal(response.statusCode, 202);
+  assert.equal(published, 1);
+  assert.equal(publishedTraceId, undefined);
+});
+
 test('create input returns 401 for failed auth', async () => {
   setRecommendationStore(null);
   const createInputHandler = buildCreateInputHandler(
