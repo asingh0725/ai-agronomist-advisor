@@ -6,6 +6,7 @@ export interface EnvironmentConfig {
   envName: EnvironmentName;
   accountId: string;
   region: string;
+  metricsNamespace: string;
   monthlyBudgetUsd: number;
   maxRecommendationCostUsd: number;
   costAlertEmail?: string;
@@ -25,11 +26,17 @@ const DEFAULT_MAX_RECOMMENDATION_COST_USD: Record<EnvironmentName, number> = {
 };
 
 function parseEnvironmentName(raw: string | undefined): EnvironmentName {
+  if (!raw) {
+    return 'dev';
+  }
+
   if (raw === 'dev' || raw === 'staging' || raw === 'prod') {
     return raw;
   }
 
-  return 'dev';
+  throw new Error(
+    `CROP_ENV must be one of dev, staging, or prod. Received: ${raw}`
+  );
 }
 
 function parseMonthlyBudget(raw: string | undefined, fallback: number): number {
@@ -62,6 +69,7 @@ export function loadEnvironmentConfig(): EnvironmentConfig {
   const envName = parseEnvironmentName(process.env.CROP_ENV);
   const accountId = process.env.AWS_ACCOUNT_ID || process.env.CDK_DEFAULT_ACCOUNT;
   const region = process.env.AWS_REGION || process.env.CDK_DEFAULT_REGION || 'ca-west-1';
+  const metricsNamespace = process.env.METRICS_NAMESPACE || 'CropCopilot/Pipeline';
 
   if (!accountId) {
     throw new Error(
@@ -87,6 +95,7 @@ export function loadEnvironmentConfig(): EnvironmentConfig {
     envName,
     accountId,
     region,
+    metricsNamespace,
     monthlyBudgetUsd,
     maxRecommendationCostUsd,
     costAlertEmail,
