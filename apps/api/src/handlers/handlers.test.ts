@@ -41,9 +41,11 @@ test('create input returns 202 and job id, then get status returns queued', asyn
     scopes: ['recommendation:write'],
   });
   let published = 0;
+  let lastPublishedTraceId: string | undefined;
   const queue: RecommendationQueue = {
-    publishRecommendationJob: async () => {
+    publishRecommendationJob: async (message) => {
       published += 1;
+      lastPublishedTraceId = message.traceId;
     },
   };
   const createInputHandler = buildCreateInputHandler(authVerifier, queue);
@@ -58,6 +60,9 @@ test('create input returns 202 and job id, then get status returns queued', asyn
           imageUrl: 'https://example.com/image.jpg',
         }),
         headers: { authorization: 'Bearer fake-token' },
+        requestContext: {
+          requestId: 'req-test-001',
+        },
       } as any,
       {} as any,
       () => undefined
@@ -70,6 +75,7 @@ test('create input returns 202 and job id, then get status returns queued', asyn
   assert.ok(accepted.jobId);
   assert.ok(accepted.inputId);
   assert.equal(published, 1);
+  assert.equal(lastPublishedTraceId, 'req-test-001');
 
   const statusRes = asHandlerResponse(
     await getJobStatusHandler(
@@ -117,6 +123,45 @@ test('create input returns 400 for invalid body', async () => {
   assert.equal(response.statusCode, 400);
   const body = parseBody<{ error: { code: string } }>(response.body);
   assert.equal(body.error.code, 'BAD_REQUEST');
+});
+
+test('create input ignores invalid trace headers and still enqueues', async () => {
+  setRecommendationStore(null);
+  let published = 0;
+  let publishedTraceId: string | undefined;
+  const createInputHandler = buildCreateInputHandler(
+    async () => ({
+      userId: '77777777-7777-4777-8777-777777777777',
+      scopes: ['recommendation:write'],
+    }),
+    {
+      publishRecommendationJob: async (message) => {
+        published += 1;
+        publishedTraceId = message.traceId;
+      },
+    }
+  );
+
+  const response = asHandlerResponse(
+    await createInputHandler(
+      {
+        body: JSON.stringify({
+          idempotencyKey: 'ios-device-07:trace-ignore',
+          type: 'PHOTO',
+        }),
+        headers: {
+          authorization: 'Bearer fake-token',
+          'x-request-id': 'short',
+        },
+      } as any,
+      {} as any,
+      () => undefined
+    )
+  );
+
+  assert.equal(response.statusCode, 202);
+  assert.equal(published, 1);
+  assert.equal(publishedTraceId, undefined);
 });
 
 test('create input returns 401 for failed auth', async () => {

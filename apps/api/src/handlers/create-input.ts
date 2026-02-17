@@ -13,11 +13,30 @@ function isValidationError(error: unknown): error is Error {
   return error instanceof Error && error.name === 'ZodError';
 }
 
+function normalizeTraceId(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length < 8 || trimmed.length > 128) {
+    return undefined;
+  }
+
+  return trimmed;
+}
+
 export function buildCreateInputHandler(
   verifier?: AuthVerifier,
   queue: RecommendationQueue = getRecommendationQueue()
 ): APIGatewayProxyHandlerV2 {
   return withAuth(async (event, auth) => {
+    const traceId = normalizeTraceId(
+      event.requestContext?.requestId ??
+        event.headers?.['x-request-id'] ??
+        event.headers?.['X-Request-Id']
+    );
+
     let command: ReturnType<typeof CreateInputCommandSchema.parse>;
     try {
       const payload = parseJsonBody<unknown>(event.body);
@@ -71,6 +90,7 @@ export function buildCreateInputHandler(
           messageType: 'recommendation.job.requested',
           messageVersion: '1',
           requestedAt: new Date().toISOString(),
+          traceId,
           userId: auth.userId,
           inputId: enqueueResponse.inputId,
           jobId: enqueueResponse.jobId,

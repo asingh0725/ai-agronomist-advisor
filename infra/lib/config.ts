@@ -6,7 +6,9 @@ export interface EnvironmentConfig {
   envName: EnvironmentName;
   accountId: string;
   region: string;
+  metricsNamespace: string;
   monthlyBudgetUsd: number;
+  maxRecommendationCostUsd: number;
   costAlertEmail?: string;
   tags: Record<string, string>;
 }
@@ -15,6 +17,12 @@ const DEFAULT_BUDGETS: Record<EnvironmentName, number> = {
   dev: 150,
   staging: 350,
   prod: 1000,
+};
+
+const DEFAULT_MAX_RECOMMENDATION_COST_USD: Record<EnvironmentName, number> = {
+  dev: 1.5,
+  staging: 1.3,
+  prod: 1.1,
 };
 
 function parseEnvironmentName(raw: string | undefined): EnvironmentName {
@@ -44,10 +52,24 @@ function parseMonthlyBudget(raw: string | undefined, fallback: number): number {
   return parsed;
 }
 
+function parsePositiveNumber(raw: string | undefined, fallback: number, name: string): number {
+  if (!raw) {
+    return fallback;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${name} must be a positive number. Received: ${raw}`);
+  }
+
+  return parsed;
+}
+
 export function loadEnvironmentConfig(): EnvironmentConfig {
   const envName = parseEnvironmentName(process.env.CROP_ENV);
   const accountId = process.env.AWS_ACCOUNT_ID || process.env.CDK_DEFAULT_ACCOUNT;
   const region = process.env.AWS_REGION || process.env.CDK_DEFAULT_REGION || 'ca-west-1';
+  const metricsNamespace = process.env.METRICS_NAMESPACE || 'CropCopilot/Pipeline';
 
   if (!accountId) {
     throw new Error(
@@ -59,6 +81,11 @@ export function loadEnvironmentConfig(): EnvironmentConfig {
     process.env.MONTHLY_BUDGET_USD,
     DEFAULT_BUDGETS[envName]
   );
+  const maxRecommendationCostUsd = parsePositiveNumber(
+    process.env.MAX_RECOMMENDATION_COST_USD,
+    DEFAULT_MAX_RECOMMENDATION_COST_USD[envName],
+    'MAX_RECOMMENDATION_COST_USD'
+  );
 
   const costAlertEmail = process.env.COST_ALERT_EMAIL || undefined;
 
@@ -68,7 +95,9 @@ export function loadEnvironmentConfig(): EnvironmentConfig {
     envName,
     accountId,
     region,
+    metricsNamespace,
     monthlyBudgetUsd,
+    maxRecommendationCostUsd,
     costAlertEmail,
     tags: {
       Project: 'crop-copilot',
