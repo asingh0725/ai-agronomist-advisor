@@ -46,6 +46,7 @@ enum APIEndpoint {
     case uploadImage
 
     // Feedback
+    case getFeedback(recommendationId: String)
     case submitFeedback
 
     private enum HostTarget {
@@ -70,7 +71,7 @@ enum APIEndpoint {
         case .compareProducts: return "/products/compare"
         case .getProductPricing: return "/products/pricing/batch"
         case .uploadImage: return "/upload"
-        case .submitFeedback: return "/feedback"
+        case .getFeedback, .submitFeedback: return "/feedback"
         }
     }
 
@@ -84,6 +85,7 @@ enum APIEndpoint {
              .getRecommendation,
              .deleteRecommendation,
              .uploadImage,
+             .getFeedback,
              .submitFeedback:
             return .runtimePreferred
         default:
@@ -131,6 +133,9 @@ enum APIEndpoint {
                 items.append(URLQueryItem(name: "type", value: type))
             }
             return items.isEmpty ? nil : items
+
+        case .getFeedback(let recommendationId):
+            return [URLQueryItem(name: "recommendationId", value: recommendationId)]
 
         default:
             return nil

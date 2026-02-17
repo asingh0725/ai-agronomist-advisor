@@ -136,7 +136,38 @@ struct FeedbackRequest: Codable {
     let recommendationId: String
     let helpful: Bool?
     let rating: Int?
+    let accuracy: Int?
     let comments: String?
+    let issues: [String]?
+    let outcomeApplied: Bool?
+    let outcomeSuccess: Bool?
+    let outcomeNotes: String?
+}
+
+struct FeedbackRecord: Codable {
+    let id: String
+    let recommendationId: String
+    let userId: String
+    let helpful: Bool?
+    let rating: Int?
+    let accuracy: Int?
+    let comments: String?
+    let issues: [String]
+    let outcomeApplied: Bool?
+    let outcomeSuccess: Bool?
+    let outcomeNotes: String?
+    let outcomeReported: Bool
+    let createdAt: String
+    let updatedAt: String
+}
+
+struct FeedbackGetResponse: Codable {
+    let feedback: FeedbackRecord?
+}
+
+struct FeedbackSubmitResponse: Codable {
+    let success: Bool
+    let feedback: FeedbackRecord
 }
 
 // MARK: - Error Response

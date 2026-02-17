@@ -149,7 +149,20 @@ export async function submitFeedback(
 export async function getFeedback(
   params: GetFeedbackParams
 ): Promise<GetFeedbackResult | null> {
-  const { recommendationId } = params;
+  const { userId, recommendationId } = params;
+
+  const recommendation = await prisma.recommendation.findUnique({
+    where: { id: recommendationId },
+    select: { userId: true },
+  });
+
+  if (!recommendation) {
+    throw new Error('Recommendation not found');
+  }
+
+  if (recommendation.userId !== userId) {
+    throw new Error('You can only provide feedback on your own recommendations');
+  }
 
   const feedback = await prisma.feedback.findUnique({
     where: { recommendationId },

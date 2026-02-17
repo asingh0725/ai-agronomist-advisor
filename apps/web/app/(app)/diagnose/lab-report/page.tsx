@@ -62,8 +62,8 @@ export default function LabReportPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
 
-  const form = useForm({
-    resolver: zodResolver(labReportSchema),
+  const form = useForm<LabReportInput>({
+    resolver: zodResolver(labReportSchema as any),
     defaultValues: {
       labName: '',
       testDate: '',
@@ -113,7 +113,7 @@ export default function LabReportPage() {
     fetchProfile()
   }, [form])
 
-  async function onSubmit(data: any) {
+  async function onSubmit(data: LabReportInput) {
     // Check if at least one nutrient value is provided (not empty string)
     const hasNutrientValue = [
       data.ph,

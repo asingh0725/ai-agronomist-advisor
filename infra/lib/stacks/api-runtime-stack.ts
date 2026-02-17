@@ -66,6 +66,11 @@ export class ApiRuntimeStack extends Stack {
       entry: 'handlers/submit-feedback.ts',
       environment,
     });
+    const getFeedbackHandler = createApiFunction(this, {
+      id: 'GetFeedbackHandler',
+      entry: 'handlers/get-feedback.ts',
+      environment,
+    });
     const profileHandler = createApiFunction(this, {
       id: 'ProfileHandler',
       entry: 'handlers/profile.ts',
@@ -175,6 +180,14 @@ export class ApiRuntimeStack extends Stack {
       integration: new integrations.HttpLambdaIntegration(
         'SubmitFeedbackIntegration',
         submitFeedbackHandler
+      ),
+    });
+    httpApi.addRoutes({
+      path: '/api/v1/feedback',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new integrations.HttpLambdaIntegration(
+        'GetFeedbackIntegration',
+        getFeedbackHandler
       ),
     });
 

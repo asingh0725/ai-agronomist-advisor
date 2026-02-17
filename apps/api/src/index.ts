@@ -4,6 +4,7 @@ export * as GetJobStatusHandler from './handlers/get-job-status';
 export * as CreateUploadUrlHandler from './handlers/create-upload-url';
 export * as GetUploadViewUrlHandler from './handlers/get-upload-view-url';
 export * as SubmitFeedbackHandler from './handlers/submit-feedback';
+export * as GetFeedbackHandler from './handlers/get-feedback';
 export * as SyncPullHandler from './handlers/sync-pull';
 export * as ProfileHandler from './handlers/profile';
 export * as ListRecommendationsHandler from './handlers/list-recommendations';

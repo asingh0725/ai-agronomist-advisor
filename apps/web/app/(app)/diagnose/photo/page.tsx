@@ -70,7 +70,7 @@ export default function PhotoDiagnosePage() {
   const [imageError, setImageError] = useState<string>('')
 
   const form = useForm<PhotoDiagnoseInput>({
-    resolver: zodResolver(photoDiagnoseSchema),
+    resolver: zodResolver(photoDiagnoseSchema as any),
     mode: 'onChange',
     defaultValues: {
       description: '',
