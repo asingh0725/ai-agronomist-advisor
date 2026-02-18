@@ -23,7 +23,7 @@ struct CropCopilotApp: App {
         WindowGroup {
             Group {
                 if authViewModel.isAuthenticated {
-                    MainTabView()
+                    AppRootView()
                 } else {
                     LoginView()
                 }
@@ -77,6 +77,41 @@ struct Configuration {
         return isValidHttpUrl(value)
     }()
 
+    static var runtimeAPIHostURL: URL? {
+        guard let base = apiRuntimeBaseURL, let url = URL(string: base) else {
+            return nil
+        }
+
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+
+        components.path = ""
+        components.query = nil
+        components.fragment = nil
+        return components.url
+    }
+
+    static func resolveMediaURL(_ rawValue: String?) -> URL? {
+        guard let rawValue else {
+            return nil
+        }
+
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+
+        if let absolute = URL(string: trimmed), absolute.scheme != nil {
+            return absolute
+        }
+
+        guard trimmed.hasPrefix("/"), let host = runtimeAPIHostURL else {
+            return nil
+        }
+
+        return URL(string: trimmed, relativeTo: host)?.absoluteURL
+    }
 }
 
 // MARK: - Environment Key for Supabase Client
