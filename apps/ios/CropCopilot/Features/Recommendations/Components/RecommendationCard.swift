@@ -6,7 +6,13 @@
 import SwiftUI
 
 struct RecommendationCard: View {
+    enum LayoutStyle {
+        case compact
+        case row
+    }
+
     let recommendation: RecommendationSummary
+    var style: LayoutStyle = .row
 
     private var inputImageURL: URL? {
         Configuration.resolveMediaURL(recommendation.input.imageUrl)
@@ -21,6 +27,49 @@ struct RecommendationCard: View {
     }
 
     var body: some View {
+        Group {
+            switch style {
+            case .compact:
+                compactBody
+            case .row:
+                rowBody
+            }
+        }
+    }
+
+    private var rowBody: some View {
+        HStack(spacing: 12) {
+            RecommendationThumbnail(url: inputImageURL)
+                .frame(width: 68, height: 68)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(AppConstants.cropLabel(for: recommendation.input.crop ?? "Unknown"))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.appPrimary)
+                    .lineLimit(1)
+                    .textCase(.uppercase)
+
+                Text(recommendation.condition)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+
+                Text(timestampLabel)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            CanvasConfidenceArc(confidence: recommendation.confidence)
+                .frame(width: 62, height: 44)
+        }
+        .padding(14)
+        .antigravityGlass(cornerRadius: 16)
+    }
+
+    private var compactBody: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 8) {
                 RecommendationThumbnail(url: inputImageURL)
@@ -41,18 +90,17 @@ struct RecommendationCard: View {
 
                 Text(recommendation.condition)
                     .font(.custom("Inter", size: 12).weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .lineLimit(2)
 
                 Text(timestampLabel)
                     .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
         }
         .padding(12)
         .antigravityGlass(cornerRadius: 18)
-        .antigravityFloat(amplitude: 6, parallaxScale: 4)
     }
 }
 
@@ -68,9 +116,9 @@ private struct RecommendationThumbnail: View {
                     .scaledToFill()
             case .empty:
                 ProgressView()
-                    .tint(.white.opacity(0.9))
+                    .tint(Color.appPrimary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.white.opacity(0.05))
+                    .background(Color.appSecondaryBackground)
             default:
                 fallback
             }
@@ -84,10 +132,10 @@ private struct RecommendationThumbnail: View {
 
     private var fallback: some View {
         ZStack {
-            Color.white.opacity(0.05)
+            Color.appSecondaryBackground
             Image(systemName: "photo")
                 .font(.title3)
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(.secondary)
         }
     }
 }

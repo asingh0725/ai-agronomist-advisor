@@ -22,8 +22,6 @@ struct ProfileView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 24) {
-                        
-                        // Farm Details Section
                         GlassSection(title: "Farm Details") {
                             VStack(spacing: 16) {
                                 LabeledContent("Location") {
@@ -36,9 +34,9 @@ struct ProfileView: View {
                                     .pickerStyle(.menu)
                                     .tint(.appPrimary)
                                 }
-                                
-                                Divider().background(.white.opacity(0.1))
-                                
+
+                                Divider().background(.separator)
+
                                 LabeledContent("Farm Size") {
                                     Picker("Farm Size", selection: $viewModel.farmSize) {
                                         Text("Select size...").tag("")
@@ -52,7 +50,6 @@ struct ProfileView: View {
                             }
                         }
 
-                        // Crops of Interest (Tag Selector)
                         GlassSection(title: "Crops of Interest") {
                             TagGridSelector(
                                 tags: viewModel.availableCrops.map { $0.value },
@@ -60,7 +57,6 @@ struct ProfileView: View {
                             )
                         }
 
-                        // Experience Level
                         GlassSection(title: "Experience Level") {
                              Picker("Experience", selection: $viewModel.experienceLevel) {
                                 Text("Select...").tag(Optional<ExperienceLevel>.none)
@@ -71,7 +67,6 @@ struct ProfileView: View {
                             .pickerStyle(.segmented)
                         }
 
-                        // Action Buttons
                         Button {
                             Task { await viewModel.saveProfile() }
                         } label: {
@@ -128,15 +123,14 @@ struct GlassSection<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.primary)
                 .padding(.leading, 4)
-            
+
             VStack {
                 content
             }
             .padding()
             .antigravityGlass(cornerRadius: 16)
-            .antigravityFloat(amplitude: 5, parallaxScale: 3)
         }
     }
 }

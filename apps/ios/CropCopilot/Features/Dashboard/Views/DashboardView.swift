@@ -20,7 +20,6 @@ struct DashboardView: View {
                 .padding(16)
             }
             .scrollContentBackground(.hidden)
-            .background(Color.clear)
             .navigationTitle("Dashboard")
             .refreshable {
                 await viewModel.loadRecentRecommendations()
@@ -35,22 +34,21 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Welcome back!")
                 .font(.title2.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
             Text("Ready to analyze your crops?")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.82))
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
         .antigravityGlass(cornerRadius: 20)
-        .antigravityFloat(amplitude: 7, parallaxScale: 4)
     }
 
     private var quickActions: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Actions")
                 .font(.headline)
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(.primary)
 
             HStack(spacing: 12) {
                 Button {
@@ -77,12 +75,11 @@ struct DashboardView: View {
                 .foregroundStyle(color)
             Text(title)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .antigravityGlass(cornerRadius: 16)
-        .antigravityFloat(amplitude: 6, parallaxScale: 4)
     }
 
     private var recentRecommendationsSection: some View {
@@ -90,7 +87,7 @@ struct DashboardView: View {
             HStack {
                 Text("Recent Recommendations")
                     .font(.headline)
-                    .foregroundStyle(.white.opacity(0.9))
+                    .foregroundStyle(.primary)
                 Spacer()
                 Button("See All") {
                     selectedTab = .recommendations
@@ -100,7 +97,7 @@ struct DashboardView: View {
             }
 
             if viewModel.isLoading {
-                ProgressView().tint(.white)
+                ProgressView().tint(Color.appPrimary)
             } else if viewModel.recentRecommendations.isEmpty {
                 emptyState
             } else {
@@ -110,8 +107,9 @@ struct DashboardView: View {
                             NavigationLink {
                                 RecommendationDetailView(recommendationId: recommendation.id)
                             } label: {
-                                RecommendationCard(recommendation: recommendation)
-                                    .frame(width: 168)
+                                RecommendationCard(recommendation: recommendation, style: .compact)
+                                    .frame(width: 172)
+                                    .frame(maxHeight: .infinity)
                             }
                             .buttonStyle(.plain)
                         }
@@ -132,13 +130,13 @@ struct DashboardView: View {
         VStack(spacing: 12) {
             Image(systemName: "leaf")
                 .font(.largeTitle)
-                .foregroundStyle(.white.opacity(0.3))
+                .foregroundStyle(.secondary)
             Text("No recommendations yet")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(.primary)
             Text("Start a diagnosis to get your first recommendation.")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.52))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)

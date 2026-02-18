@@ -19,11 +19,11 @@ struct DiagnoseTabView: View {
                 VStack(spacing: 8) {
                     Text("Start a Diagnosis")
                         .font(.title2.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
 
                     Text("Choose how you'd like to submit crop or soil data for analysis.")
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.74))
+                        .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                 }
@@ -56,7 +56,6 @@ struct DiagnoseTabView: View {
                 Spacer()
             }
             .navigationTitle("Diagnose")
-            .background(Color.clear)
         }
     }
 }
@@ -78,17 +77,16 @@ private struct DiagnoseOptionCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.66))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Image(systemName: "chevron.right")
-                .foregroundStyle(.white.opacity(0.4))
+                .foregroundStyle(.secondary)
         }
         .padding()
         .antigravityGlass(cornerRadius: 16)
-        .antigravityFloat(amplitude: 6, parallaxScale: 4)
     }
 }

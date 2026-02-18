@@ -10,7 +10,7 @@ struct RecommendationsListView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            VStack(spacing: 12) {
                 if !Configuration.isRuntimeApiConfigured {
                     Text("Set API_RUNTIME_BASE_URL to keep iOS synced with AWS runtime.")
                         .font(.caption)
@@ -27,7 +27,7 @@ struct RecommendationsListView: View {
                 } else if viewModel.recommendations.isEmpty {
                     emptyView
                 } else {
-                    cardsRail
+                    recommendationsList
                 }
 
                 if let error = viewModel.errorMessage {
@@ -50,10 +50,10 @@ struct RecommendationsListView: View {
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(.secondary)
             TextField("Search by crop or condition...", text: $viewModel.searchText)
                 .textFieldStyle(.plain)
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .onSubmit {
                     Task { await viewModel.loadRecommendations(reset: true) }
                 }
@@ -64,7 +64,7 @@ struct RecommendationsListView: View {
                     Task { await viewModel.loadRecommendations(reset: true) }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.white.opacity(0.72))
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -92,17 +92,17 @@ struct RecommendationsListView: View {
                                     .fill(
                                         viewModel.selectedSort == option
                                             ? Color.appPrimary
-                                            : Color.white.opacity(0.08)
+                                            : Color.appSecondaryBackground
                                     )
                             )
                             .overlay(
                                 Capsule()
-                                    .strokeBorder(.white.opacity(0.14), lineWidth: 0.7)
+                                    .strokeBorder(.black.opacity(0.08), lineWidth: 0.8)
                             )
                             .foregroundStyle(
                                 viewModel.selectedSort == option
                                     ? Color.black
-                                    : Color.white.opacity(0.9)
+                                    : Color.primary
                             )
                     }
                     .buttonStyle(.plain)
@@ -113,63 +113,48 @@ struct RecommendationsListView: View {
         }
     }
 
-    private var cardsRail: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            GeometryReader { proxy in
-                let spacing: CGFloat = 10
-                let visibleCount: CGFloat = proxy.size.width > 800 ? 4.0 : 3.6
-                let cardWidth = max(120, (proxy.size.width - (spacing * (visibleCount - 1)) - 32) / visibleCount)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: spacing) {
-                        ForEach(viewModel.recommendations) { recommendation in
-                            NavigationLink(value: recommendation.id) {
-                                RecommendationCard(recommendation: recommendation)
-                                    .frame(width: cardWidth)
-                                    .frame(maxHeight: .infinity)
-                            }
-                            .buttonStyle(.plain)
-                        }
-
-                        if viewModel.hasMorePages {
-                            loadMoreCard
-                                .frame(width: cardWidth)
-                        }
+    private var recommendationsList: some View {
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                ForEach(viewModel.recommendations) { recommendation in
+                    NavigationLink(value: recommendation.id) {
+                        RecommendationCard(recommendation: recommendation, style: .row)
                     }
-                    .scrollTargetLayout()
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 6)
+                    .buttonStyle(.plain)
                 }
-                .scrollTargetBehavior(.viewAligned)
-                .refreshable {
-                    await viewModel.loadRecommendations(reset: true)
+
+                if viewModel.hasMorePages {
+                    loadMoreButton
                 }
             }
-            .frame(height: 242)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 10)
+        }
+        .refreshable {
+            await viewModel.loadRecommendations(reset: true)
         }
     }
 
-    private var loadMoreCard: some View {
+    private var loadMoreButton: some View {
         Button {
             Task { await viewModel.loadNextPage() }
         } label: {
-            VStack(spacing: 10) {
+            HStack(spacing: 10) {
                 if viewModel.isLoadingMore {
                     ProgressView()
-                        .tint(.white)
+                        .tint(Color.appPrimary)
                 } else {
                     Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(size: 28))
+                        .font(.system(size: 22))
                         .foregroundStyle(Color.appPrimary)
                     Text("Load More")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(12)
-            .antigravityGlass(cornerRadius: 18)
-            .antigravityFloat(amplitude: 5, parallaxScale: 3)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 12)
+            .antigravityGlass(cornerRadius: 14)
         }
         .buttonStyle(.plain)
     }
@@ -178,8 +163,8 @@ struct RecommendationsListView: View {
         VStack(spacing: 16) {
             Spacer()
             ProgressView("Loading recommendations...")
-                .tint(.white)
-                .foregroundStyle(.white)
+                .tint(Color.appPrimary)
+                .foregroundStyle(.primary)
             Spacer()
         }
     }
@@ -189,13 +174,13 @@ struct RecommendationsListView: View {
             Spacer()
             Image(systemName: "doc.text.magnifyingglass")
                 .font(.system(size: 50))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(.secondary)
             Text("No recommendations yet")
                 .font(.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
             Text("Submit a photo or lab report to get started.")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.72))
+                .foregroundStyle(.secondary)
             Spacer()
         }
     }

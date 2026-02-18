@@ -21,27 +21,28 @@ struct TagGridSelector: View {
                 Button {
                     toggle(tag)
                 } label: {
+                    let isSelected = selectedTags.contains(tag)
                     Text(tag)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 12)
                         .frame(maxWidth: .infinity)
                         .background(
                             Capsule()
                                 .fill(
-                                    selectedTags.contains(tag)
+                                    isSelected
                                         ? Color.appPrimary.opacity(0.2)
-                                        : Color.white.opacity(0.05)
+                                        : Color(uiColor: .tertiarySystemFill)
                                 )
                         )
                         .overlay(
                             Capsule()
                                 .stroke(
-                                    selectedTags.contains(tag)
+                                    isSelected
                                         ? Color.appPrimary
-                                        : Color.white.opacity(0.14),
-                                    lineWidth: selectedTags.contains(tag) ? 1.5 : 0.7
+                                        : Color.black.opacity(0.08),
+                                    lineWidth: isSelected ? 1.5 : 0.8
                                 )
                         )
                 }
