@@ -13,7 +13,7 @@ export * as DeleteRecommendationHandler from './handlers/delete-recommendation';
 export * as ProcessRecommendationJobWorker from './workers/process-recommendation-job';
 export * as RunIngestionBatchWorker from './workers/run-ingestion-batch';
 export * as ProcessIngestionBatchWorker from './workers/process-ingestion-batch';
-export * from './auth/cognito-jwt';
+export * from './auth/supabase-auth';
 export * from './auth/with-auth';
 export * from './notifications/push-events';
 export * from './telemetry/recommendation-metrics';

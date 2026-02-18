@@ -15,6 +15,7 @@ class ProfileViewModel: ObservableObject {
     @Published var experienceLevel: ExperienceLevel?
     @Published var isSaving = false
     @Published var isLoading = false
+    @Published var hasLoadedProfile = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
 
@@ -33,7 +34,10 @@ class ProfileViewModel: ObservableObject {
     func loadProfile() async {
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            hasLoadedProfile = true
+        }
 
         do {
             let response: ProfileResponse = try await apiClient.request(.getProfile)
