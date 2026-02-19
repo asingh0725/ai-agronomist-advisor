@@ -27,7 +27,12 @@ struct DashboardView: View {
                 await viewModel.loadRecentRecommendations()
             }
             .task {
-                await viewModel.loadRecentRecommendations()
+                await viewModel.loadIfNeeded()
+            }
+            .onAppear {
+                Task {
+                    await viewModel.loadRecentRecommendations()
+                }
             }
         }
     }

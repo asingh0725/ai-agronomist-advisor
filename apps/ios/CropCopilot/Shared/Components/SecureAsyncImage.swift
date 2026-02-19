@@ -41,6 +41,7 @@ struct SecureAsyncImage<Content: View, Placeholder: View, Failure: View>: View {
     @State private var resolvedURL: URL?
     @State private var isResolving = false
     @State private var didFail = false
+    @State private var lastResolvedSource: String?
 
     var body: some View {
         Group {
@@ -77,41 +78,51 @@ struct SecureAsyncImage<Content: View, Placeholder: View, Failure: View>: View {
 
         guard let source, !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             resolvedURL = nil
+            lastResolvedSource = nil
             return
         }
 
         let trimmed = source.trimmingCharacters(in: .whitespacesAndNewlines)
+        if lastResolvedSource == trimmed, resolvedURL != nil {
+            return
+        }
 
         if let url = URL(string: trimmed), url.scheme != nil {
             if shouldPresign(url: url) {
                 if let cached = await SignedImageUrlCache.shared.read(for: trimmed) {
                     resolvedURL = cached
+                    lastResolvedSource = trimmed
                     return
                 }
 
                 if let signed = await fetchSignedURL(objectUrl: url.absoluteString, cacheKey: trimmed) {
                     resolvedURL = signed
+                    lastResolvedSource = trimmed
                     return
                 }
 
-                didFail = true
-                resolvedURL = nil
+                // Fallback to direct URL in case bucket policy allows public reads.
+                resolvedURL = url
+                lastResolvedSource = trimmed
                 return
             }
 
             resolvedURL = url
+            lastResolvedSource = trimmed
             return
         }
 
         guard let resolved = Configuration.resolveMediaURL(trimmed) else {
             resolvedURL = nil
             didFail = true
+            lastResolvedSource = nil
             return
         }
 
         if shouldPresign(url: resolved) {
             if let cached = await SignedImageUrlCache.shared.read(for: resolved.absoluteString) {
                 resolvedURL = cached
+                lastResolvedSource = trimmed
                 return
             }
 
@@ -120,15 +131,17 @@ struct SecureAsyncImage<Content: View, Placeholder: View, Failure: View>: View {
                 cacheKey: resolved.absoluteString
             ) {
                 resolvedURL = signed
+                lastResolvedSource = trimmed
                 return
             }
 
-            didFail = true
-            resolvedURL = nil
+            resolvedURL = resolved
+            lastResolvedSource = trimmed
             return
         }
 
         resolvedURL = resolved
+        lastResolvedSource = trimmed
     }
 
     private func fetchSignedURL(objectUrl: String, cacheKey: String) async -> URL? {

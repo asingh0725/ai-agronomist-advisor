@@ -7,6 +7,28 @@
 
 import Foundation
 
+private struct LossyDecodingArray<Element: Decodable>: Decodable {
+    let values: [Element]
+
+    private struct Ignored: Decodable {}
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        var decoded: [Element] = []
+        decoded.reserveCapacity(container.count ?? 0)
+
+        while !container.isAtEnd {
+            if let element = try? container.decode(Element.self) {
+                decoded.append(element)
+            } else {
+                _ = try? container.decode(Ignored.self)
+            }
+        }
+
+        values = decoded
+    }
+}
+
 struct Recommendation: Decodable, Identifiable {
     let id: String
     let userId: String
@@ -39,6 +61,8 @@ struct DiagnosisData: Decodable {
         case diagnosis
         case recommendations
         case products
+        case recommendedProducts
+        case productRecommendations
         case sources
         case confidence
         case condition
@@ -68,31 +92,95 @@ struct DiagnosisData: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        recommendations = try container.decodeIfPresent([RecommendationAction].self, forKey: .recommendations) ?? []
-        products = try container.decodeIfPresent([RecommendedProduct].self, forKey: .products) ?? []
-        sources = try container.decodeIfPresent([Source].self, forKey: .sources) ?? []
+        let parsedRecommendations =
+            (try? container.decode(LossyDecodingArray<RecommendationAction>.self, forKey: .recommendations).values)
+            ?? []
+        let parsedProducts =
+            (try? container.decode(LossyDecodingArray<RecommendedProduct>.self, forKey: .products).values)
+            ?? []
+        let aliasProducts =
+            (try? container.decode(LossyDecodingArray<RecommendedProduct>.self, forKey: .recommendedProducts).values)
+            ?? (try? container.decode(LossyDecodingArray<RecommendedProduct>.self, forKey: .productRecommendations).values)
+            ?? []
+        let parsedSources =
+            (try? container.decode(LossyDecodingArray<Source>.self, forKey: .sources).values)
+            ?? []
 
-        if let nestedDiagnosis = try container.decodeIfPresent(DiagnosisDetails.self, forKey: .diagnosis) {
+        recommendations = parsedRecommendations
+        products = parsedProducts.isEmpty ? aliasProducts : parsedProducts
+        sources = parsedSources
+
+        if let nestedDiagnosis = try? container.decode(DiagnosisDetails.self, forKey: .diagnosis) {
             diagnosis = nestedDiagnosis
-        } else if let primaryCondition = try container.decodeIfPresent(DiagnosisDetails.self, forKey: .primaryCondition) {
+        } else if let primaryCondition = try? container.decode(DiagnosisDetails.self, forKey: .primaryCondition) {
             diagnosis = primaryCondition
         } else {
+            let fallbackCondition =
+                (try? container.decode(String.self, forKey: .condition))
+                ?? "Unknown condition"
+            let fallbackReasoning =
+                (try? container.decode(String.self, forKey: .reasoning))
+                ?? "No diagnostic reasoning was provided."
+            let rawConditionType =
+                (try? container.decode(String.self, forKey: .conditionType))
+                ?? (try? container.decode(String.self, forKey: .conditionTypeSnake))
             diagnosis = DiagnosisDetails(
-                condition: try container.decodeIfPresent(String.self, forKey: .condition) ?? "Unknown condition",
-                conditionType:
-                    try container.decodeIfPresent(String.self, forKey: .conditionType)
-                    ?? (try container.decodeIfPresent(String.self, forKey: .conditionTypeSnake))
-                    ?? "unknown",
-                severity: try container.decodeIfPresent(String.self, forKey: .severity),
-                confidence: try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0,
-                reasoning: try container.decodeIfPresent(String.self, forKey: .reasoning) ?? "No diagnostic reasoning was provided.",
+                condition: fallbackCondition,
+                conditionType: Self.inferConditionType(rawConditionType, condition: fallbackCondition),
+                severity: try? container.decode(String.self, forKey: .severity),
+                confidence: DiagnosisData.parseDouble(
+                    from: container,
+                    key: .confidence
+                ) ?? 0,
+                reasoning: fallbackReasoning,
                 differentialDiagnosis:
-                    try container.decodeIfPresent([String].self, forKey: .differentialDiagnosis)
-                    ?? (try container.decodeIfPresent([String].self, forKey: .differentialDiagnosisSnake))
+                    (try? container.decode([String].self, forKey: .differentialDiagnosis))
+                    ?? (try? container.decode([String].self, forKey: .differentialDiagnosisSnake))
             )
         }
 
-        confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? diagnosis.confidence
+        confidence = DiagnosisData.parseDouble(from: container, key: .confidence) ?? diagnosis.confidence
+    }
+
+    private static func parseDouble(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        key: CodingKeys
+    ) -> Double? {
+        if let value = try? container.decode(Double.self, forKey: key) {
+            return value
+        }
+        if let raw = try? container.decode(String.self, forKey: key) {
+            return Double(raw.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return nil
+    }
+
+    private static func inferConditionType(_ raw: String?, condition: String) -> String {
+        guard let raw else {
+            return fallbackConditionType(from: condition)
+        }
+        let normalized = raw.lowercased()
+        if ["deficiency", "disease", "pest", "environmental", "unknown"].contains(normalized) {
+            return normalized
+        }
+        return fallbackConditionType(from: condition)
+    }
+
+    private static func fallbackConditionType(from condition: String) -> String {
+        let lowered = condition.lowercased()
+        if lowered.contains("deficien") || lowered.contains("chlorosis") || lowered.contains("nutrient") {
+            return "deficiency"
+        }
+        if lowered.contains("pest") || lowered.contains("insect") || lowered.contains("mite") {
+            return "pest"
+        }
+        if lowered.contains("disease") || lowered.contains("rust") || lowered.contains("blight") || lowered.contains("fung") {
+            return "disease"
+        }
+        if lowered.contains("drought") || lowered.contains("heat") || lowered.contains("cold") || lowered.contains("water") {
+            return "environmental"
+        }
+        return "unknown"
     }
 }
 
@@ -261,7 +349,7 @@ struct RecommendedProduct: Decodable, Identifiable {
     }
 }
 
-struct Source: Codable, Identifiable {
+struct Source: Decodable, Identifiable {
     var id: String { chunkId }
     let chunkId: String
     let title: String
@@ -270,8 +358,54 @@ struct Source: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case chunkId = "chunk_id"
+        case chunkIdCamel = "chunkId"
+        case id
         case title
         case url
         case relevance
+        case relevanceScore = "relevance_score"
+        case relevanceScoreCamel = "relevanceScore"
+        case score
+    }
+
+    init(chunkId: String, title: String, url: String?, relevance: Double) {
+        self.chunkId = chunkId
+        self.title = title
+        self.url = url
+        self.relevance = relevance
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        chunkId =
+            (try? container.decode(String.self, forKey: .chunkId))
+            ?? (try? container.decode(String.self, forKey: .chunkIdCamel))
+            ?? (try? container.decode(String.self, forKey: .id))
+            ?? UUID().uuidString
+        title = (try? container.decode(String.self, forKey: .title)) ?? "Source excerpt"
+        url = try? container.decode(String.self, forKey: .url)
+        let numericRelevance =
+            (try? container.decode(Double.self, forKey: .relevance))
+            ?? (try? container.decode(Double.self, forKey: .relevanceScore))
+            ?? (try? container.decode(Double.self, forKey: .relevanceScoreCamel))
+            ?? (try? container.decode(Double.self, forKey: .score))
+
+        if let numericRelevance {
+            relevance = numericRelevance
+            return
+        }
+
+        let relevanceKeys: [CodingKeys] = [.relevance, .relevanceScore, .relevanceScoreCamel, .score]
+        var parsedRelevance: Double? = nil
+
+        for key in relevanceKeys {
+            if let raw = try? container.decode(String.self, forKey: key),
+               let parsed = Double(raw) {
+                parsedRelevance = parsed
+                break
+            }
+        }
+
+        relevance = parsedRelevance ?? 0
     }
 }

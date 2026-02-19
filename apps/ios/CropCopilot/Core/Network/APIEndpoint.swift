@@ -90,7 +90,13 @@ enum APIEndpoint {
              .updateProfile,
              .createInput,
              .getJobStatus,
+             .listRecommendations,
+             .getRecommendation,
              .deleteRecommendation,
+             .listProducts,
+             .getProduct,
+             .compareProducts,
+             .getProductPricing,
              .uploadImage,
              .getUploadViewUrl,
              .getFeedback,
@@ -181,11 +187,12 @@ enum APIEndpoint {
         let baseURL: String
         switch hostTarget {
         case .runtimePreferred:
-            guard let runtimeBaseURL,
-                  !runtimeBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                return nil
+            let runtime = runtimeBaseURL?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if let runtime, !runtime.isEmpty {
+                baseURL = runtime
+            } else {
+                baseURL = primaryBaseURL
             }
-            baseURL = runtimeBaseURL
         case .primary:
             baseURL = primaryBaseURL
         }

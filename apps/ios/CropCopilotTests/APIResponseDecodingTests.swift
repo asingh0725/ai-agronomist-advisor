@@ -254,4 +254,76 @@ final class APIResponseDecodingTests: XCTestCase {
         XCTAssertEqual(detail.diagnosis.recommendations[0].action, "Inspect lower canopy")
         XCTAssertFalse(detail.diagnosis.recommendations[0].timing.isEmpty)
     }
+
+    func testRecommendationDetailResponseDecodingWithDiagnosisProductAliases() throws {
+        let json = """
+        {
+            "id": "rec-alias-products",
+            "createdAt": "2026-02-18T12:00:00.000Z",
+            "confidence": "0.81",
+            "diagnosis": {
+                "diagnosis": {
+                    "condition": "magnesium deficiency",
+                    "conditionType": "deficiency",
+                    "reasoning": "Interveinal chlorosis supports Mg deficiency.",
+                    "confidence": 0.81
+                },
+                "recommendedProducts": [
+                    {
+                        "product_id": "prod-9",
+                        "product_name": "MagBoost 5-0-0",
+                        "product_type": "FERTILIZER",
+                        "reasoning": "Supports magnesium availability."
+                    }
+                ]
+            },
+            "input": {
+                "id": "input-9",
+                "type": "PHOTO"
+            },
+            "sources": []
+        }
+        """.data(using: .utf8)!
+
+        let detail = try decoder.decode(RecommendationDetailResponse.self, from: json)
+        XCTAssertEqual(detail.confidence, 0.81, accuracy: 0.0001)
+        XCTAssertEqual(detail.recommendedProducts.count, 1)
+        XCTAssertEqual(detail.recommendedProducts[0].catalogProductId, "prod-9")
+        XCTAssertEqual(detail.recommendedProducts[0].name, "MagBoost 5-0-0")
+    }
+
+    func testRecommendationDetailResponseDecodingLossyProductArray() throws {
+        let json = """
+        {
+            "id": "rec-lossy-products",
+            "createdAt": "2026-02-18T12:00:00.000Z",
+            "diagnosis": {
+                "diagnosis": {
+                    "condition": "leaf spot",
+                    "conditionType": "disease",
+                    "reasoning": "Spots with spread pattern.",
+                    "confidence": 0.72
+                }
+            },
+            "recommendedProducts": [
+                {
+                    "id": "prod-good",
+                    "name": "Field Shield",
+                    "type": "FUNGICIDE"
+                },
+                12345
+            ],
+            "input": {
+                "id": "input-10",
+                "type": "PHOTO"
+            },
+            "sources": []
+        }
+        """.data(using: .utf8)!
+
+        let detail = try decoder.decode(RecommendationDetailResponse.self, from: json)
+        XCTAssertEqual(detail.recommendedProducts.count, 1)
+        XCTAssertEqual(detail.recommendedProducts[0].id, "prod-good")
+        XCTAssertEqual(detail.recommendedProducts[0].name, "Field Shield")
+    }
 }

@@ -5,11 +5,18 @@
 
 import SwiftUI
 
+private enum PricingSheetDetent: CGFloat, CaseIterable {
+    case compact = 0.46
+    case medium = 0.68
+    case expanded = 0.9
+}
+
 struct ProductDetailView: View {
     let productId: String
 
     @StateObject private var viewModel: ProductDetailViewModel
     @State private var showPricingSheet = false
+    @State private var pricingDetent: PricingSheetDetent = .medium
 
     init(productId: String) {
         self.productId = productId
@@ -304,11 +311,52 @@ struct ProductDetailView: View {
 
                 pricingSheet
             }
+            .frame(height: pricingSheetHeight, alignment: .top)
             .frame(maxWidth: .infinity)
             .background(Color.appBackground)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .gesture(pricingDetentDragGesture)
             .padding(.horizontal, 12)
             .padding(.bottom, 10)
+        }
+    }
+
+    private var pricingSheetHeight: CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        return max(320, screenHeight * pricingDetent.rawValue)
+    }
+
+    private var pricingDetentDragGesture: some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .local)
+            .onEnded { value in
+                let verticalDelta = value.translation.height
+                if verticalDelta < -30 {
+                    pricingDetent = nextLargerPricingDetent(from: pricingDetent)
+                } else if verticalDelta > 30 {
+                    pricingDetent = nextSmallerPricingDetent(from: pricingDetent)
+                }
+            }
+    }
+
+    private func nextLargerPricingDetent(from current: PricingSheetDetent) -> PricingSheetDetent {
+        switch current {
+        case .compact:
+            return .medium
+        case .medium:
+            return .expanded
+        case .expanded:
+            return .expanded
+        }
+    }
+
+    private func nextSmallerPricingDetent(from current: PricingSheetDetent) -> PricingSheetDetent {
+        switch current {
+        case .compact:
+            return .compact
+        case .medium:
+            return .compact
+        case .expanded:
+            return .medium
         }
     }
 

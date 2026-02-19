@@ -34,7 +34,12 @@ struct RecommendationsListView: View {
                 RecommendationDetailView(recommendationId: recommendationId)
             }
             .task {
-                await viewModel.loadRecommendations(reset: true)
+                await viewModel.loadIfNeeded()
+            }
+            .onAppear {
+                Task {
+                    await viewModel.refreshRecommendations()
+                }
             }
         }
     }
@@ -107,11 +112,17 @@ struct RecommendationsListView: View {
     private var recommendationsList: some View {
         ScrollView {
             LazyVStack(spacing: 10) {
-                ForEach(viewModel.recommendations) { recommendation in
+                ForEach(Array(viewModel.recommendations.enumerated()), id: \.element.id) { index, recommendation in
                     NavigationLink(value: recommendation.id) {
                         RecommendationCard(recommendation: recommendation, style: .row)
                     }
                     .buttonStyle(.plain)
+                    .onAppear {
+                        let preloadThreshold = max(viewModel.recommendations.count - 3, 0)
+                        if index >= preloadThreshold {
+                            Task { await viewModel.loadNextPage() }
+                        }
+                    }
                 }
 
                 if viewModel.hasMorePages {
@@ -122,7 +133,7 @@ struct RecommendationsListView: View {
             .padding(.bottom, 24)
         }
         .refreshable {
-            await viewModel.loadRecommendations(reset: true)
+            await viewModel.refreshRecommendations()
         }
     }
 

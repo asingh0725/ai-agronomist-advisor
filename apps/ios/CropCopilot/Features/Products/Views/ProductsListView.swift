@@ -27,10 +27,15 @@ struct ProductsListView: View {
                 ProductDetailView(productId: productId)
             }
             .task {
-                await viewModel.loadProducts()
+                await viewModel.loadIfNeeded()
+            }
+            .onAppear {
+                Task {
+                    await viewModel.refreshProducts()
+                }
             }
             .onChange(of: viewModel.selectedType) { _ in
-                Task { await viewModel.loadProducts() }
+                Task { await viewModel.loadProducts(reset: true) }
             }
         }
     }
@@ -43,12 +48,12 @@ struct ProductsListView: View {
                 .textFieldStyle(.plain)
                 .foregroundStyle(.primary)
                 .onSubmit {
-                    Task { await viewModel.loadProducts() }
+                    Task { await viewModel.loadProducts(reset: true) }
                 }
             if !viewModel.searchText.isEmpty {
                 Button {
                     viewModel.searchText = ""
-                    Task { await viewModel.loadProducts() }
+                    Task { await viewModel.loadProducts(reset: true) }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
@@ -111,7 +116,7 @@ struct ProductsListView: View {
                 }
                 .padding(.bottom, 2)
 
-                ForEach(viewModel.products) { product in
+                ForEach(Array(viewModel.products.enumerated()), id: \.element.id) { index, product in
                     NavigationLink(value: product.id) {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(alignment: .top, spacing: 8) {
@@ -169,6 +174,16 @@ struct ProductsListView: View {
                         .antigravityGlass(cornerRadius: 16)
                     }
                     .buttonStyle(.plain)
+                    .onAppear {
+                        let preloadThreshold = max(viewModel.products.count - 6, 0)
+                        if index >= preloadThreshold {
+                            Task { await viewModel.loadNextPage() }
+                        }
+                    }
+                }
+
+                if viewModel.hasMorePages {
+                    loadMoreButton
                 }
 
                 if let error = viewModel.errorMessage {
@@ -182,8 +197,32 @@ struct ProductsListView: View {
             .padding(.bottom, 24)
         }
         .refreshable {
-            await viewModel.loadProducts()
+            await viewModel.refreshProducts()
         }
+    }
+
+    private var loadMoreButton: some View {
+        Button {
+            Task { await viewModel.loadNextPage() }
+        } label: {
+            HStack(spacing: 10) {
+                if viewModel.isLoadingMore {
+                    ProgressView()
+                        .tint(Color.appPrimary)
+                } else {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Color.appPrimary)
+                    Text("Load More")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 12)
+            .antigravityGlass(cornerRadius: 14)
+        }
+        .buttonStyle(.plain)
     }
 
     private var loadingView: some View {

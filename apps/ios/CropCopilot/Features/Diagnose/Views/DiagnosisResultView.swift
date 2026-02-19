@@ -1047,7 +1047,7 @@ struct DiagnosisResultView: View {
             merged.append(
                 MergedRecommendationProduct(
                     id: product.id,
-                    productId: product.id,
+                    productId: product.catalogProductId,
                     name: normalized,
                     type: product.type,
                     applicationRate: product.applicationRate,
