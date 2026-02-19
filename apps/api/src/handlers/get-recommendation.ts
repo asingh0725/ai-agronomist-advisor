@@ -38,6 +38,16 @@ interface RecommendationSourceRow {
   source_metadata: unknown;
 }
 
+interface ProductRecommendationRow {
+  product_id: string;
+  product_name: string;
+  product_brand: string | null;
+  product_type: string;
+  recommendation_reason: string | null;
+  application_rate: string | null;
+  priority: number;
+}
+
 let recommendationDetailPool: Pool | null = null;
 
 function getRecommendationDetailPool(): Pool {
@@ -158,6 +168,64 @@ const recommendationSourcesQuery = `
   ORDER BY rs."relevanceScore" DESC NULLS LAST, rs.id ASC
 `;
 
+const recommendationProductsQuery = `
+  SELECT
+    pr."productId" AS product_id,
+    p.name AS product_name,
+    p.brand AS product_brand,
+    p.type AS product_type,
+    pr.reason AS recommendation_reason,
+    pr."applicationRate" AS application_rate,
+    pr.priority
+  FROM "ProductRecommendation" pr
+  JOIN "Product" p ON p.id = pr."productId"
+  WHERE pr."recommendationId" = $1
+  ORDER BY pr.priority ASC, pr."createdAt" ASC
+`;
+
+function normalizeDiagnosisPayload(
+  diagnosis: unknown,
+  productRows: ProductRecommendationRow[]
+): Record<string, unknown> {
+  const fallback: Record<string, unknown> = {
+    diagnosis: {
+      condition: 'Unknown condition',
+      conditionType: 'unknown',
+      confidence: 0,
+      reasoning: 'No diagnostic reasoning was returned yet.',
+    },
+    recommendations: [],
+    products: [],
+    confidence: 0,
+  };
+
+  const base =
+    diagnosis && typeof diagnosis === 'object'
+      ? { ...(diagnosis as Record<string, unknown>) }
+      : fallback;
+  const products = Array.isArray(base.products) ? base.products : [];
+
+  if (products.length === 0 && productRows.length > 0) {
+    base.products = productRows.map((row) => ({
+      productId: row.product_id,
+      productName: row.product_name,
+      productType: row.product_type,
+      applicationRate: row.application_rate,
+      reasoning:
+        row.recommendation_reason ??
+        `Recommended for ${row.product_type.toLowerCase()} management.`,
+      priority: row.priority,
+      brand: row.product_brand,
+    }));
+  }
+
+  if (!Array.isArray(base.recommendations)) {
+    base.recommendations = [];
+  }
+
+  return base;
+}
+
 export function buildGetRecommendationHandler(
   verifier?: AuthVerifier
 ): APIGatewayProxyHandlerV2 {
@@ -207,6 +275,10 @@ export function buildGetRecommendationHandler(
         recommendationSourcesQuery,
         [recommendation.id]
       );
+      const productsResult = await pool.query<ProductRecommendationRow>(
+        recommendationProductsQuery,
+        [recommendation.id]
+      );
 
       const sources = sourcesResult.rows.map((row) => ({
         id: row.id,
@@ -227,11 +299,27 @@ export function buildGetRecommendationHandler(
           : null,
       }));
 
+      const normalizedDiagnosis = normalizeDiagnosisPayload(
+        recommendation.diagnosis,
+        productsResult.rows
+      );
+      const recommendedProducts = productsResult.rows.map((row) => ({
+        id: row.product_id,
+        name: row.product_name,
+        brand: row.product_brand,
+        type: row.product_type,
+        reason:
+          row.recommendation_reason ??
+          `Recommended for ${row.product_type.toLowerCase()} management.`,
+        applicationRate: row.application_rate,
+        priority: row.priority,
+      }));
+
       return jsonResponse(
         {
           id: recommendation.id,
           createdAt: toIsoString(recommendation.created_at),
-          diagnosis: recommendation.diagnosis,
+          diagnosis: normalizedDiagnosis,
           confidence: recommendation.confidence,
           modelUsed: recommendation.model_used,
           input: {
@@ -246,6 +334,7 @@ export function buildGetRecommendationHandler(
             createdAt: toIsoString(recommendation.input_created_at),
           },
           sources,
+          recommendedProducts,
         },
         { statusCode: 200 }
       );

@@ -198,13 +198,17 @@ struct RecommendationAction: Decodable, Identifiable {
 }
 
 struct RecommendedProduct: Decodable, Identifiable {
-    var id: String { productName }
+    var id: String { productId ?? productName }
+    let productId: String?
     let productName: String
     let productType: String
     let applicationRate: String?
     let reasoning: String
 
     enum CodingKeys: String, CodingKey {
+        case productId = "product_id"
+        case productIdCamel = "productId"
+        case id
         case productName = "product_name"
         case productNameCamel = "productName"
         case name
@@ -218,11 +222,13 @@ struct RecommendedProduct: Decodable, Identifiable {
     }
 
     init(
+        productId: String?,
         productName: String,
         productType: String,
         applicationRate: String?,
         reasoning: String
     ) {
+        self.productId = productId
         self.productName = productName
         self.productType = productType
         self.applicationRate = applicationRate
@@ -231,6 +237,10 @@ struct RecommendedProduct: Decodable, Identifiable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        productId =
+            try container.decodeIfPresent(String.self, forKey: .productId)
+            ?? (try container.decodeIfPresent(String.self, forKey: .productIdCamel))
+            ?? (try container.decodeIfPresent(String.self, forKey: .id))
         productName =
             try container.decodeIfPresent(String.self, forKey: .productName)
             ?? (try container.decodeIfPresent(String.self, forKey: .productNameCamel))

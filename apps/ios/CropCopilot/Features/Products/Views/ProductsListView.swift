@@ -23,6 +23,9 @@ struct ProductsListView: View {
                 }
             }
             .navigationTitle("Products")
+            .navigationDestination(for: String.self) { productId in
+                ProductDetailView(productId: productId)
+            }
             .task {
                 await viewModel.loadProducts()
             }
@@ -109,54 +112,63 @@ struct ProductsListView: View {
                 .padding(.bottom, 2)
 
                 ForEach(viewModel.products) { product in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .top, spacing: 8) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(product.name)
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(2)
+                    NavigationLink(value: product.id) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .top, spacing: 8) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(product.name)
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+                                        .lineLimit(2)
 
-                                if let brand = product.brand, !brand.isEmpty {
-                                    Text(brand)
-                                        .font(.subheadline)
+                                    if let brand = product.brand, !brand.isEmpty {
+                                        Text(brand)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer(minLength: 6)
+                                VStack(alignment: .trailing, spacing: 8) {
+                                    Text(prettyProductType(product.type))
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(Color.appSecondary)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 5)
+                                        .background(Color.appPrimary.opacity(0.18))
+                                        .clipShape(Capsule())
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption.weight(.semibold))
                                         .foregroundStyle(.secondary)
                                 }
                             }
-                            Spacer(minLength: 6)
-                            Text(prettyProductType(product.type))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Color.appSecondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 5)
-                                .background(Color.appPrimary.opacity(0.18))
-                                .clipShape(Capsule())
-                        }
 
-                        if let description = product.description, !description.isEmpty {
-                            Text(description)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                        }
-
-                        HStack(spacing: 8) {
-                            if let rate = product.applicationRate, !rate.isEmpty {
-                                Label(rate, systemImage: "speedometer")
-                                    .font(.caption)
+                            if let description = product.description, !description.isEmpty {
+                                Text(description)
+                                    .font(.subheadline)
                                     .foregroundStyle(.secondary)
+                                    .lineLimit(2)
                             }
-                            if let crops = product.crops, !crops.isEmpty {
-                                Text(crops.prefix(2).map(AppConstants.cropLabel).joined(separator: " • "))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
+
+                            HStack(spacing: 8) {
+                                if let rate = product.applicationRate, !rate.isEmpty {
+                                    Label(rate, systemImage: "speedometer")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                if let crops = product.crops, !crops.isEmpty {
+                                    Text(crops.prefix(2).map(AppConstants.cropLabel).joined(separator: " • "))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(1)
+                                }
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                        .antigravityGlass(cornerRadius: 16)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(14)
-                    .antigravityGlass(cornerRadius: 16)
+                    .buttonStyle(.plain)
                 }
 
                 if let error = viewModel.errorMessage {

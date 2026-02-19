@@ -47,6 +47,7 @@ struct RecommendationDetailResponse: Decodable, Identifiable {
     let modelUsed: String
     let input: RecommendationInputDetail
     let sources: [RecommendationSourceDetail]
+    let recommendedProducts: [RecommendationProductSummary]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -56,6 +57,7 @@ struct RecommendationDetailResponse: Decodable, Identifiable {
         case modelUsed
         case input
         case sources
+        case recommendedProducts
     }
 
     init(from decoder: Decoder) throws {
@@ -81,7 +83,18 @@ struct RecommendationDetailResponse: Decodable, Identifiable {
         modelUsed = try container.decodeIfPresent(String.self, forKey: .modelUsed) ?? "unknown"
         input = try container.decode(RecommendationInputDetail.self, forKey: .input)
         sources = try container.decodeIfPresent([RecommendationSourceDetail].self, forKey: .sources) ?? []
+        recommendedProducts =
+            try container.decodeIfPresent([RecommendationProductSummary].self, forKey: .recommendedProducts) ?? []
     }
+}
+
+struct RecommendationProductSummary: Decodable, Identifiable {
+    let id: String
+    let name: String
+    let brand: String?
+    let type: String
+    let reason: String?
+    let applicationRate: String?
 }
 
 struct RecommendationInputDetail: Decodable {
@@ -260,6 +273,84 @@ struct ProductListItem: Decodable, Identifiable {
     let description: String?
     let applicationRate: String?
     let crops: [String]?
+}
+
+struct ProductDetailResponse: Decodable, Identifiable {
+    let id: String
+    let name: String
+    let brand: String?
+    let type: String
+    let description: String?
+    let applicationRate: String?
+    let crops: [String]
+    let usedInRecommendations: Int
+    let relatedProducts: [RelatedProductSummary]
+    let recommendations: [ProductRecommendationReference]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case brand
+        case type
+        case description
+        case applicationRate
+        case crops
+        case usedInRecommendations
+        case relatedProducts
+        case recommendations
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        brand = try container.decodeIfPresent(String.self, forKey: .brand)
+        type = try container.decodeIfPresent(String.self, forKey: .type) ?? "unknown"
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        applicationRate = try container.decodeIfPresent(String.self, forKey: .applicationRate)
+        crops = try container.decodeIfPresent([String].self, forKey: .crops) ?? []
+        usedInRecommendations = try container.decodeIfPresent(Int.self, forKey: .usedInRecommendations) ?? 0
+        relatedProducts =
+            try container.decodeIfPresent([RelatedProductSummary].self, forKey: .relatedProducts) ?? []
+        recommendations =
+            try container.decodeIfPresent([ProductRecommendationReference].self, forKey: .recommendations) ?? []
+    }
+}
+
+struct RelatedProductSummary: Decodable, Identifiable {
+    let id: String
+    let name: String
+    let brand: String?
+    let type: String
+}
+
+struct ProductRecommendationReference: Decodable, Identifiable {
+    var id: String { recommendationId }
+    let recommendationId: String
+    let condition: String
+    let crop: String?
+    let createdAt: String
+}
+
+struct BatchPricingResponse: Decodable {
+    let pricing: [ProductPricingEntry]
+}
+
+struct ProductPricingEntry: Decodable, Identifiable {
+    var id: String { productId }
+    let productId: String
+    let productName: String
+    let brand: String?
+    let pricing: ProductPricingSnapshot
+}
+
+struct ProductPricingSnapshot: Decodable {
+    let currency: String
+    let retailPrice: Double?
+    let wholesalePrice: Double?
+    let unit: String?
+    let availability: String?
+    let lastUpdated: String?
 }
 
 // MARK: - Profile Response

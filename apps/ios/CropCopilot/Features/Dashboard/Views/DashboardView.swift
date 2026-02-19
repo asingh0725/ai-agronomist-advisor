@@ -151,7 +151,7 @@ struct DashboardView: View {
 
     private var statusStrip: some View {
         HStack(spacing: 8) {
-            Label("AWS Runtime Connected", systemImage: "bolt.horizontal.circle.fill")
+            Label("Research-backed", systemImage: "checkmark.seal.fill")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 10)
@@ -161,7 +161,7 @@ struct DashboardView: View {
 
             Spacer()
 
-            Label("Cited RAG", systemImage: "book.closed.fill")
+            Label("Outcome tracking", systemImage: "chart.line.uptrend.xyaxis")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 10)

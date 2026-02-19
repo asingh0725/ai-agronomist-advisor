@@ -47,6 +47,19 @@ struct ProfileView: View {
                                     .pickerStyle(.menu)
                                     .tint(.primary)
                                 }
+
+                                Divider().background(.separator)
+
+                                LabeledContent("Expertise Level") {
+                                    Picker("Expertise Level", selection: $viewModel.experienceLevel) {
+                                        Text("Select level...").tag(Optional<ExperienceLevel>.none)
+                                        ForEach(ExperienceLevel.allCases, id: \.self) { level in
+                                            Text(level.displayName).tag(Optional(level))
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .tint(.primary)
+                                }
                             }
                         }
 

@@ -11,14 +11,6 @@ struct RecommendationsListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                if !Configuration.isRuntimeApiConfigured {
-                    Text("Set API_RUNTIME_BASE_URL to keep iOS synced with AWS runtime.")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                        .padding(.horizontal)
-                        .padding(.top, 6)
-                }
-
                 searchBar
                 sortPicker
 
