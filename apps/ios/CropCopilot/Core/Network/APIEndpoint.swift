@@ -37,7 +37,14 @@ enum APIEndpoint {
     case deleteRecommendation(id: String)
 
     // Products
-    case listProducts(search: String?, type: String?)
+    case listProducts(
+        search: String?,
+        type: String?,
+        limit: Int?,
+        offset: Int?,
+        sortBy: String?,
+        sortOrder: String?
+    )
     case getProduct(id: String)
     case compareProducts
     case getProductPricing
@@ -83,8 +90,6 @@ enum APIEndpoint {
              .updateProfile,
              .createInput,
              .getJobStatus,
-             .listRecommendations,
-             .getRecommendation,
              .deleteRecommendation,
              .uploadImage,
              .getUploadViewUrl,
@@ -127,13 +132,25 @@ enum APIEndpoint {
             }
             return items
 
-        case .listProducts(let search, let type):
+        case .listProducts(let search, let type, let limit, let offset, let sortBy, let sortOrder):
             var items: [URLQueryItem] = []
             if let search = search {
                 items.append(URLQueryItem(name: "search", value: search))
             }
             if let type = type {
                 items.append(URLQueryItem(name: "types", value: type))
+            }
+            if let limit {
+                items.append(URLQueryItem(name: "limit", value: "\(limit)"))
+            }
+            if let offset {
+                items.append(URLQueryItem(name: "offset", value: "\(offset)"))
+            }
+            if let sortBy {
+                items.append(URLQueryItem(name: "sortBy", value: sortBy))
+            }
+            if let sortOrder {
+                items.append(URLQueryItem(name: "sortOrder", value: sortOrder))
             }
             return items.isEmpty ? nil : items
 

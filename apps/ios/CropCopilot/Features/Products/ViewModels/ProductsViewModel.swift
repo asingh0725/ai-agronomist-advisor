@@ -53,7 +53,11 @@ final class ProductsViewModel: ObservableObject {
             let response: ProductsListResponse = try await apiClient.request(
                 .listProducts(
                     search: searchText.isEmpty ? nil : searchText,
-                    type: selectedType.apiValue
+                    type: selectedType.apiValue,
+                    limit: 100,
+                    offset: 0,
+                    sortBy: "name",
+                    sortOrder: "asc"
                 )
             )
             products = response.products

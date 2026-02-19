@@ -50,9 +50,7 @@ struct ProductDetailView: View {
             if showPricingSheet {
                 Color.black.opacity(0.38)
                     .ignoresSafeArea()
-                    .onTapGesture {
-                        showPricingSheet = false
-                    }
+                    .onTapGesture {}
                     .transition(.opacity)
 
                 pricingOverlay
@@ -307,7 +305,7 @@ struct ProductDetailView: View {
                 pricingSheet
             }
             .frame(maxWidth: .infinity)
-            .background(.ultraThinMaterial)
+            .background(Color.appBackground)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .padding(.horizontal, 12)
             .padding(.bottom, 10)

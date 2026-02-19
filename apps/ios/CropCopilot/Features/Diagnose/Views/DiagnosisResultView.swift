@@ -27,6 +27,12 @@ private enum RecommendationSection: String, Hashable {
     case products
 }
 
+private enum CitationSheetDetent: CGFloat, CaseIterable {
+    case compact = 0.42
+    case medium = 0.66
+    case expanded = 0.9
+}
+
 private struct CitationItem: Identifiable, Hashable {
     let id: String
     let title: String
@@ -76,6 +82,7 @@ struct DiagnosisResultView: View {
         .actions,
     ]
     @State private var showCitationsModal = false
+    @State private var citationDetent: CitationSheetDetent = .medium
 
     private var hasActiveModal: Bool {
         activeFeedbackStage != nil || showCitationsModal
@@ -96,11 +103,7 @@ struct DiagnosisResultView: View {
             if hasActiveModal {
                 Color.black.opacity(0.38)
                     .ignoresSafeArea()
-                    .onTapGesture {
-                        if showCitationsModal {
-                            showCitationsModal = false
-                        }
-                    }
+                    .onTapGesture {}
                     .transition(.opacity)
             }
 
@@ -192,8 +195,6 @@ struct DiagnosisResultView: View {
                 ) {
                     productsContent(detail)
                 }
-
-                feedbackStatusCard
             }
             .padding()
             .padding(.bottom, 24)
@@ -496,57 +497,20 @@ struct DiagnosisResultView: View {
         .buttonStyle(.plain)
     }
 
-    private var feedbackStatusCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Feedback Loop")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.primary)
-
-            Text(viewModel.feedbackSummary)
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .lineSpacing(2)
-
-            HStack(spacing: 8) {
-                Button("Provide Feedback") {
-                    showCitationsModal = false
-                    activeFeedbackStage = viewModel.nextSuggestedStage ?? .basic
-                }
-                .buttonStyle(GlowSkeuomorphicButtonStyle())
-
-                Button {
-                    if let stage = viewModel.nextSuggestedStage {
-                        viewModel.setSnooze(stage: stage, recommendationId: recommendationId, days: 2)
-                    } else {
-                        viewModel.setSnooze(stage: .basic, recommendationId: recommendationId, days: 2)
-                    }
-                } label: {
-                    secondaryActionLabel("Later")
-                }
-                .buttonStyle(.plain)
-            }
-
-            if let feedbackSuccessMessage {
-                Text(feedbackSuccessMessage)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.appSecondary)
-            }
-
-            if let feedbackErrorMessage {
-                Text(feedbackErrorMessage)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.red)
-            }
-        }
-        .padding(16)
-        .antigravityGlass(cornerRadius: 14)
-    }
-
     private var citationsModal: some View {
-        VStack {
+        let sheetHeight = citationSheetHeight
+
+        return VStack {
             Spacer()
 
             VStack(alignment: .leading, spacing: 14) {
+                Capsule()
+                    .fill(Color.secondary.opacity(0.45))
+                    .frame(width: 38, height: 5)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 10)
+                    .padding(.bottom, 4)
+
                 HStack {
                     Text("Cited Sources")
                         .font(.title3.weight(.semibold))
@@ -570,6 +534,7 @@ struct DiagnosisResultView: View {
                     Text("No citations are attached to this recommendation yet.")
                         .font(.body)
                         .foregroundStyle(.secondary)
+                        .padding(.bottom, 12)
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 10) {
@@ -613,13 +578,14 @@ struct DiagnosisResultView: View {
                             }
                         }
                     }
-                    .frame(maxHeight: 340)
                 }
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial)
+            .frame(height: sheetHeight, alignment: .top)
+            .background(Color.appBackground)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .gesture(citationDetentDragGesture)
             .padding(.horizontal, 12)
             .padding(.bottom, 10)
         }
@@ -700,7 +666,7 @@ struct DiagnosisResultView: View {
             content()
         }
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial)
+        .background(Color.appBackground)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .padding(.horizontal, 12)
         .padding(.bottom, 10)
@@ -1117,6 +1083,45 @@ struct DiagnosisResultView: View {
         value.replacingOccurrences(of: "_", with: " ").capitalized
     }
 
+    private var citationSheetHeight: CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        return max(320, screenHeight * citationDetent.rawValue)
+    }
+
+    private var citationDetentDragGesture: some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .local)
+            .onEnded { value in
+                let verticalDelta = value.translation.height
+                if verticalDelta < -30 {
+                    citationDetent = nextLargerCitationDetent(from: citationDetent)
+                } else if verticalDelta > 30 {
+                    citationDetent = nextSmallerCitationDetent(from: citationDetent)
+                }
+            }
+    }
+
+    private func nextLargerCitationDetent(from current: CitationSheetDetent) -> CitationSheetDetent {
+        switch current {
+        case .compact:
+            return .medium
+        case .medium:
+            return .expanded
+        case .expanded:
+            return .expanded
+        }
+    }
+
+    private func nextSmallerCitationDetent(from current: CitationSheetDetent) -> CitationSheetDetent {
+        switch current {
+        case .compact:
+            return .compact
+        case .medium:
+            return .compact
+        case .expanded:
+            return .medium
+        }
+    }
+
     private func presentSuggestedModalIfNeeded() {
         guard activeFeedbackStage == nil else {
             return
@@ -1131,6 +1136,8 @@ struct DiagnosisResultView: View {
                 return
             }
             activeFeedbackStage = stage
+            feedbackErrorMessage = nil
+            feedbackSuccessMessage = nil
             showCitationsModal = false
             viewModel.consumeSuggestedStage()
         }
