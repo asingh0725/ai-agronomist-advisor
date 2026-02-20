@@ -41,31 +41,37 @@ struct DashboardView: View {
     // MARK: - Hero Card
 
     private var heroCard: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            HStack(spacing: Spacing.sm) {
-                CropCopilotLogoMark(size: 32, color: .white)
-                Text("Crop Copilot")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(.white)
-                Spacer()
-            }
+        ZStack(alignment: .topLeading) {
+            // Animated particle field — subtle botanical pollen drift
+            AnimatedParticleField()
 
-            Text("AI-backed agronomy\nrecommendations with citations.")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.70))
-                .lineSpacing(3)
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                HStack(spacing: Spacing.sm) {
+                    CropCopilotLogoMark(size: 32, color: .white)
+                        .pulseGlow(color: .appPrimary, radius: 10, duration: 4.0)
+                    Text("Crop Copilot")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                }
 
-            Button {
-                selectedTab = .diagnose
-            } label: {
-                Label("Start New Diagnosis", systemImage: "arrow.up.right")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.black)
+                Text("AI-backed agronomy\nrecommendations with citations.")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.70))
+                    .lineSpacing(3)
+
+                Button {
+                    selectedTab = .diagnose
+                } label: {
+                    Label("Start New Diagnosis", systemImage: "arrow.up.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.black)
+                }
+                .buttonStyle(GlowSkeuomorphicButtonStyle())
             }
-            .buttonStyle(GlowSkeuomorphicButtonStyle())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Spacing.xl)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.xl)
         .heroGradientCard()
     }
 
@@ -85,14 +91,14 @@ struct DashboardView: View {
                 value: averageConfidenceLabel,
                 subtitle: "confidence",
                 icon: "chart.bar.fill",
-                color: .semanticInfo
+                color: Color.semanticInfo
             )
             metricCard(
                 title: "High",
                 value: highConfidenceCountLabel,
                 subtitle: "≥ 80%",
                 icon: "checkmark.seal.fill",
-                color: .semanticSuccess
+                color: Color.semanticSuccess
             )
         }
     }
@@ -123,6 +129,7 @@ struct DashboardView: View {
                 .frame(width: 26, height: 26)
                 .background(color.opacity(0.12))
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .floatAnimation(amplitude: 3, duration: 5.5)
 
             Text(value)
                 .font(.title3.weight(.bold))
@@ -183,7 +190,8 @@ struct DashboardView: View {
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
-                .lineLimit(1)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
 
@@ -268,6 +276,7 @@ struct DashboardView: View {
     private var emptyState: some View {
         VStack(spacing: Spacing.md) {
             IconBadge(icon: "leaf.fill", color: .appPrimary, size: 44, cornerRadius: 14)
+                .floatAnimation(amplitude: 4, duration: 5.5)
 
             VStack(spacing: 4) {
                 Text("No recommendations yet")

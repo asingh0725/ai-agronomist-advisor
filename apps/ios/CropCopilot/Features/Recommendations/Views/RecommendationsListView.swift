@@ -7,19 +7,42 @@ import SwiftUI
 
 struct RecommendationsListView: View {
     @StateObject private var viewModel = RecommendationsViewModel()
+    @State private var showGrid = true
+
+    // Explicit fixed column width so every card in the grid is identical.
+    // .flexible() lets image intrinsic size influence cell height — .fixed() doesn't.
+    private var gridColumnWidth: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        return floor((screenWidth - Spacing.lg * 2 - Spacing.sm) / 2)
+    }
+
+    private var gridCardHeight: CGFloat {
+        ceil(gridColumnWidth / 0.88)
+    }
+
+    private var gridColumns: [GridItem] {
+        [
+            GridItem(.fixed(gridColumnWidth), spacing: Spacing.sm),
+            GridItem(.fixed(gridColumnWidth), spacing: Spacing.sm),
+        ]
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: Spacing.md) {
                 searchBar
-                sortPicker
+                controlBar
 
                 if viewModel.isLoading && viewModel.recommendations.isEmpty {
                     loadingView
                 } else if viewModel.recommendations.isEmpty {
                     emptyView
                 } else {
-                    recommendationsList
+                    if showGrid {
+                        gridContent
+                    } else {
+                        listContent
+                    }
                 }
 
                 if let error = viewModel.errorMessage {
@@ -74,45 +97,109 @@ struct RecommendationsListView: View {
         .padding(.top, Spacing.sm)
     }
 
-    // MARK: - Sort Picker
+    // MARK: - Control Bar (sort picker + layout toggle)
 
-    private var sortPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
-                    Button {
-                        viewModel.selectedSort = option
-                        Task { await viewModel.loadRecommendations(reset: true) }
-                    } label: {
-                        let isSelected = viewModel.selectedSort == option
-                        Text(option.displayName)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(isSelected ? Color.appPrimary : .primary)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.sm)
-                            .background(
-                                Capsule()
-                                    .fill(isSelected ? Color.appPrimary.opacity(0.14) : Color.appSecondaryBackground)
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(
-                                        isSelected ? Color.appPrimary : Color.black.opacity(0.08),
-                                        lineWidth: isSelected ? 1.1 : 0.8
-                                    )
-                            )
+    private var controlBar: some View {
+        HStack(spacing: Spacing.sm) {
+            // Sort picker — uses .menu style to avoid _UIReparentingView warnings from Menu.
+            // fixedSize(horizontal: false, vertical: true) + lineLimit(1) prevents the Capsule
+            // from stretching vertically when Picker renders the selected label.
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.appPrimary)
+                Picker("Sort", selection: $viewModel.selectedSort) {
+                    ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
+                        Label(option.displayName, systemImage: sortIcon(for: option))
+                            .tag(option)
                     }
-                    .buttonStyle(.plain)
+                }
+                .pickerStyle(.menu)
+                .font(.subheadline.weight(.semibold))
+                .tint(Color.appPrimary)
+                .lineLimit(1)
+                .onChange(of: viewModel.selectedSort) { _ in
+                    Task { await viewModel.loadRecommendations(reset: true) }
                 }
             }
-            .padding(.horizontal, Spacing.lg)
-            .padding(.vertical, Spacing.md)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm + 2)
+            .background(Color.appPrimary.opacity(0.10))
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color.appPrimary.opacity(0.22), lineWidth: 1))
+
+            Spacer()
+
+            // Layout toggle
+            Button {
+                withAnimation(.appFast) {
+                    showGrid.toggle()
+                }
+            } label: {
+                Image(systemName: showGrid ? "rectangle.grid.1x2.fill" : "square.grid.2x2.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.appSecondary)
+                    .frame(width: 34, height: 34)
+                    .background(Color.appSecondaryBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, Spacing.lg)
+    }
+
+    private func sortIcon(for option: RecommendationsViewModel.SortOption) -> String {
+        switch option {
+        case .dateDesc:       return "calendar.badge.clock"
+        case .dateAsc:        return "calendar"
+        case .confidenceHigh: return "chart.bar.fill"
+        case .confidenceLow:  return "chart.bar"
         }
     }
 
-    // MARK: - Recommendations List
+    // MARK: - Grid Content
 
-    private var recommendationsList: some View {
+    private var gridContent: some View {
+        let w = gridColumnWidth
+        let h = gridCardHeight
+
+        return ScrollView {
+            LazyVGrid(columns: gridColumns, spacing: Spacing.sm) {
+                ForEach(Array(viewModel.recommendations.enumerated()), id: \.element.id) { index, recommendation in
+                    NavigationLink(value: recommendation.id) {
+                        RecommendationCard(recommendation: recommendation, style: .grid)
+                    }
+                    // Frame on the link itself — GeometryReader inside the card reads this.
+                    // .clipped() prevents any visual bleed (borders, highlights) outside the cell.
+                    .frame(width: w, height: h)
+                    .clipped()
+                    .buttonStyle(.plain)
+                    .onAppear {
+                        let preloadThreshold = max(viewModel.recommendations.count - 4, 0)
+                        if index >= preloadThreshold {
+                            Task { await viewModel.loadNextPage() }
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.xxl)
+
+            if viewModel.hasMorePages {
+                loadMoreButton
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.bottom, Spacing.lg)
+            }
+        }
+        .refreshable {
+            await viewModel.refreshRecommendations()
+        }
+    }
+
+    // MARK: - List Content
+
+    private var listContent: some View {
         ScrollView {
             LazyVStack(spacing: Spacing.sm) {
                 if !viewModel.recommendations.isEmpty {
@@ -175,17 +262,24 @@ struct RecommendationsListView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - States
+    // MARK: - Loading Skeleton
 
     private var loadingView: some View {
-        VStack(spacing: Spacing.lg) {
-            Spacer()
-            ProgressView("Loading recommendations...")
-                .tint(Color.appPrimary)
-                .foregroundStyle(.primary)
-            Spacer()
+        let w = gridColumnWidth
+        let h = gridCardHeight
+
+        return ScrollView {
+            LazyVGrid(columns: gridColumns, spacing: Spacing.sm) {
+                ForEach(0..<6, id: \.self) { _ in
+                    SkeletonCard(height: h, cornerRadius: CornerRadius.lg)
+                        .frame(width: w, height: h)
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
         }
     }
+
+    // MARK: - Empty State
 
     private var emptyView: some View {
         VStack(spacing: Spacing.md) {
@@ -196,6 +290,7 @@ struct RecommendationsListView: View {
                 size: 52,
                 cornerRadius: 16
             )
+            .floatAnimation(amplitude: 4, duration: 5)
             Text("No recommendations yet")
                 .font(.headline)
                 .foregroundStyle(.primary)

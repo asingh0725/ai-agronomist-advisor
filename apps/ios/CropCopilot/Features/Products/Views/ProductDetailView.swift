@@ -27,12 +27,39 @@ struct ProductDetailView: View {
         ZStack {
             Group {
                 if viewModel.isLoading {
-                    VStack(spacing: Spacing.md) {
-                        ProgressView()
-                            .tint(Color.appPrimary)
-                        Text("Loading product...")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
+                            // Header skeleton
+                            VStack(alignment: .leading, spacing: Spacing.md) {
+                                HStack {
+                                    SkeletonCard(height: 44, cornerRadius: 13).frame(width: 44)
+                                    Spacer()
+                                    SkeletonLine(width: 80, height: 26, cornerRadius: 13)
+                                }
+                                SkeletonLine(height: 22)
+                                SkeletonLine(width: 140, height: 16)
+                                SkeletonLine(height: 13)
+                                SkeletonLine(height: 13)
+                                SkeletonLine(width: 200, height: 13)
+                            }
+                            .padding(Spacing.lg)
+                            .antigravityGlass(cornerRadius: CornerRadius.lg)
+
+                            // Pricing row skeleton
+                            SkeletonCard(height: 64, cornerRadius: CornerRadius.lg)
+
+                            // Sections
+                            ForEach(0..<2, id: \.self) { _ in
+                                VStack(alignment: .leading, spacing: Spacing.sm) {
+                                    SkeletonLine(width: 180, height: 18)
+                                    SkeletonLine(height: 13)
+                                    SkeletonLine(height: 13)
+                                }
+                                .padding(Spacing.md)
+                                .antigravityGlass(cornerRadius: CornerRadius.lg)
+                            }
+                        }
+                        .padding(Spacing.lg)
                     }
                 } else if let product = viewModel.product {
                     ScrollView {

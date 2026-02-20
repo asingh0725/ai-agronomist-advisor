@@ -17,10 +17,10 @@ class RecommendationsViewModel: ObservableObject {
 
         var displayName: String {
             switch self {
-            case .dateDesc: return "Newest"
-            case .dateAsc: return "Oldest"
-            case .confidenceHigh: return "High Confidence"
-            case .confidenceLow: return "Low Confidence"
+            case .dateDesc:        return "Newest"
+            case .dateAsc:         return "Oldest"
+            case .confidenceHigh:  return "High Conf."   // short enough to never wrap in the sort capsule
+            case .confidenceLow:   return "Low Conf."
             }
         }
     }

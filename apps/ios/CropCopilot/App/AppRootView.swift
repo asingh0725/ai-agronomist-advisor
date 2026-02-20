@@ -25,6 +25,11 @@ struct AppRootView: View {
             )
             .ignoresSafeArea()
 
+            // Subtle botanical particle field — drifts behind semi-transparent surfaces
+            // (antigravityGlass cards, navigation bars) throughout every tab.
+            AnimatedParticleField()
+                .ignoresSafeArea()
+
             TabView(selection: $selectedTab) {
                 DashboardView(selectedTab: $selectedTab)
                     .tabItem {
