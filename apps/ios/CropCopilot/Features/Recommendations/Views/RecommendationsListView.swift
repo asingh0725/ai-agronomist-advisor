@@ -101,7 +101,9 @@ struct RecommendationsListView: View {
 
     private var controlBar: some View {
         HStack(spacing: Spacing.sm) {
-            // Sort picker — uses .menu style to avoid _UIReparentingView warnings from Menu
+            // Sort picker — uses .menu style to avoid _UIReparentingView warnings from Menu.
+            // fixedSize(horizontal: false, vertical: true) + lineLimit(1) prevents the Capsule
+            // from stretching vertically when Picker renders the selected label.
             HStack(spacing: 4) {
                 Image(systemName: "arrow.up.arrow.down")
                     .font(.caption.weight(.bold))
@@ -115,10 +117,12 @@ struct RecommendationsListView: View {
                 .pickerStyle(.menu)
                 .font(.subheadline.weight(.semibold))
                 .tint(Color.appPrimary)
+                .lineLimit(1)
                 .onChange(of: viewModel.selectedSort) { _ in
                     Task { await viewModel.loadRecommendations(reset: true) }
                 }
             }
+            .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm + 2)
             .background(Color.appPrimary.opacity(0.10))

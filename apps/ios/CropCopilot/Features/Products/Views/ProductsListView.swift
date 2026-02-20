@@ -12,7 +12,7 @@ struct ProductsListView: View {
         NavigationStack {
             VStack(spacing: Spacing.md) {
                 searchBar
-                typeFilterBar
+                filterControlBar
 
                 if viewModel.isLoading && viewModel.products.isEmpty {
                     loadingView
@@ -33,9 +33,6 @@ struct ProductsListView: View {
                 Task {
                     await viewModel.refreshProducts()
                 }
-            }
-            .onChange(of: viewModel.selectedType) { _ in
-                Task { await viewModel.loadProducts(reset: true) }
             }
         }
     }
@@ -69,55 +66,83 @@ struct ProductsListView: View {
         .padding(.top, Spacing.sm)
     }
 
-    // MARK: - Type Filter Chips
+    // MARK: - Filter Control Bar (multiselect, matches Recommendations sort style)
 
-    private var typeFilterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.sm) {
-                ForEach(ProductsViewModel.ProductTypeFilter.allCases) { filter in
+    private var filterControlBar: some View {
+        HStack(spacing: Spacing.sm) {
+            // Multiselect type filter — styled capsule opening a Menu with checkmarks
+            Menu {
+                ForEach(ProductsViewModel.ProductTypeFilter.selectableTypes) { filter in
                     Button {
-                        viewModel.selectedType = filter
+                        viewModel.toggleType(filter)
                     } label: {
-                        let isSelected = viewModel.selectedType == filter
-                        let chipColor = typeFilterColor(filter)
-                        Text(filter.displayName)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(isSelected ? chipColor : .primary)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.sm)
-                            .background(
-                                Capsule()
-                                    .fill(isSelected ? chipColor.opacity(0.14) : Color.appSecondaryBackground)
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(
-                                        isSelected ? chipColor : Color.black.opacity(0.10),
-                                        lineWidth: isSelected ? 1.1 : 0.8
-                                    )
-                            )
+                        if viewModel.selectedTypes.contains(filter) {
+                            Label(filter.displayName, systemImage: "checkmark")
+                        } else {
+                            Text(filter.displayName)
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
-            }
-            .padding(.horizontal, Spacing.lg)
-            .padding(.vertical, 2)
-        }
-    }
 
-    private func typeFilterColor(_ filter: ProductsViewModel.ProductTypeFilter) -> Color {
-        switch filter {
-        case .all:          return .appPrimary
-        case .fertilizer:   return .typeColorFertilizer
-        case .amendment:    return .typeColorAmendment
-        case .pesticide:    return .typeColorPesticide
-        case .herbicide:    return .typeColorHerbicide
-        case .fungicide:    return .typeColorFungicide
-        case .insecticide:  return .typeColorInsecticide
-        case .seedTreatment: return .typeColorSeedTreatment
-        case .biological:   return .typeColorBiological
-        case .other:        return .appSecondary
+                if !viewModel.selectedTypes.isEmpty {
+                    Divider()
+                    Button("Show All Types", role: .destructive) {
+                        viewModel.clearTypes()
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.appPrimary)
+                    Text(viewModel.filterLabel)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm + 2)
+                .background(
+                    viewModel.selectedTypes.isEmpty
+                        ? Color.appPrimary.opacity(0.10)
+                        : Color.appPrimary.opacity(0.20)
+                )
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule().stroke(
+                        Color.appPrimary.opacity(viewModel.selectedTypes.isEmpty ? 0.22 : 0.50),
+                        lineWidth: 1
+                    )
+                )
+            }
+
+            Spacer()
+
+            if !viewModel.selectedTypes.isEmpty {
+                // Active filter badge showing count, tap to clear
+                Button {
+                    viewModel.clearTypes()
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("\(viewModel.selectedTypes.count) active")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.appPrimary)
+                        Image(systemName: "xmark")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color.appPrimary)
+                    }
+                    .padding(.horizontal, Spacing.sm + 2)
+                    .padding(.vertical, Spacing.xs + 2)
+                    .background(Color.appPrimary.opacity(0.10))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
+        .animation(.appFast, value: viewModel.selectedTypes.isEmpty)
+        .padding(.horizontal, Spacing.lg)
     }
 
     // MARK: - Product List
@@ -126,7 +151,7 @@ struct ProductsListView: View {
         ScrollView {
             LazyVStack(spacing: Spacing.sm) {
                 HStack {
-                    Text("\(viewModel.products.count) products")
+                    Text("\(viewModel.products.count) product\(viewModel.products.count == 1 ? "" : "s")")
                         .font(.appCaption.weight(.semibold))
                         .foregroundStyle(.secondary)
                     Spacer()

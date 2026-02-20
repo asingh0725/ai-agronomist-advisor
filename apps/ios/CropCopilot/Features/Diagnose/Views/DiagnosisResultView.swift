@@ -99,10 +99,15 @@ struct DiagnosisResultView: View {
                     errorView(error)
                 }
             }
+            // Disable all background tap targets while any modal is presented.
+            .allowsHitTesting(!hasActiveModal)
 
             if hasActiveModal {
+                // .contentShape(Rectangle()) ensures the full overlay area absorbs taps
+                // even where the translucent fill renders as "empty" space.
                 Color.black.opacity(0.38)
                     .ignoresSafeArea()
+                    .contentShape(Rectangle())
                     .onTapGesture {}
                     .transition(.opacity)
             }
