@@ -84,41 +84,38 @@ struct RecommendationsListView: View {
         .padding(.top, Spacing.sm)
     }
 
-    // MARK: - Control Bar (sort + layout toggle)
+    // MARK: - Control Bar (sort menu + layout toggle)
 
     private var controlBar: some View {
         HStack(spacing: Spacing.sm) {
-            // Sort chips
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: Spacing.sm) {
-                    ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
-                        Button {
-                            viewModel.selectedSort = option
-                            Task { await viewModel.loadRecommendations(reset: true) }
-                        } label: {
-                            let isSelected = viewModel.selectedSort == option
-                            Text(option.displayName)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(isSelected ? Color.appPrimary : .primary)
-                                .padding(.horizontal, Spacing.md)
-                                .padding(.vertical, Spacing.sm)
-                                .background(
-                                    Capsule()
-                                        .fill(isSelected ? Color.appPrimary.opacity(0.14) : Color.appSecondaryBackground)
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .stroke(
-                                            isSelected ? Color.appPrimary : Color.black.opacity(0.08),
-                                            lineWidth: isSelected ? 1.1 : 0.8
-                                        )
-                                )
-                        }
-                        .buttonStyle(.plain)
+            // Sort menu — shows current sort, reveals all 4 options on tap
+            Menu {
+                ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
+                    Button {
+                        viewModel.selectedSort = option
+                        Task { await viewModel.loadRecommendations(reset: true) }
+                    } label: {
+                        Label(option.displayName, systemImage: sortIcon(for: option))
                     }
                 }
-                .padding(.vertical, Spacing.md)
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.up.arrow.down")
+                        .font(.caption.weight(.bold))
+                    Text(viewModel.selectedSort.displayName)
+                        .font(.subheadline.weight(.semibold))
+                    Image(systemName: "chevron.down")
+                        .font(.caption2.weight(.bold))
+                }
+                .foregroundStyle(Color.appPrimary)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm + 2)
+                .background(Color.appPrimary.opacity(0.10))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.appPrimary.opacity(0.22), lineWidth: 1))
             }
+
+            Spacer()
 
             // Layout toggle
             Button {
@@ -136,6 +133,15 @@ struct RecommendationsListView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, Spacing.lg)
+    }
+
+    private func sortIcon(for option: RecommendationsViewModel.SortOption) -> String {
+        switch option {
+        case .dateDesc:       return "calendar.badge.clock"
+        case .dateAsc:        return "calendar"
+        case .confidenceHigh: return "chart.bar.fill"
+        case .confidenceLow:  return "chart.bar"
+        }
     }
 
     // MARK: - Grid Content

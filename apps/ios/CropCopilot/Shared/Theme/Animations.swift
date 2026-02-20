@@ -132,6 +132,52 @@ struct SkeletonCard: View {
     }
 }
 
+// MARK: - Animated Particle Field
+
+/// Floating organic particle field — subtle pollen/seed drift for hero backgrounds.
+/// Draws 18 small white circles that drift upward with staggered phase offsets.
+/// Uses `TimelineView(.animation)` + `Canvas` for GPU-accelerated drawing.
+/// Entirely transparent when `accessibilityReduceMotion` is enabled.
+struct AnimatedParticleField: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if reduceMotion {
+            Color.clear
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                Canvas { context, size in
+                    guard size.width > 0, size.height > 0 else { return }
+                    let t = timeline.date.timeIntervalSinceReferenceDate
+                    let count = 22
+
+                    for i in 0..<count {
+                        let fi = Double(i)
+                        // Distribute X positions using golden-angle spacing
+                        let baseX = (fi * 137.508).truncatingRemainder(dividingBy: size.width * 0.86) + size.width * 0.07
+                        let swayX = sin(t * 0.38 + fi * 0.85) * 14
+                        let x = baseX + swayX
+
+                        // Drift upward; wrap when past top
+                        let speed = 15 + fi.truncatingRemainder(dividingBy: 6) * 5
+                        let phase = fi * (size.height / Double(count))
+                        let rawY = size.height - (t * speed + phase).truncatingRemainder(dividingBy: size.height + 24)
+                        let y = rawY < -8 ? rawY + size.height + 24 : rawY
+
+                        let radius = 1.2 + (fi.truncatingRemainder(dividingBy: 3)) * 0.9
+                        let opacity = 0.07 + 0.06 * sin(t * 0.55 + fi * 1.2)
+
+                        let dot = CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)
+                        context.opacity = opacity
+                        context.fill(Path(ellipseIn: dot), with: .color(.white))
+                    }
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
 // MARK: - View Extensions
 
 extension View {

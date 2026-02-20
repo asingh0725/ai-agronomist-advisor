@@ -225,7 +225,8 @@ struct DiagnosisResultView: View {
                 Text(detail.diagnosis.diagnosis.condition)
                     .font(.headline)
                     .foregroundStyle(.white)
-                    .lineLimit(2)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if let crop = detail.input.crop {
                     Label(AppConstants.cropLabel(for: crop), systemImage: "leaf.fill")
@@ -234,17 +235,49 @@ struct DiagnosisResultView: View {
                 }
             }
 
-            Spacer(minLength: Spacing.md)
+            Spacer(minLength: Spacing.sm)
 
-            CanvasConfidenceArc(confidence: detail.confidence, style: .detailed)
-                .pulseGlow(
-                    color: ConfidenceLevel.from(detail.confidence).foreground,
-                    radius: 14,
-                    duration: 3.0
-                )
+            // Dark-mode confidence ring — white text, colored arc, no opaque pill background
+            heroConfidenceArc(detail.confidence)
         }
         .padding(Spacing.lg)
         .heroGradientCard()
+    }
+
+    /// Confidence ring styled for dark hero card backgrounds.
+    /// Uses white percentage text and a light track — no opaque background pill.
+    private func heroConfidenceArc(_ confidence: Double) -> some View {
+        let level = ConfidenceLevel.from(confidence)
+        let clamped = min(max(confidence, 0), 1)
+        let pct = Int((clamped * 100).rounded())
+
+        return VStack(spacing: 5) {
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.18), lineWidth: 5.5)
+                    .frame(width: 64, height: 64)
+
+                Circle()
+                    .trim(from: 0, to: clamped)
+                    .stroke(
+                        level.foreground,
+                        style: StrokeStyle(lineWidth: 5.5, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 64, height: 64)
+
+                Text("\(pct)%")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .monospacedDigit()
+            }
+            .pulseGlow(color: level.foreground, radius: 14, duration: 3.0)
+
+            Text(level.title)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.70))
+                .lineLimit(1)
+        }
     }
 
     @ViewBuilder
@@ -310,6 +343,27 @@ struct DiagnosisResultView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .stroke(.black.opacity(0.08), lineWidth: 0.8)
+                    )
+                } else {
+                    // Lab report — no photo by design; show a themed icon thumbnail
+                    ZStack {
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.appEarth800, location: 0),
+                                .init(color: Color.appEarth950, location: 1),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        Image(systemName: "flask.fill")
+                            .font(.system(size: 30))
+                            .foregroundStyle(Color.appPrimary.opacity(0.75))
+                    }
+                    .frame(width: 96, height: 96)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.appPrimary.opacity(0.15), lineWidth: 0.8)
                     )
                 }
 
@@ -525,96 +579,141 @@ struct DiagnosisResultView: View {
 
     private var citationsModal: some View {
         let sheetHeight = citationSheetHeight
+        let citations = currentCitationItems
 
         return VStack {
             Spacer()
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(spacing: 0) {
+                // Drag handle
                 Capsule()
-                    .fill(Color.secondary.opacity(0.45))
+                    .fill(Color.secondary.opacity(0.35))
                     .frame(width: 38, height: 5)
-                    .frame(maxWidth: .infinity)
                     .padding(.top, 10)
-                    .padding(.bottom, 4)
+                    .padding(.bottom, 2)
 
-                HStack {
-                    Text("Cited Sources")
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.primary)
+                // Earth gradient header
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Cited Sources")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.white)
+
+                        if !citations.isEmpty {
+                            Text("\(citations.count) reference\(citations.count == 1 ? "" : "s")")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.white.opacity(0.65))
+                        }
+                    }
                     Spacer()
                     Button {
                         showCitationsModal = false
                     } label: {
                         Image(systemName: "xmark")
                             .font(.subheadline.weight(.bold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.white.opacity(0.80))
                             .frame(width: 30, height: 30)
-                            .background(Color.appSecondaryBackground)
+                            .background(.white.opacity(0.15))
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
                 }
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.md)
+                .background(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Color.appEarth950, location: 0),
+                            .init(color: Color.appEarth800, location: 1),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
 
-                let citations = currentCitationItems
+                // Citations content
                 if citations.isEmpty {
                     Text("No citations are attached to this recommendation yet.")
                         .font(.body)
                         .foregroundStyle(.secondary)
-                        .padding(.bottom, 12)
+                        .padding(20)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 10) {
                             ForEach(citations) { citation in
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(citation.title)
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundStyle(.primary)
-
-                                    if let excerpt = citation.excerpt,
-                                       !excerpt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                        Text(excerpt)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                            .lineLimit(4)
-                                    }
-
-                                    HStack {
-                                        if let relevance = citation.relevance {
-                                            Text("Relevance: \(Int((relevance * 100).rounded()))%")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                        }
-
-                                        Spacer()
-
-                                        if let link = citation.url,
-                                           let url = URL(string: link) {
-                                            Button("Open") {
-                                                openURL(url)
-                                            }
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(Color.appSecondary)
-                                        }
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
-                                .background(Color.appSecondaryBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                citationCard(citation)
                             }
                         }
+                        .padding(Spacing.lg)
                     }
                 }
+
+                Spacer(minLength: 0)
             }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: sheetHeight, alignment: .top)
+            .frame(maxWidth: .infinity)
             .background(Color.appBackground)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .gesture(citationDetentDragGesture)
             .padding(.horizontal, 12)
             .padding(.bottom, 10)
         }
+    }
+
+    private func citationCard(_ citation: CitationItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: Spacing.sm) {
+                // Colored accent bar
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Color.appPrimary.opacity(0.70))
+                    .frame(width: 3)
+                    .frame(minHeight: 20)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(citation.title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+
+                    if let excerpt = citation.excerpt,
+                       !excerpt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(excerpt)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(3)
+                    }
+                }
+            }
+
+            HStack {
+                if let relevance = citation.relevance {
+                    Label("\(Int((relevance * 100).rounded()))% relevant", systemImage: "chart.bar.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.appPrimary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.appPrimary.opacity(0.10))
+                        .clipShape(Capsule())
+                }
+
+                Spacer()
+
+                if let link = citation.url,
+                   let url = URL(string: link) {
+                    Button {
+                        openURL(url)
+                    } label: {
+                        Label("Open", systemImage: "arrow.up.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.appSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.md)
+        .antigravityGlass(cornerRadius: 12)
     }
 
     private func feedbackModalContainer(for stage: FeedbackStage) -> some View {
@@ -664,30 +763,58 @@ struct DiagnosisResultView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(spacing: 0) {
+            // Drag handle
             Capsule()
-                .fill(Color.secondary.opacity(0.5))
+                .fill(Color.secondary.opacity(0.35))
                 .frame(width: 38, height: 5)
                 .padding(.top, 10)
-                .padding(.bottom, 12)
+                .padding(.bottom, 2)
 
-            HStack {
-                Text(modalTitle(stage))
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.primary)
+            // Earth gradient header with stage icon
+            HStack(alignment: .center, spacing: Spacing.sm) {
+                IconBadge(
+                    icon: modalIcon(stage),
+                    color: .white,
+                    size: 34,
+                    cornerRadius: 9
+                )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(modalTitle(stage))
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text(modalSubtitle(stage))
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.65))
+                        .lineLimit(1)
+                }
+
                 Spacer()
+
                 Button {
                     activeFeedbackStage = nil
                 } label: {
                     Image(systemName: "xmark")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.80))
                         .frame(width: 30, height: 30)
-                        .background(Color.appSecondaryBackground)
+                        .background(.white.opacity(0.15))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.md)
+            .background(
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.appEarth950, location: 0),
+                        .init(color: Color.appEarth800, location: 1),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
 
             content()
         }
@@ -696,6 +823,22 @@ struct DiagnosisResultView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .padding(.horizontal, 12)
         .padding(.bottom, 10)
+    }
+
+    private func modalIcon(_ stage: FeedbackStage) -> String {
+        switch stage {
+        case .basic:    return "hand.thumbsup.fill"
+        case .detailed: return "list.clipboard.fill"
+        case .outcome:  return "checkmark.circle.fill"
+        }
+    }
+
+    private func modalSubtitle(_ stage: FeedbackStage) -> String {
+        switch stage {
+        case .basic:    return "Quick signal on usefulness"
+        case .detailed: return "Quality details for improvement"
+        case .outcome:  return "Implementation outcome"
+        }
     }
 
     private func modalTitle(_ stage: FeedbackStage) -> String {

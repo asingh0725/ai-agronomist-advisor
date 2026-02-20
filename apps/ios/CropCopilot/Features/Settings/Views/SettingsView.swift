@@ -52,10 +52,10 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Account")
                     .font(.title3.weight(.bold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.white)
                 Text("Manage your profile and preferences")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.68))
             }
 
             Spacer()
@@ -112,14 +112,16 @@ struct SettingsView: View {
                 title: "Notifications",
                 subtitle: "Push preference controls coming soon",
                 icon: "bell.badge.fill",
-                color: .semanticWarning
+                color: .semanticWarning,
+                showChevron: false
             )
 
             settingsRow(
                 title: "Version",
                 subtitle: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0",
                 icon: "info.circle.fill",
-                color: .semanticInfo
+                color: .semanticInfo,
+                showChevron: false
             )
         }
     }
@@ -171,7 +173,13 @@ struct SettingsView: View {
 
     // MARK: - Row
 
-    private func settingsRow(title: String, subtitle: String, icon: String, color: Color) -> some View {
+    private func settingsRow(
+        title: String,
+        subtitle: String,
+        icon: String,
+        color: Color,
+        showChevron: Bool = true
+    ) -> some View {
         HStack(alignment: .center, spacing: Spacing.md) {
             IconBadge(icon: icon, color: color, size: 36, cornerRadius: 10)
 
@@ -186,9 +194,11 @@ struct SettingsView: View {
 
             Spacer(minLength: Spacing.sm)
 
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+            if showChevron {
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.md)

@@ -26,6 +26,11 @@ struct RecommendationCard: View {
         ConfidenceLevel.from(recommendation.confidence)
     }
 
+    private var hasPhoto: Bool {
+        guard let url = recommendation.input.imageUrl else { return false }
+        return !url.isEmpty
+    }
+
     var body: some View {
         Group {
             switch style {
@@ -39,7 +44,7 @@ struct RecommendationCard: View {
         }
     }
 
-    // MARK: - Row Style (Phase 1 design, polished)
+    // MARK: - Row Style
 
     private var rowBody: some View {
         HStack(spacing: Spacing.md) {
@@ -112,66 +117,41 @@ struct RecommendationCard: View {
         .antigravityGlass(cornerRadius: CornerRadius.xl)
     }
 
-    // MARK: - Grid Style (Phase 2 — image-first, full-bleed with gradient overlay)
+    // MARK: - Grid Style (image-first, full-bleed with gradient overlay)
 
     private var gridBody: some View {
         ZStack(alignment: .bottomLeading) {
-            // Background: photo or gradient
-            Group {
-                if let imageUrl = recommendation.input.imageUrl, !imageUrl.isEmpty {
-                    SecureAsyncImage(source: imageUrl) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    } placeholder: {
-                        gradientBackground
-                    } failure: {
-                        gradientBackground
-                    }
-                } else {
-                    gradientBackground
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .clipped()
+            // Background: photo or lab-themed fallback
+            backgroundLayer
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
 
             // Gradient overlay — darkens from mid to bottom for legibility
             LinearGradient(
                 stops: [
                     .init(color: .clear, location: 0.0),
-                    .init(color: .black.opacity(0.35), location: 0.45),
-                    .init(color: .black.opacity(0.80), location: 1.0),
+                    .init(color: .black.opacity(0.30), location: 0.40),
+                    .init(color: .black.opacity(0.82), location: 1.0),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            // Content over gradient
-            VStack(alignment: .leading, spacing: 6) {
-                // Confidence ring badge (top-right)
-                HStack {
-                    Spacer()
-                    CanvasConfidenceArc(confidence: recommendation.confidence, style: .compact)
-                        .pulseGlow(color: level.foreground, radius: 10, duration: 3.0)
-                }
-
-                Spacer()
-
-                // Crop label
+            // Bottom text content — positioned at bottomLeading by ZStack alignment
+            VStack(alignment: .leading, spacing: 5) {
                 Text(AppConstants.cropLabel(for: recommendation.input.crop ?? "Unknown"))
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.72))
                     .textCase(.uppercase)
                     .lineLimit(1)
 
-                // Condition name
                 Text(recommendation.condition)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                // Timestamp
                 Text(timestampLabel)
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.60))
@@ -180,6 +160,11 @@ struct RecommendationCard: View {
             .padding(Spacing.md)
         }
         .aspectRatio(0.88, contentMode: .fit)
+        // Confidence pill badge pinned to top-right — outside ZStack to avoid overlap
+        .overlay(alignment: .topTrailing) {
+            gridConfidenceBadge
+                .padding(Spacing.sm)
+        }
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
         .overlay(alignment: .top) {
             // Lime hairline at top — matches web card pattern
@@ -200,15 +185,57 @@ struct RecommendationCard: View {
         .contentShape(RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous))
     }
 
-    private var gradientBackground: some View {
-        LinearGradient(
-            stops: [
-                .init(color: Color.appEarth800, location: 0),
-                .init(color: Color.appEarth950, location: 1),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    /// Confidence pill with always-white text — readable over any photo.
+    private var gridConfidenceBadge: some View {
+        let pct = Int((min(max(recommendation.confidence, 0), 1) * 100).rounded())
+        return Text("\(pct)%")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(level.foreground.opacity(0.82), in: Capsule())
+            .overlay(Capsule().stroke(.white.opacity(0.20), lineWidth: 0.8))
+    }
+
+    /// Background layer: crop photo if available, otherwise lab-themed gradient with icon.
+    @ViewBuilder
+    private var backgroundLayer: some View {
+        if hasPhoto {
+            SecureAsyncImage(source: recommendation.input.imageUrl) { image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
+                labFallbackBackground
+            } failure: {
+                labFallbackBackground
+            }
+        } else {
+            labFallbackBackground
+        }
+    }
+
+    /// Earth-gradient background with a flask icon — shown for lab-report inputs.
+    private var labFallbackBackground: some View {
+        ZStack {
+            LinearGradient(
+                stops: [
+                    .init(color: Color.appEarth800, location: 0),
+                    .init(color: Color.appEarth950, location: 1),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            VStack(spacing: 6) {
+                Image(systemName: "flask.fill")
+                    .font(.system(size: 26))
+                    .foregroundStyle(Color.appPrimary.opacity(0.70))
+                Text("Lab Report")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.40))
+                    .textCase(.uppercase)
+            }
+        }
     }
 }
 
@@ -217,6 +244,8 @@ struct RecommendationCard: View {
 private struct RecommendationThumbnail: View {
     let source: String?
     let size: CGFloat
+
+    private var isLabReport: Bool { source == nil || source?.isEmpty == true }
 
     var body: some View {
         ZStack {
@@ -243,10 +272,26 @@ private struct RecommendationThumbnail: View {
 
     private var fallback: some View {
         ZStack {
-            Color.appSecondaryBackground
-            Image(systemName: "photo")
-                .font(.title3)
-                .foregroundStyle(.secondary)
+            if isLabReport {
+                // Lab report — no photo by design
+                LinearGradient(
+                    stops: [
+                        .init(color: Color.appEarth800, location: 0),
+                        .init(color: Color.appEarth950, location: 1),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Image(systemName: "flask.fill")
+                    .font(.system(size: size * 0.30))
+                    .foregroundStyle(Color.appPrimary.opacity(0.75))
+            } else {
+                // Photo failed to load
+                Color.appSecondaryBackground
+                Image(systemName: "photo")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

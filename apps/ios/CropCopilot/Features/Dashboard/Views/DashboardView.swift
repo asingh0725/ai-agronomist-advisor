@@ -41,32 +41,37 @@ struct DashboardView: View {
     // MARK: - Hero Card
 
     private var heroCard: some View {
-        VStack(alignment: .leading, spacing: Spacing.lg) {
-            HStack(spacing: Spacing.sm) {
-                CropCopilotLogoMark(size: 32, color: .white)
-                    .pulseGlow(color: .appPrimary, radius: 10, duration: 4.0)
-                Text("Crop Copilot")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(.white)
-                Spacer()
-            }
+        ZStack(alignment: .topLeading) {
+            // Animated particle field — subtle botanical pollen drift
+            AnimatedParticleField()
 
-            Text("AI-backed agronomy\nrecommendations with citations.")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.70))
-                .lineSpacing(3)
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                HStack(spacing: Spacing.sm) {
+                    CropCopilotLogoMark(size: 32, color: .white)
+                        .pulseGlow(color: .appPrimary, radius: 10, duration: 4.0)
+                    Text("Crop Copilot")
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                    Spacer()
+                }
 
-            Button {
-                selectedTab = .diagnose
-            } label: {
-                Label("Start New Diagnosis", systemImage: "arrow.up.right")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.black)
+                Text("AI-backed agronomy\nrecommendations with citations.")
+                    .font(.subheadline)
+                    .foregroundStyle(.white.opacity(0.70))
+                    .lineSpacing(3)
+
+                Button {
+                    selectedTab = .diagnose
+                } label: {
+                    Label("Start New Diagnosis", systemImage: "arrow.up.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.black)
+                }
+                .buttonStyle(GlowSkeuomorphicButtonStyle())
             }
-            .buttonStyle(GlowSkeuomorphicButtonStyle())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Spacing.xl)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Spacing.xl)
         .heroGradientCard()
     }
 
