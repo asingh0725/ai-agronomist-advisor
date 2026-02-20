@@ -135,12 +135,25 @@ struct DiagnosisResultView: View {
     }
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.4)
-            Text("Loading recommendation...")
-                .font(.body)
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.lg) {
+                // Skeleton confidence header
+                SkeletonCard(height: 110, cornerRadius: CornerRadius.lg)
+
+                // Skeleton sections
+                ForEach(0..<3, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: Spacing.sm) {
+                        SkeletonLine(width: 120, height: 18)
+                        SkeletonLine(height: 13)
+                        SkeletonLine(height: 13)
+                        SkeletonLine(width: 180, height: 13)
+                    }
+                    .padding(Spacing.lg)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .antigravityGlass(cornerRadius: CornerRadius.lg)
+                }
+            }
+            .padding(Spacing.lg)
         }
     }
 
@@ -202,23 +215,36 @@ struct DiagnosisResultView: View {
     }
 
     private func confidenceHeader(_ detail: RecommendationDetailResponse) -> some View {
-        HStack(alignment: .center, spacing: 10) {
+        HStack(alignment: .center, spacing: Spacing.md) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(prettyConditionType(detail.diagnosis.diagnosis.conditionType))
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .font(.appMicro)
+                    .foregroundStyle(.white.opacity(0.60))
+                    .textCase(.uppercase)
+
+                Text(detail.diagnosis.diagnosis.condition)
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .lineLimit(2)
+
                 if let crop = detail.input.crop {
-                    Text(AppConstants.cropLabel(for: crop))
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(.primary)
+                    Label(AppConstants.cropLabel(for: crop), systemImage: "leaf.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.72))
                 }
             }
 
-            Spacer(minLength: 12)
+            Spacer(minLength: Spacing.md)
+
             CanvasConfidenceArc(confidence: detail.confidence, style: .detailed)
+                .pulseGlow(
+                    color: ConfidenceLevel.from(detail.confidence).foreground,
+                    radius: 14,
+                    duration: 3.0
+                )
         }
-        .padding(16)
-        .antigravityGlass(cornerRadius: 14)
+        .padding(Spacing.lg)
+        .heroGradientCard()
     }
 
     @ViewBuilder

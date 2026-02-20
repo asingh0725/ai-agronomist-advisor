@@ -44,6 +44,7 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: Spacing.lg) {
             HStack(spacing: Spacing.sm) {
                 CropCopilotLogoMark(size: 32, color: .white)
+                    .pulseGlow(color: .appPrimary, radius: 10, duration: 4.0)
                 Text("Crop Copilot")
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.white)
@@ -123,6 +124,7 @@ struct DashboardView: View {
                 .frame(width: 26, height: 26)
                 .background(color.opacity(0.12))
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .floatAnimation(amplitude: 3, duration: 5.5)
 
             Text(value)
                 .font(.title3.weight(.bold))
@@ -268,6 +270,7 @@ struct DashboardView: View {
     private var emptyState: some View {
         VStack(spacing: Spacing.md) {
             IconBadge(icon: "leaf.fill", color: .appPrimary, size: 44, cornerRadius: 14)
+                .floatAnimation(amplitude: 4, duration: 5.5)
 
             VStack(spacing: 4) {
                 Text("No recommendations yet")

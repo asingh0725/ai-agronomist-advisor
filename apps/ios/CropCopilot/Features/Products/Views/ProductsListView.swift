@@ -261,11 +261,26 @@ struct ProductsListView: View {
     // MARK: - States
 
     private var loadingView: some View {
-        VStack(spacing: Spacing.md) {
-            Spacer()
-            ProgressView("Loading products...")
-                .tint(Color.appPrimary)
-            Spacer()
+        ScrollView {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(0..<6, id: \.self) { _ in
+                    HStack(alignment: .top, spacing: Spacing.md) {
+                        SkeletonCard(height: 38, cornerRadius: 11)
+                            .frame(width: 38)
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            SkeletonLine(height: 16)
+                            SkeletonLine(width: 120, height: 12)
+                            SkeletonLine(height: 12)
+                            SkeletonLine(width: 80, height: 22, cornerRadius: 11)
+                        }
+                        Spacer()
+                    }
+                    .padding(Spacing.md)
+                    .antigravityGlass(cornerRadius: CornerRadius.lg)
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.sm)
         }
     }
 

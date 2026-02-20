@@ -34,20 +34,22 @@ enum ConfidenceLevel: String {
 
     var foreground: Color {
         switch self {
-        case .low: return Color(red: 0.80, green: 0.46, blue: 0.00)
+        case .low:    return Color(red: 0.80, green: 0.46, blue: 0.00)
         case .medium: return Color(red: 0.15, green: 0.42, blue: 0.89)
-        case .high: return Color(red: 0.11, green: 0.47, blue: 0.16)
+        case .high:   return Color(red: 0.11, green: 0.47, blue: 0.16)
         }
     }
 
     var background: Color {
         switch self {
-        case .low: return Color(red: 1.0, green: 0.96, blue: 0.88)
+        case .low:    return Color(red: 1.0,  green: 0.96, blue: 0.88)
         case .medium: return Color(red: 0.92, green: 0.96, blue: 1.0)
-        case .high: return Color(red: 0.92, green: 0.98, blue: 0.92)
+        case .high:   return Color(red: 0.92, green: 0.98, blue: 0.92)
         }
     }
 }
+
+// MARK: - Animated Confidence Arc
 
 struct CanvasConfidenceArc: View {
     enum Style {
@@ -58,6 +60,8 @@ struct CanvasConfidenceArc: View {
     let confidence: Double
     var style: Style = .compact
 
+    @State private var animatedConfidence: Double = 0
+
     private var clampedConfidence: Double {
         min(max(confidence, 0), 1)
     }
@@ -67,47 +71,62 @@ struct CanvasConfidenceArc: View {
     }
 
     private var percentText: String {
-        "\(Int((clampedConfidence * 100).rounded()))%"
+        "\(Int((animatedConfidence * 100).rounded()))%"
     }
 
     var body: some View {
-        switch style {
-        case .compact:
-            ConfidenceRing(
-                confidence: clampedConfidence,
-                strokeColor: level.foreground,
-                textColor: level.foreground,
-                size: 48,
-                lineWidth: 4,
-                font: .system(size: 13, weight: .bold)
-            )
-        case .detailed:
-            HStack(spacing: 10) {
+        Group {
+            switch style {
+            case .compact:
                 ConfidenceRing(
-                    confidence: clampedConfidence,
+                    confidence: animatedConfidence,
                     strokeColor: level.foreground,
                     textColor: level.foreground,
-                    size: 58,
-                    lineWidth: 5,
-                    font: .system(size: 14, weight: .bold)
+                    size: 48,
+                    lineWidth: 4,
+                    font: .system(size: 13, weight: .bold)
                 )
+            case .detailed:
+                HStack(spacing: Spacing.sm) {
+                    ConfidenceRing(
+                        confidence: animatedConfidence,
+                        strokeColor: level.foreground,
+                        textColor: level.foreground,
+                        size: 62,
+                        lineWidth: 5.5,
+                        font: .system(size: 15, weight: .bold)
+                    )
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(percentText)
-                        .font(.subheadline.weight(.semibold))
-                    Text(level.title)
-                        .font(.caption.weight(.medium))
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(percentText)
+                            .font(.subheadline.weight(.semibold))
+                            .monospacedDigit()
+                        Text(level.title)
+                            .font(.caption.weight(.medium))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(.primary)
                 }
-                .foregroundStyle(.primary)
+                .padding(.horizontal, Spacing.sm + 2)
+                .padding(.vertical, Spacing.sm)
+                .background(level.background.opacity(0.65))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md, style: .continuous))
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(level.background.opacity(0.65))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .onAppear {
+            withAnimation(.spring(response: 1.2, dampingFraction: 0.7).delay(0.15)) {
+                animatedConfidence = clampedConfidence
+            }
+        }
+        .onChange(of: confidence) { newValue in
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.7)) {
+                animatedConfidence = min(max(newValue, 0), 1)
+            }
         }
     }
 }
+
+// MARK: - Ring Shape
 
 private struct ConfidenceRing: View {
     let confidence: Double
@@ -134,6 +153,7 @@ private struct ConfidenceRing: View {
                 .font(font)
                 .foregroundStyle(textColor)
                 .monospacedDigit()
+                .contentTransition(.numericText())
         }
         .frame(width: size, height: size)
         .accessibilityLabel("Confidence \(Int((confidence * 100).rounded())) percent")
