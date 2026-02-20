@@ -12,15 +12,16 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: Spacing.lg) {
                     heroCard
                     insightCards
                     quickActions
                     statusStrip
                     recentRecommendationsSection
                 }
-                .padding(16)
-                .padding(.bottom, 28)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.top, Spacing.sm)
+                .padding(.bottom, Spacing.xxxl)
             }
             .navigationTitle("Dashboard")
             .refreshable {
@@ -37,18 +38,22 @@ struct DashboardView: View {
         }
     }
 
+    // MARK: - Hero Card
+
     private var heroCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                CropCopilotLogoMark(size: 30, color: .appSecondary)
+        VStack(alignment: .leading, spacing: Spacing.lg) {
+            HStack(spacing: Spacing.sm) {
+                CropCopilotLogoMark(size: 32, color: .white)
                 Text("Crop Copilot")
                     .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
                 Spacer()
             }
 
-            Text("AI-backed agronomy recommendations with citations.")
+            Text("AI-backed agronomy\nrecommendations with citations.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.70))
+                .lineSpacing(3)
 
             Button {
                 selectedTab = .diagnose
@@ -56,46 +61,38 @@ struct DashboardView: View {
                 Label("Start New Diagnosis", systemImage: "arrow.up.right")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.black)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(Color.appPrimary)
-                    .clipShape(Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(GlowSkeuomorphicButtonStyle())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(
-            LinearGradient(
-                colors: [Color.white, Color.appCanvas],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(.black.opacity(0.08), lineWidth: 0.8)
-        )
-        .shadow(color: .black.opacity(0.05), radius: 14, x: 0, y: 6)
+        .padding(Spacing.xl)
+        .heroGradientCard()
     }
 
+    // MARK: - Insight Cards
+
     private var insightCards: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: Spacing.sm) {
             metricCard(
                 title: "Recent",
                 value: "\(viewModel.recentRecommendations.count)",
-                subtitle: "recommendations"
+                subtitle: "recommendations",
+                icon: "list.bullet.rectangle.fill",
+                color: .appPrimary
             )
             metricCard(
                 title: "Average",
                 value: averageConfidenceLabel,
-                subtitle: "confidence"
+                subtitle: "confidence",
+                icon: "chart.bar.fill",
+                color: .semanticInfo
             )
             metricCard(
                 title: "High",
                 value: highConfidenceCountLabel,
-                subtitle: ">= 80%"
+                subtitle: "≥ 80%",
+                icon: "checkmark.seal.fill",
+                color: .semanticSuccess
             )
         }
     }
@@ -109,101 +106,133 @@ struct DashboardView: View {
 
     private var highConfidenceCountLabel: String {
         guard !viewModel.recentRecommendations.isEmpty else { return "0" }
-        let highCount = viewModel.recentRecommendations.filter { $0.confidence >= 0.8 }.count
-        return "\(highCount)"
+        return "\(viewModel.recentRecommendations.filter { $0.confidence >= 0.8 }.count)"
     }
 
-    private func metricCard(title: String, value: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title.uppercased())
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+    private func metricCard(
+        title: String,
+        value: String,
+        subtitle: String,
+        icon: String,
+        color: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Image(systemName: icon)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 26, height: 26)
+                .background(color.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+
             Text(value)
                 .font(.title3.weight(.bold))
-                .foregroundStyle(.primary)
-            Text(subtitle)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(color)
+                .monospacedDigit()
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title.uppercased())
+                    .font(.appMicro)
+                    .foregroundStyle(.secondary)
+                Text(subtitle)
+                    .font(.appMicro)
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .antigravityGlass(cornerRadius: 16)
+        .padding(Spacing.md)
+        .antigravityGlass(cornerRadius: CornerRadius.lg)
+        .limeShadow(radius: 6, opacity: 0.10)
     }
 
-    private var quickActions: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Quick Actions")
-                .font(.headline)
-                .foregroundStyle(.primary)
+    // MARK: - Quick Actions
 
-            HStack(spacing: 10) {
+    private var quickActions: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            SectionHeader(title: "Quick Actions")
+
+            HStack(spacing: Spacing.sm) {
                 Button {
                     selectedTab = .diagnose
                 } label: {
-                    quickActionCard(icon: "camera.fill", title: "Photo Diagnosis", color: .appPrimary)
+                    quickActionCard(
+                        icon: "camera.fill",
+                        title: "Photo Diagnosis",
+                        color: .appPrimary
+                    )
                 }
                 .buttonStyle(AntigravityScaleButtonStyle())
 
                 Button {
                     selectedTab = .diagnose
                 } label: {
-                    quickActionCard(icon: "doc.text.fill", title: "Lab Report", color: .blue)
+                    quickActionCard(
+                        icon: "doc.text.fill",
+                        title: "Lab Report",
+                        color: .semanticInfo
+                    )
                 }
                 .buttonStyle(AntigravityScaleButtonStyle())
             }
         }
     }
 
-    private var statusStrip: some View {
-        HStack(spacing: 8) {
-            Label("Research-backed", systemImage: "checkmark.seal.fill")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(Color.appSecondaryBackground)
-                .clipShape(Capsule())
-
-            Spacer()
-
-            Label("Outcome tracking", systemImage: "chart.line.uptrend.xyaxis")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(Color.appSecondaryBackground)
-                .clipShape(Capsule())
-        }
-    }
-
     private func quickActionCard(icon: String, title: String, color: Color) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.headline)
-                .foregroundStyle(color)
-                .frame(width: 28, height: 28)
-                .background(Color.appSecondaryBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        HStack(spacing: Spacing.sm) {
+            IconBadge(icon: icon, color: color, size: 34, cornerRadius: 10)
 
             Text(title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
+
             Spacer()
+
+            Image(systemName: "arrow.right")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(color)
+                .frame(width: 22, height: 22)
+                .background(color.opacity(0.10))
+                .clipShape(Circle())
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .padding(.horizontal, 12)
-        .antigravityGlass(cornerRadius: 14)
+        .padding(.vertical, Spacing.md)
+        .padding(.horizontal, Spacing.md)
+        .antigravityGlass(cornerRadius: CornerRadius.lg)
+        .overlay(
+            RoundedRectangle(cornerRadius: CornerRadius.lg, style: .continuous)
+                .stroke(color.opacity(0.18), lineWidth: 1)
+        )
     }
 
+    // MARK: - Status Strip
+
+    private var statusStrip: some View {
+        HStack(spacing: Spacing.sm) {
+            statusChip(icon: "checkmark.seal.fill", label: "Research-backed", color: .appPrimary)
+            Spacer()
+            statusChip(icon: "chart.line.uptrend.xyaxis", label: "Outcome tracking", color: .appSecondary)
+        }
+    }
+
+    private func statusChip(icon: String, label: String, color: Color) -> some View {
+        Label(label, systemImage: icon)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, Spacing.sm + 2)
+            .padding(.vertical, Spacing.sm)
+            .background(color.opacity(0.10))
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(color.opacity(0.22), lineWidth: 1)
+            )
+    }
+
+    // MARK: - Recent Recommendations
+
     private var recentRecommendationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Recent Recommendations")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                Spacer()
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            SectionHeader(title: "Recent Recommendations") {
                 Button("See All") {
                     selectedTab = .recommendations
                 }
@@ -216,7 +245,7 @@ struct DashboardView: View {
             } else if viewModel.recentRecommendations.isEmpty {
                 emptyState
             } else {
-                VStack(spacing: 10) {
+                VStack(spacing: Spacing.sm) {
                     ForEach(viewModel.recentRecommendations.prefix(6)) { recommendation in
                         NavigationLink {
                             RecommendationDetailView(recommendationId: recommendation.id)
@@ -237,19 +266,20 @@ struct DashboardView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "leaf")
-                .font(.title2)
-                .foregroundStyle(.secondary)
-            Text("No recommendations yet")
-                .font(.subheadline.weight(.semibold))
-            Text("Start a diagnosis to generate your first recommendation.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+        VStack(spacing: Spacing.md) {
+            IconBadge(icon: "leaf.fill", color: .appPrimary, size: 44, cornerRadius: 14)
+
+            VStack(spacing: 4) {
+                Text("No recommendations yet")
+                    .font(.subheadline.weight(.semibold))
+                Text("Start a diagnosis to generate your first AI-backed recommendation.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
-        .antigravityGlass(cornerRadius: 14)
+        .padding(.vertical, Spacing.xxl)
+        .antigravityGlass(cornerRadius: CornerRadius.lg)
     }
 }
