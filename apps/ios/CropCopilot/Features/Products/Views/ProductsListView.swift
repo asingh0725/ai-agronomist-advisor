@@ -10,14 +10,12 @@ struct ProductsListView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.md) {
                 searchBar
-                typeFilterBar
+                filterControlBar
 
                 if viewModel.isLoading && viewModel.products.isEmpty {
                     loadingView
-                } else if let error = viewModel.errorMessage, viewModel.products.isEmpty {
-                    errorView(error)
                 } else if viewModel.products.isEmpty {
                     emptyView
                 } else {
@@ -31,11 +29,15 @@ struct ProductsListView: View {
             .task {
                 await viewModel.loadIfNeeded()
             }
-            .onChange(of: viewModel.selectedType) { _ in
-                Task { await viewModel.loadProducts(reset: true) }
+            .onAppear {
+                Task {
+                    await viewModel.refreshProducts()
+                }
             }
         }
     }
+
+    // MARK: - Search Bar
 
     private var searchBar: some View {
         HStack {
@@ -57,58 +59,100 @@ struct ProductsListView: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .antigravityGlass(cornerRadius: 14)
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm + 2)
+        .antigravityGlass(cornerRadius: CornerRadius.md)
+        .padding(.horizontal, Spacing.lg)
+        .padding(.top, Spacing.sm)
     }
 
-    private var typeFilterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(ProductsViewModel.ProductTypeFilter.allCases) { filter in
+    // MARK: - Filter Control Bar (multiselect, matches Recommendations sort style)
+
+    private var filterControlBar: some View {
+        HStack(spacing: Spacing.sm) {
+            // Multiselect type filter — styled capsule opening a Menu with checkmarks
+            Menu {
+                ForEach(ProductsViewModel.ProductTypeFilter.selectableTypes) { filter in
                     Button {
-                        viewModel.selectedType = filter
+                        viewModel.toggleType(filter)
                     } label: {
-                        Text(filter.displayName)
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(
-                                        viewModel.selectedType == filter
-                                            ? Color.appPrimary.opacity(0.24)
-                                            : Color.appSecondaryBackground
-                                    )
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(
-                                        viewModel.selectedType == filter
-                                            ? Color.appPrimary
-                                            : Color.black.opacity(0.10),
-                                        lineWidth: viewModel.selectedType == filter ? 1.1 : 0.8
-                                    )
-                            )
-                            .foregroundStyle(.primary)
-                            .contentShape(Rectangle())
+                        if viewModel.selectedTypes.contains(filter) {
+                            Label(filter.displayName, systemImage: "checkmark")
+                        } else {
+                            Text(filter.displayName)
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
+
+                if !viewModel.selectedTypes.isEmpty {
+                    Divider()
+                    Button("Show All Types", role: .destructive) {
+                        viewModel.clearTypes()
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.appPrimary)
+                    Text(viewModel.filterLabel)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, Spacing.sm + 2)
+                .background(
+                    viewModel.selectedTypes.isEmpty
+                        ? Color.appPrimary.opacity(0.10)
+                        : Color.appPrimary.opacity(0.20)
+                )
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule().stroke(
+                        Color.appPrimary.opacity(viewModel.selectedTypes.isEmpty ? 0.22 : 0.50),
+                        lineWidth: 1
+                    )
+                )
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 2)
+
+            Spacer()
+
+            if !viewModel.selectedTypes.isEmpty {
+                // Active filter badge showing count, tap to clear
+                Button {
+                    viewModel.clearTypes()
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("\(viewModel.selectedTypes.count) active")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.appPrimary)
+                        Image(systemName: "xmark")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Color.appPrimary)
+                    }
+                    .padding(.horizontal, Spacing.sm + 2)
+                    .padding(.vertical, Spacing.xs + 2)
+                    .background(Color.appPrimary.opacity(0.10))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
+        .animation(.appFast, value: viewModel.selectedTypes.isEmpty)
+        .padding(.horizontal, Spacing.lg)
     }
+
+    // MARK: - Product List
 
     private var productList: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
+            LazyVStack(spacing: Spacing.sm) {
                 HStack {
-                    Text("\(viewModel.products.count) products")
-                        .font(.caption.weight(.semibold))
+                    Text("\(viewModel.products.count) product\(viewModel.products.count == 1 ? "" : "s")")
+                        .font(.appCaption.weight(.semibold))
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -116,61 +160,7 @@ struct ProductsListView: View {
 
                 ForEach(Array(viewModel.products.enumerated()), id: \.element.id) { index, product in
                     NavigationLink(value: product.id) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack(alignment: .top, spacing: 8) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(product.name)
-                                        .font(.headline)
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(2)
-
-                                    if let brand = product.brand, !brand.isEmpty {
-                                        Text(brand)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                Spacer(minLength: 6)
-                                VStack(alignment: .trailing, spacing: 8) {
-                                    Text(prettyProductType(product.type))
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(Color.appSecondary)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 5)
-                                        .background(Color.appPrimary.opacity(0.18))
-                                        .clipShape(Capsule())
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            if let description = product.description, !description.isEmpty {
-                                Text(description)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(2)
-                            }
-
-                            HStack(spacing: 8) {
-                                if let rate = product.applicationRate, !rate.isEmpty {
-                                    Label(rate, systemImage: "speedometer")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                if let crops = product.crops, !crops.isEmpty {
-                                    Text(crops.prefix(2).map(AppConstants.cropLabel).joined(separator: " • "))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(14)
-                        .antigravityGlass(cornerRadius: 16)
-                        .contentShape(Rectangle())
+                        productRow(product)
                     }
                     .buttonStyle(.plain)
                     .onAppear {
@@ -192,22 +182,91 @@ struct ProductsListView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.xxl)
         }
         .refreshable {
             await viewModel.refreshProducts()
         }
     }
 
+    private func productRow(_ product: ProductListItem) -> some View {
+        HStack(alignment: .top, spacing: Spacing.md) {
+            // Type icon badge
+            IconBadge(
+                icon: iconForType(product.type),
+                color: .forProductType(product.type),
+                size: 38,
+                cornerRadius: 11
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(product.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+
+                if let brand = product.brand, !brand.isEmpty {
+                    Text(brand)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let description = product.description, !description.isEmpty {
+                    Text(description)
+                        .font(.appBodySmall)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                HStack(spacing: Spacing.sm) {
+                    ProductTypeBadge(type: product.type)
+
+                    if let rate = product.applicationRate, !rate.isEmpty {
+                        Label(rate, systemImage: "speedometer")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.top, 2)
+            }
+
+            Spacer(minLength: 4)
+
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.md)
+        .antigravityGlass(cornerRadius: CornerRadius.lg)
+        .coloredShadow(.forProductType(product.type), radius: 6, opacity: 0.07)
+    }
+
+    private func iconForType(_ type: String) -> String {
+        switch type.uppercased() {
+        case "FERTILIZER":     return "drop.fill"
+        case "PESTICIDE":      return "shield.fill"
+        case "HERBICIDE":      return "xmark.circle.fill"
+        case "FUNGICIDE":      return "staroflife.fill"
+        case "AMENDMENT":      return "square.stack.3d.up.fill"
+        case "BIOLOGICAL":     return "leaf.fill"
+        case "INSECTICIDE":    return "ant.fill"
+        case "SEED_TREATMENT": return "circle.hexagongrid.fill"
+        default:               return "shippingbox.fill"
+        }
+    }
+
+    // MARK: - Load More
+
     private var loadMoreButton: some View {
         Button {
             Task { await viewModel.loadNextPage() }
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: Spacing.sm) {
                 if viewModel.isLoadingMore {
-                    ProgressView()
-                        .tint(Color.appPrimary)
+                    ProgressView().tint(Color.appPrimary)
                 } else {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 22))
@@ -218,62 +277,48 @@ struct ProductsListView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 12)
-            .antigravityGlass(cornerRadius: 14)
-            .contentShape(Rectangle())
+            .padding(.vertical, Spacing.md)
+            .antigravityGlass(cornerRadius: CornerRadius.md)
         }
         .buttonStyle(.plain)
     }
 
+    // MARK: - States
+
     private var loadingView: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            ProgressView("Loading products...")
-                .tint(Color.appPrimary)
-            Spacer()
+        ScrollView {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(0..<6, id: \.self) { _ in
+                    HStack(alignment: .top, spacing: Spacing.md) {
+                        SkeletonCard(height: 38, cornerRadius: 11)
+                            .frame(width: 38)
+                        VStack(alignment: .leading, spacing: Spacing.sm) {
+                            SkeletonLine(height: 16)
+                            SkeletonLine(width: 120, height: 12)
+                            SkeletonLine(height: 12)
+                            SkeletonLine(width: 80, height: 22, cornerRadius: 11)
+                        }
+                        Spacer()
+                    }
+                    .padding(Spacing.md)
+                    .antigravityGlass(cornerRadius: CornerRadius.lg)
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.sm)
         }
     }
 
     private var emptyView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: Spacing.md) {
             Spacer()
-            Image(systemName: "shippingbox")
-                .font(.system(size: 44))
-                .foregroundStyle(.secondary)
+            IconBadge(icon: "shippingbox.fill", color: .appSecondary, size: 52, cornerRadius: 16)
             Text("No products found")
                 .font(.headline)
-            Text("Try a different search term.")
+            Text("Try a different search term or filter.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Spacer()
         }
-    }
-
-    private func errorView(_ message: String) -> some View {
-        VStack(spacing: 12) {
-            Spacer()
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 42))
-                .foregroundStyle(.orange)
-            Text("Could not load products")
-                .font(.headline)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            Button("Retry") {
-                Task { await viewModel.loadProducts(reset: true) }
-            }
-            .buttonStyle(GlowSkeuomorphicButtonStyle())
-            .padding(.top, 6)
-            Spacer()
-        }
-    }
-
-    private func prettyProductType(_ raw: String) -> String {
-        raw
-            .replacingOccurrences(of: "_", with: " ")
-            .capitalized
     }
 }

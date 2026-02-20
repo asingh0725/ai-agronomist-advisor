@@ -40,6 +40,11 @@ final class ProductsViewModel: ObservableObject {
         var apiValue: String? {
             self == .all ? nil : rawValue
         }
+
+        /// All selectable types in the multiselect menu (excludes .all sentinel)
+        static var selectableTypes: [ProductTypeFilter] {
+            allCases.filter { $0 != .all }
+        }
     }
 
     @Published var products: [ProductListItem] = []
@@ -47,8 +52,18 @@ final class ProductsViewModel: ObservableObject {
     @Published var isLoadingMore = false
     @Published var errorMessage: String?
     @Published var searchText = ""
-    @Published var selectedType: ProductTypeFilter = .all
+    /// Multiselect active type filters. Empty = show all types.
+    @Published var selectedTypes: Set<ProductTypeFilter> = []
     @Published var hasMorePages = false
+
+    /// Label shown in the filter capsule button
+    var filterLabel: String {
+        switch selectedTypes.count {
+        case 0:  return "All Types"
+        case 1:  return selectedTypes.first!.displayName
+        default: return "\(selectedTypes.count) Types"
+        }
+    }
 
     private let apiClient = APIClient.shared
     private var hasLoadedOnce = false
@@ -56,11 +71,11 @@ final class ProductsViewModel: ObservableObject {
     private var offset = 0
     private var total = 0
     private var requestGeneration = 0
+    /// Unfiltered products loaded from the API — client-side filter is applied on top
+    private var allLoadedProducts: [ProductListItem] = []
 
     func loadIfNeeded() async {
-        if hasLoadedOnce {
-            return
-        }
+        if hasLoadedOnce { return }
         hasLoadedOnce = true
         await loadProducts(reset: true)
     }
@@ -87,7 +102,7 @@ final class ProductsViewModel: ObservableObject {
             let response: ProductsListResponse = try await apiClient.request(
                 .listProducts(
                     search: searchText.isEmpty ? nil : searchText,
-                    type: selectedType.apiValue,
+                    type: nil,          // always load all types; filter applied client-side
                     limit: pageSize,
                     offset: offset,
                     sortBy: "name",
@@ -95,36 +110,30 @@ final class ProductsViewModel: ObservableObject {
                 )
             )
 
-            guard generation == requestGeneration else {
-                return
-            }
+            guard generation == requestGeneration else { return }
 
             if reset {
-                products = response.products
+                allLoadedProducts = response.products
             } else {
-                let existing = Set(products.map(\.id))
+                let existing = Set(allLoadedProducts.map(\.id))
                 let nextPage = response.products.filter { !existing.contains($0.id) }
-                products.append(contentsOf: nextPage)
+                allLoadedProducts.append(contentsOf: nextPage)
             }
 
-            total = max(response.total, products.count)
-            offset = products.count
-            hasMorePages = products.count < total
+            total = max(response.total, allLoadedProducts.count)
+            offset = allLoadedProducts.count
+            hasMorePages = allLoadedProducts.count < total
             hasLoadedOnce = true
+
+            applyTypeFilter()
         } catch let error as NetworkError {
-            guard generation == requestGeneration else {
-                return
-            }
-            if case .cancelled = error {
-                return
-            }
+            guard generation == requestGeneration else { return }
+            if case .cancelled = error { return }
             errorMessage = error.localizedDescription
         } catch is CancellationError {
             return
         } catch {
-            guard generation == requestGeneration else {
-                return
-            }
+            guard generation == requestGeneration else { return }
             errorMessage = error.localizedDescription
         }
     }
@@ -139,5 +148,32 @@ final class ProductsViewModel: ObservableObject {
         isLoadingMore = true
         defer { isLoadingMore = false }
         await loadProducts(reset: false)
+    }
+
+    /// Toggle a type in/out of the active filter set and immediately apply.
+    func toggleType(_ filter: ProductTypeFilter) {
+        if selectedTypes.contains(filter) {
+            selectedTypes.remove(filter)
+        } else {
+            selectedTypes.insert(filter)
+        }
+        applyTypeFilter()
+    }
+
+    /// Clear all active type filters (show everything).
+    func clearTypes() {
+        selectedTypes = []
+        applyTypeFilter()
+    }
+
+    // MARK: - Private
+
+    private func applyTypeFilter() {
+        if selectedTypes.isEmpty {
+            products = allLoadedProducts
+        } else {
+            let typeValues = Set(selectedTypes.map { $0.rawValue.uppercased() })
+            products = allLoadedProducts.filter { typeValues.contains($0.type.uppercased()) }
+        }
     }
 }

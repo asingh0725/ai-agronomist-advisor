@@ -7,28 +7,49 @@ import SwiftUI
 
 struct RecommendationsListView: View {
     @StateObject private var viewModel = RecommendationsViewModel()
+    @State private var showGrid = true
+
+    // Explicit fixed column width so every card in the grid is identical.
+    // .flexible() lets image intrinsic size influence cell height — .fixed() doesn't.
+    private var gridColumnWidth: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        return floor((screenWidth - Spacing.lg * 2 - Spacing.sm) / 2)
+    }
+
+    private var gridCardHeight: CGFloat {
+        ceil(gridColumnWidth / 0.88)
+    }
+
+    private var gridColumns: [GridItem] {
+        [
+            GridItem(.fixed(gridColumnWidth), spacing: Spacing.sm),
+            GridItem(.fixed(gridColumnWidth), spacing: Spacing.sm),
+        ]
+    }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.md) {
                 searchBar
-                sortPicker
+                controlBar
 
                 if viewModel.isLoading && viewModel.recommendations.isEmpty {
                     loadingView
-                } else if let error = viewModel.errorMessage, viewModel.recommendations.isEmpty {
-                    errorView(error)
                 } else if viewModel.recommendations.isEmpty {
                     emptyView
                 } else {
-                    recommendationsList
+                    if showGrid {
+                        gridContent
+                    } else {
+                        listContent
+                    }
                 }
 
                 if let error = viewModel.errorMessage {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.sm)
                 }
             }
             .navigationTitle("Recommendations")
@@ -38,8 +59,15 @@ struct RecommendationsListView: View {
             .task {
                 await viewModel.loadIfNeeded()
             }
+            .onAppear {
+                Task {
+                    await viewModel.refreshRecommendations()
+                }
+            }
         }
     }
+
+    // MARK: - Search Bar
 
     private var searchBar: some View {
         HStack {
@@ -62,59 +90,131 @@ struct RecommendationsListView: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .antigravityGlass(cornerRadius: 14)
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm + 2)
+        .antigravityGlass(cornerRadius: CornerRadius.md)
+        .padding(.horizontal, Spacing.lg)
+        .padding(.top, Spacing.sm)
     }
 
-    private var sortPicker: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
-                    Button {
-                        viewModel.selectedSort = option
-                        Task { await viewModel.loadRecommendations(reset: true) }
-                    } label: {
-                        Text(option.displayName)
-                            .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(
-                                Capsule()
-                                    .fill(
-                                        viewModel.selectedSort == option
-                                            ? Color.appPrimary.opacity(0.22)
-                                            : Color.appSecondaryBackground
-                                    )
-                            )
-                            .overlay(
-                                Capsule()
-                                    .strokeBorder(
-                                        viewModel.selectedSort == option ? Color.appPrimary : Color.black.opacity(0.08),
-                                        lineWidth: viewModel.selectedSort == option ? 1.0 : 0.8
-                                    )
-                            )
-                            .foregroundStyle(Color.primary)
-                            .contentShape(Rectangle())
+    // MARK: - Control Bar (sort picker + layout toggle)
+
+    private var controlBar: some View {
+        HStack(spacing: Spacing.sm) {
+            // Sort picker — uses .menu style to avoid _UIReparentingView warnings from Menu.
+            // fixedSize(horizontal: false, vertical: true) + lineLimit(1) prevents the Capsule
+            // from stretching vertically when Picker renders the selected label.
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.appPrimary)
+                Picker("Sort", selection: $viewModel.selectedSort) {
+                    ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
+                        Label(option.displayName, systemImage: sortIcon(for: option))
+                            .tag(option)
                     }
-                    .buttonStyle(.plain)
+                }
+                .pickerStyle(.menu)
+                .font(.subheadline.weight(.semibold))
+                .tint(Color.appPrimary)
+                .lineLimit(1)
+                .onChange(of: viewModel.selectedSort) { _ in
+                    Task { await viewModel.loadRecommendations(reset: true) }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm + 2)
+            .background(Color.appPrimary.opacity(0.10))
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color.appPrimary.opacity(0.22), lineWidth: 1))
+
+            Spacer()
+
+            // Layout toggle
+            Button {
+                withAnimation(.appFast) {
+                    showGrid.toggle()
+                }
+            } label: {
+                Image(systemName: showGrid ? "rectangle.grid.1x2.fill" : "square.grid.2x2.fill")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.appSecondary)
+                    .frame(width: 34, height: 34)
+                    .background(Color.appSecondaryBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, Spacing.lg)
+    }
+
+    private func sortIcon(for option: RecommendationsViewModel.SortOption) -> String {
+        switch option {
+        case .dateDesc:       return "calendar.badge.clock"
+        case .dateAsc:        return "calendar"
+        case .confidenceHigh: return "chart.bar.fill"
+        case .confidenceLow:  return "chart.bar"
         }
     }
 
-    private var recommendationsList: some View {
+    // MARK: - Grid Content
+
+    private var gridContent: some View {
+        let w = gridColumnWidth
+        let h = gridCardHeight
+
+        return ScrollView {
+            LazyVGrid(columns: gridColumns, spacing: Spacing.sm) {
+                ForEach(Array(viewModel.recommendations.enumerated()), id: \.element.id) { index, recommendation in
+                    NavigationLink(value: recommendation.id) {
+                        RecommendationCard(recommendation: recommendation, style: .grid)
+                    }
+                    // Frame on the link itself — GeometryReader inside the card reads this.
+                    // .clipped() prevents any visual bleed (borders, highlights) outside the cell.
+                    .frame(width: w, height: h)
+                    .clipped()
+                    .buttonStyle(.plain)
+                    .onAppear {
+                        let preloadThreshold = max(viewModel.recommendations.count - 4, 0)
+                        if index >= preloadThreshold {
+                            Task { await viewModel.loadNextPage() }
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.xxl)
+
+            if viewModel.hasMorePages {
+                loadMoreButton
+                    .padding(.horizontal, Spacing.lg)
+                    .padding(.bottom, Spacing.lg)
+            }
+        }
+        .refreshable {
+            await viewModel.refreshRecommendations()
+        }
+    }
+
+    // MARK: - List Content
+
+    private var listContent: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
+            LazyVStack(spacing: Spacing.sm) {
+                if !viewModel.recommendations.isEmpty {
+                    HStack {
+                        Text("\(viewModel.recommendations.count) recommendation\(viewModel.recommendations.count == 1 ? "" : "s")")
+                            .font(.appCaption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.bottom, 2)
+                }
+
                 ForEach(Array(viewModel.recommendations.enumerated()), id: \.element.id) { index, recommendation in
                     NavigationLink(value: recommendation.id) {
                         RecommendationCard(recommendation: recommendation, style: .row)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .onAppear {
@@ -129,22 +229,23 @@ struct RecommendationsListView: View {
                     loadMoreButton
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.xxl)
         }
         .refreshable {
             await viewModel.refreshRecommendations()
         }
     }
 
+    // MARK: - Load More
+
     private var loadMoreButton: some View {
         Button {
             Task { await viewModel.loadNextPage() }
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: Spacing.sm) {
                 if viewModel.isLoadingMore {
-                    ProgressView()
-                        .tint(Color.appPrimary)
+                    ProgressView().tint(Color.appPrimary)
                 } else {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 22))
@@ -155,56 +256,47 @@ struct RecommendationsListView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 12)
-            .antigravityGlass(cornerRadius: 14)
+            .padding(.vertical, Spacing.md)
+            .antigravityGlass(cornerRadius: CornerRadius.md)
         }
         .buttonStyle(.plain)
     }
 
+    // MARK: - Loading Skeleton
+
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            ProgressView("Loading recommendations...")
-                .tint(Color.appPrimary)
-                .foregroundStyle(.primary)
-            Spacer()
+        let w = gridColumnWidth
+        let h = gridCardHeight
+
+        return ScrollView {
+            LazyVGrid(columns: gridColumns, spacing: Spacing.sm) {
+                ForEach(0..<6, id: \.self) { _ in
+                    SkeletonCard(height: h, cornerRadius: CornerRadius.lg)
+                        .frame(width: w, height: h)
+                }
+            }
+            .padding(.horizontal, Spacing.lg)
         }
     }
 
+    // MARK: - Empty State
+
     private var emptyView: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: Spacing.md) {
             Spacer()
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 50))
-                .foregroundStyle(.secondary)
+            IconBadge(
+                icon: "doc.text.magnifyingglass",
+                color: .appSecondary,
+                size: 52,
+                cornerRadius: 16
+            )
+            .floatAnimation(amplitude: 4, duration: 5)
             Text("No recommendations yet")
                 .font(.headline)
                 .foregroundStyle(.primary)
             Text("Submit a photo or lab report to get started.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Spacer()
-        }
-    }
-
-    private func errorView(_ message: String) -> some View {
-        VStack(spacing: 14) {
-            Spacer()
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
-                .foregroundStyle(.orange)
-            Text("Could not load recommendations")
-                .font(.headline)
-                .foregroundStyle(.primary)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
-            Button("Retry") {
-                Task { await viewModel.refreshRecommendations() }
-            }
-            .buttonStyle(GlowSkeuomorphicButtonStyle())
             Spacer()
         }
     }

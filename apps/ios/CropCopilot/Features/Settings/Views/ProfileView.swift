@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
+    @State private var isCropsExpanded = false
 
     var body: some View {
         Group {
@@ -63,11 +64,49 @@ struct ProfileView: View {
                             }
                         }
 
-                        GlassSection(title: "Crops of Interest") {
-                            TagGridSelector(
-                                options: viewModel.availableCrops,
-                                selectedTags: $viewModel.selectedCrops
-                            )
+                        // Collapsible Crops of Interest
+                        VStack(alignment: .leading, spacing: 12) {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    isCropsExpanded.toggle()
+                                }
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Text("Crops of Interest")
+                                        .font(.headline)
+                                        .foregroundStyle(.primary)
+
+                                    if !isCropsExpanded && !viewModel.selectedCrops.isEmpty {
+                                        Text("\(viewModel.selectedCrops.count) selected")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color.appPrimary)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 3)
+                                            .background(Color.appPrimary.opacity(0.12))
+                                            .clipShape(Capsule())
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: isCropsExpanded ? "chevron.up" : "chevron.down")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(.leading, 4)
+                            }
+                            .buttonStyle(.plain)
+
+                            if isCropsExpanded {
+                                VStack {
+                                    TagGridSelector(
+                                        options: viewModel.availableCrops,
+                                        selectedTags: $viewModel.selectedCrops
+                                    )
+                                }
+                                .padding()
+                                .antigravityGlass(cornerRadius: 16)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                         }
 
                         Button {
