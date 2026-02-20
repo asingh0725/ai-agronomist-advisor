@@ -27,7 +27,7 @@ struct ProductDetailView: View {
         ZStack {
             Group {
                 if viewModel.isLoading {
-                    VStack(spacing: 14) {
+                    VStack(spacing: Spacing.md) {
                         ProgressView()
                             .tint(Color.appPrimary)
                         Text("Loading product...")
@@ -36,14 +36,14 @@ struct ProductDetailView: View {
                     }
                 } else if let product = viewModel.product {
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 14) {
+                        VStack(alignment: .leading, spacing: Spacing.md) {
                             headerCard(product)
                             pricingRow
                             recommendationLinks(product)
                             relatedProducts(product)
                         }
-                        .padding(16)
-                        .padding(.bottom, 20)
+                        .padding(Spacing.lg)
+                        .padding(.bottom, Spacing.xl)
                     }
                 } else {
                     Text(viewModel.errorMessage ?? "Failed to load product.")
@@ -69,31 +69,36 @@ struct ProductDetailView: View {
         .task {
             await viewModel.loadProduct()
         }
-        .animation(.easeInOut(duration: 0.18), value: showPricingSheet)
+        .animation(.easeInOut(duration: AnimationDuration.fast), value: showPricingSheet)
     }
 
-    private func headerCard(_ product: ProductDetailResponse) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 10) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(product.name)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.primary)
+    // MARK: - Header Card
 
-                    if let brand = product.brand, !brand.isEmpty {
-                        Text(brand)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+    private func headerCard(_ product: ProductDetailResponse) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            // Type icon + badge row
+            HStack(alignment: .top) {
+                IconBadge(
+                    icon: iconForType(product.type),
+                    color: .forProductType(product.type),
+                    size: 44,
+                    cornerRadius: 13
+                )
+                Spacer()
+                ProductTypeBadge(type: product.type)
+            }
+
+            // Name and brand
+            VStack(alignment: .leading, spacing: 4) {
+                Text(product.name)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                if let brand = product.brand, !brand.isEmpty {
+                    Text(brand)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-                Spacer(minLength: 8)
-                Text(prettyType(product.type))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.appSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.appPrimary.opacity(0.18))
-                    .clipShape(Capsule())
             }
 
             if let description = product.description, !description.isEmpty {
@@ -109,9 +114,26 @@ struct ProductDetailView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .antigravityGlass(cornerRadius: 16)
+        .padding(Spacing.lg)
+        .antigravityGlass(cornerRadius: CornerRadius.lg)
+        .coloredShadow(.forProductType(product.type), radius: 8, opacity: 0.08)
     }
+
+    private func iconForType(_ type: String) -> String {
+        switch type.uppercased() {
+        case "FERTILIZER":     return "drop.fill"
+        case "PESTICIDE":      return "shield.fill"
+        case "HERBICIDE":      return "xmark.circle.fill"
+        case "FUNGICIDE":      return "staroflife.fill"
+        case "AMENDMENT":      return "square.stack.3d.up.fill"
+        case "BIOLOGICAL":     return "leaf.fill"
+        case "INSECTICIDE":    return "ant.fill"
+        case "SEED_TREATMENT": return "circle.hexagongrid.fill"
+        default:               return "shippingbox.fill"
+        }
+    }
+
+    // MARK: - Pricing Row
 
     private var pricingRow: some View {
         Button {
@@ -120,42 +142,36 @@ struct ProductDetailView: View {
                 await viewModel.loadPricingOnDemand()
             }
         } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "dollarsign.circle")
-                    .font(.headline)
-                    .foregroundStyle(Color.appPrimary)
-                    .frame(width: 32, height: 32)
-                    .background(Color.appPrimary.opacity(0.14))
-                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            HStack(spacing: Spacing.sm) {
+                IconBadge(icon: "dollarsign.circle.fill", color: .appPrimary, size: 36, cornerRadius: 10)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("On-demand pricing")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
-                    Text("Tap to fetch latest pricing for this product")
+                    Text("Tap to fetch latest pricing")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
+
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .antigravityGlass(cornerRadius: 16)
+            .padding(Spacing.md)
+            .antigravityGlass(cornerRadius: CornerRadius.lg)
         }
         .buttonStyle(.plain)
     }
 
+    // MARK: - Recommendation Links
+
     private func recommendationLinks(_ product: ProductDetailResponse) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Used In Recommendations")
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                Spacer()
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            SectionHeader(title: "Used In Recommendations") {
                 Text("\(product.usedInRecommendations)")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
@@ -171,7 +187,7 @@ struct ProductDetailView: View {
                     NavigationLink {
                         RecommendationDetailView(recommendationId: rec.recommendationId)
                     } label: {
-                        HStack(spacing: 10) {
+                        HStack(spacing: Spacing.sm) {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(rec.condition)
                                     .font(.subheadline.weight(.semibold))
@@ -190,8 +206,8 @@ struct ProductDetailView: View {
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
-                        .padding(12)
-                        .antigravityGlass(cornerRadius: 12)
+                        .padding(Spacing.md)
+                        .antigravityGlass(cornerRadius: CornerRadius.md)
                     }
                     .buttonStyle(.plain)
                 }
@@ -199,11 +215,11 @@ struct ProductDetailView: View {
         }
     }
 
+    // MARK: - Related Products
+
     private func relatedProducts(_ product: ProductDetailResponse) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Related Products")
-                .font(.headline)
-                .foregroundStyle(.primary)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            SectionHeader(title: "Related Products")
 
             if product.relatedProducts.isEmpty {
                 Text("No related products available.")
@@ -214,22 +230,26 @@ struct ProductDetailView: View {
                     NavigationLink {
                         ProductDetailView(productId: related.id)
                     } label: {
-                        HStack(spacing: 10) {
+                        HStack(spacing: Spacing.sm) {
+                            IconBadge(
+                                icon: iconForType(related.type),
+                                color: .forProductType(related.type),
+                                size: 34,
+                                cornerRadius: 10
+                            )
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(related.name)
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(.primary)
-                                Text(prettyType(related.type))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                ProductTypeBadge(type: related.type)
                             }
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
-                        .padding(12)
-                        .antigravityGlass(cornerRadius: 12)
+                        .padding(Spacing.md)
+                        .antigravityGlass(cornerRadius: CornerRadius.md)
                     }
                     .buttonStyle(.plain)
                 }
@@ -237,47 +257,7 @@ struct ProductDetailView: View {
         }
     }
 
-    private var pricingSheet: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Latest Pricing")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.primary)
-
-            if viewModel.isLoadingPricing {
-                HStack(spacing: 10) {
-                    ProgressView().tint(Color.appPrimary)
-                    Text("Fetching pricing...")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            } else if let entry = viewModel.pricingEntry {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(entry.productName)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                    priceRow("Retail", value: entry.pricing.retailPrice, currency: entry.pricing.currency)
-                    priceRow("Wholesale", value: entry.pricing.wholesalePrice, currency: entry.pricing.currency)
-                    if let availability = entry.pricing.availability {
-                        Text("Availability: \(availability)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    if let updated = entry.pricing.lastUpdated {
-                        Text("Updated: \(prettyDate(updated) ?? updated)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            } else {
-                Text(viewModel.pricingError ?? "Pricing is not available for this product.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(20)
-    }
+    // MARK: - Pricing Overlay
 
     private var pricingOverlay: some View {
         VStack {
@@ -307,18 +287,56 @@ struct ProductDetailView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Spacing.xl)
 
-                pricingSheet
+                pricingSheetContent
             }
             .frame(height: pricingSheetHeight, alignment: .top)
             .frame(maxWidth: .infinity)
             .background(Color.appBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.xxl, style: .continuous))
             .gesture(pricingDetentDragGesture)
-            .padding(.horizontal, 12)
-            .padding(.bottom, 10)
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.sm)
         }
+    }
+
+    private var pricingSheetContent: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            if viewModel.isLoadingPricing {
+                HStack(spacing: Spacing.sm) {
+                    ProgressView().tint(Color.appPrimary)
+                    Text("Fetching pricing...")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            } else if let entry = viewModel.pricingEntry {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    Text(entry.productName)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    priceRow("Retail", value: entry.pricing.retailPrice, currency: entry.pricing.currency)
+                    priceRow("Wholesale", value: entry.pricing.wholesalePrice, currency: entry.pricing.currency)
+                    if let availability = entry.pricing.availability {
+                        Text("Availability: \(availability)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let updated = entry.pricing.lastUpdated {
+                        Text("Updated: \(prettyDate(updated) ?? updated)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } else {
+                Text(viewModel.pricingError ?? "Pricing is not available for this product.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(Spacing.xl)
     }
 
     private var pricingSheetHeight: CGFloat {
@@ -340,23 +358,17 @@ struct ProductDetailView: View {
 
     private func nextLargerPricingDetent(from current: PricingSheetDetent) -> PricingSheetDetent {
         switch current {
-        case .compact:
-            return .medium
-        case .medium:
-            return .expanded
-        case .expanded:
-            return .expanded
+        case .compact:  return .medium
+        case .medium:   return .expanded
+        case .expanded: return .expanded
         }
     }
 
     private func nextSmallerPricingDetent(from current: PricingSheetDetent) -> PricingSheetDetent {
         switch current {
-        case .compact:
-            return .compact
-        case .medium:
-            return .compact
-        case .expanded:
-            return .medium
+        case .compact:  return .compact
+        case .medium:   return .compact
+        case .expanded: return .medium
         }
     }
 
@@ -373,23 +385,14 @@ struct ProductDetailView: View {
     }
 
     private func currencySymbol(_ code: String) -> String {
-        if code.uppercased() == "USD" {
-            return "$"
-        }
-        return "\(code.uppercased()) "
-    }
-
-    private func prettyType(_ raw: String) -> String {
-        raw.replacingOccurrences(of: "_", with: " ").capitalized
+        code.uppercased() == "USD" ? "$" : "\(code.uppercased()) "
     }
 
     private func prettyDate(_ value: String) -> String? {
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let date = iso.date(from: value) ?? ISO8601DateFormatter().date(from: value)
-        guard let parsed = date else {
-            return nil
-        }
+        guard let parsed = date else { return nil }
         return parsed.formatted(date: .abbreviated, time: .omitted)
     }
 }

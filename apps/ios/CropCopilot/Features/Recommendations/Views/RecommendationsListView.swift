@@ -10,7 +10,7 @@ struct RecommendationsListView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
+            VStack(spacing: Spacing.md) {
                 searchBar
                 sortPicker
 
@@ -26,7 +26,7 @@ struct RecommendationsListView: View {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Spacing.sm)
                 }
             }
             .navigationTitle("Recommendations")
@@ -43,6 +43,8 @@ struct RecommendationsListView: View {
             }
         }
     }
+
+    // MARK: - Search Bar
 
     private var searchBar: some View {
         HStack {
@@ -65,53 +67,64 @@ struct RecommendationsListView: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .antigravityGlass(cornerRadius: 14)
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm + 2)
+        .antigravityGlass(cornerRadius: CornerRadius.md)
+        .padding(.horizontal, Spacing.lg)
+        .padding(.top, Spacing.sm)
     }
+
+    // MARK: - Sort Picker
 
     private var sortPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: Spacing.sm) {
                 ForEach(RecommendationsViewModel.SortOption.allCases, id: \.self) { option in
                     Button {
                         viewModel.selectedSort = option
                         Task { await viewModel.loadRecommendations(reset: true) }
                     } label: {
+                        let isSelected = viewModel.selectedSort == option
                         Text(option.displayName)
                             .font(.caption.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .foregroundStyle(isSelected ? Color.appPrimary : .primary)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.vertical, Spacing.sm)
                             .background(
                                 Capsule()
-                                    .fill(
-                                        viewModel.selectedSort == option
-                                            ? Color.appPrimary.opacity(0.22)
-                                            : Color.appSecondaryBackground
-                                    )
+                                    .fill(isSelected ? Color.appPrimary.opacity(0.14) : Color.appSecondaryBackground)
                             )
                             .overlay(
                                 Capsule()
-                                    .strokeBorder(
-                                        viewModel.selectedSort == option ? Color.appPrimary : Color.black.opacity(0.08),
-                                        lineWidth: viewModel.selectedSort == option ? 1.0 : 0.8
+                                    .stroke(
+                                        isSelected ? Color.appPrimary : Color.black.opacity(0.08),
+                                        lineWidth: isSelected ? 1.1 : 0.8
                                     )
                             )
-                            .foregroundStyle(Color.primary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.vertical, Spacing.md)
         }
     }
 
+    // MARK: - Recommendations List
+
     private var recommendationsList: some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
+            LazyVStack(spacing: Spacing.sm) {
+                if !viewModel.recommendations.isEmpty {
+                    HStack {
+                        Text("\(viewModel.recommendations.count) recommendation\(viewModel.recommendations.count == 1 ? "" : "s")")
+                            .font(.appCaption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.bottom, 2)
+                }
+
                 ForEach(Array(viewModel.recommendations.enumerated()), id: \.element.id) { index, recommendation in
                     NavigationLink(value: recommendation.id) {
                         RecommendationCard(recommendation: recommendation, style: .row)
@@ -129,22 +142,23 @@ struct RecommendationsListView: View {
                     loadMoreButton
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, Spacing.lg)
+            .padding(.bottom, Spacing.xxl)
         }
         .refreshable {
             await viewModel.refreshRecommendations()
         }
     }
 
+    // MARK: - Load More
+
     private var loadMoreButton: some View {
         Button {
             Task { await viewModel.loadNextPage() }
         } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: Spacing.sm) {
                 if viewModel.isLoadingMore {
-                    ProgressView()
-                        .tint(Color.appPrimary)
+                    ProgressView().tint(Color.appPrimary)
                 } else {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 22))
@@ -155,14 +169,16 @@ struct RecommendationsListView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 12)
-            .antigravityGlass(cornerRadius: 14)
+            .padding(.vertical, Spacing.md)
+            .antigravityGlass(cornerRadius: CornerRadius.md)
         }
         .buttonStyle(.plain)
     }
 
+    // MARK: - States
+
     private var loadingView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Spacing.lg) {
             Spacer()
             ProgressView("Loading recommendations...")
                 .tint(Color.appPrimary)
@@ -172,11 +188,14 @@ struct RecommendationsListView: View {
     }
 
     private var emptyView: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: Spacing.md) {
             Spacer()
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 50))
-                .foregroundStyle(.secondary)
+            IconBadge(
+                icon: "doc.text.magnifyingglass",
+                color: .appSecondary,
+                size: 52,
+                cornerRadius: 16
+            )
             Text("No recommendations yet")
                 .font(.headline)
                 .foregroundStyle(.primary)
