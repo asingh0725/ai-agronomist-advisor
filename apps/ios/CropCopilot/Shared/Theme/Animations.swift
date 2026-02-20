@@ -112,7 +112,7 @@ struct SkeletonLine: View {
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .fill(Color.appSecondaryBackground)
-            .frame(width: width, maxWidth: width == nil ? .infinity : nil, minWidth: 0)
+            .frame(minWidth: 0, maxWidth: width ?? .infinity)
             .frame(height: height)
             .shimmer()
     }
