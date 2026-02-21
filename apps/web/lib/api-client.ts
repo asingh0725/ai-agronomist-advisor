@@ -52,15 +52,15 @@ export interface ApiClient {
 }
 
 export function createApiClient(accessToken: string): ApiClient {
-  const base = getGatewayBaseUrl();
-  if (!base) {
-    throw new Error(
-      'API Gateway URL is not configured. ' +
-        'Set API_GATEWAY_URL (server) or NEXT_PUBLIC_API_GATEWAY_URL (browser) in your environment.'
-    );
-  }
-
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const base = getGatewayBaseUrl();
+    if (!base) {
+      throw new ApiClientError(
+        503,
+        'API Gateway URL is not configured. ' +
+          'Set API_GATEWAY_URL (server) or NEXT_PUBLIC_API_GATEWAY_URL (browser) in your environment.'
+      );
+    }
     const url = `${base}${path}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);

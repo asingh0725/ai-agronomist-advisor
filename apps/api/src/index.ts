@@ -16,6 +16,7 @@ export * as CompareProductsHandler from './handlers/compare-products';
 export * as GetProductPricingBatchHandler from './handlers/get-product-pricing-batch';
 export * as RetrievalSearchHandler from './handlers/retrieval-search';
 export * as RegisterSourceHandler from './handlers/register-source';
+export * as GetDiscoveryStatusHandler from './handlers/get-discovery-status';
 export * as TrackEventHandler from './handlers/track-event';
 export * as ProcessRecommendationJobWorker from './workers/process-recommendation-job';
 export * as RunIngestionBatchWorker from './workers/run-ingestion-batch';

@@ -406,6 +406,22 @@ export class ApiRuntimeStack extends Stack {
       ),
     });
 
+    // Admin: discovery pipeline status dashboard
+    const getDiscoveryStatusHandler = createApiFunction(this, {
+      id: 'GetDiscoveryStatusHandler',
+      entry: 'handlers/get-discovery-status.ts',
+      environment,
+    });
+
+    httpApi.addRoutes({
+      path: '/api/v1/admin/discovery/status',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: new integrations.HttpLambdaIntegration(
+        'GetDiscoveryStatusIntegration',
+        getDiscoveryStatusHandler,
+      ),
+    });
+
     const runtimeUrlParameterName = `/${config.projectSlug}/${config.envName}/platform/api/runtime-url`;
     new ssm.StringParameter(this, 'ParameterRuntimeApiBaseUrl', {
       parameterName: runtimeUrlParameterName,
