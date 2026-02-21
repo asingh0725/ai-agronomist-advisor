@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
+import { createApiClient, ApiClientError } from "@/lib/api-client";
 import { DiagnosisDisplay } from "@/components/recommendations/diagnosis-display";
 import { RecommendationContent } from "@/components/recommendations/recommendation-content";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { SecureImage } from "@/components/recommendations/secure-image";
-import { upsertRecommendationProductsFromDiagnosis } from "@/lib/services/recommendation-products";
 import type {
   ActionItem,
   ConditionType,
@@ -245,22 +244,6 @@ function buildFallbackSources(rawDiagnosis: unknown): RecommendationSourceView[]
   return fallbackSources;
 }
 
-function isGenericProductLabel(value: string | null | undefined): boolean {
-  if (!value) return true;
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ");
-  return (
-    normalized.length === 0 ||
-    normalized === "suggested product" ||
-    normalized === "unspecified" ||
-    normalized === "unknown product" ||
-    normalized === "product"
-  );
-}
-
 async function getRecommendation(id: string) {
   const supabase = await createClient();
   const {
@@ -271,204 +254,65 @@ async function getRecommendation(id: string) {
     return null;
   }
 
-  // First try to find by recommendation ID
-  let recommendation = await prisma.recommendation.findUnique({
-    where: { id },
-    include: {
-      input: {
-        include: {
-          user: {
-            include: {
-              profile: true,
-            },
-          },
-        },
-      },
-      sources: {
-        include: {
-          textChunk: {
-            include: {
-              source: true,
-            },
-          },
-          imageChunk: {
-            include: {
-              source: true,
-            },
-          },
-        },
-      },
-      products: {
-        include: {
-          product: true,
-        },
-        orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
-      },
-    },
-  });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const client = createApiClient(session?.access_token ?? "");
 
-  // If not found, try to find by input ID
-  if (!recommendation) {
-    recommendation = await prisma.recommendation.findUnique({
-      where: { inputId: id },
-      include: {
-        input: {
-          include: {
-            user: {
-              include: {
-                profile: true,
-              },
-            },
-          },
-        },
-        sources: {
-          include: {
-            textChunk: {
-              include: {
-                source: true,
-              },
-            },
-            imageChunk: {
-              include: {
-                source: true,
-              },
-            },
-          },
-        },
-        products: {
-          include: {
-            product: true,
-          },
-          orderBy: [{ priority: "asc" }, { createdAt: "asc" }],
-        },
-      },
-    });
-  }
-
-  if (!recommendation) {
-    return null;
-  }
-
-  // Check if user owns this recommendation
-  if (recommendation.input.userId !== user.id) {
-    return null;
-  }
-
-  type RecommendationProductRow = {
-    reason: string | null;
-    applicationRate: string | null;
-    priority: number;
-    product: {
+  try {
+    const rec = await client.get<{
       id: string;
-      name: string;
-      brand: string | null;
-      type: string;
-    };
-  };
-
-  let productRows: RecommendationProductRow[] = recommendation.products.map((entry) => ({
-    reason: entry.reason,
-    applicationRate: entry.applicationRate,
-    priority: entry.priority,
-    product: {
-      id: entry.product.id,
-      name: entry.product.name,
-      brand: entry.product.brand,
-      type: entry.product.type,
-    },
-  }));
-  const hasSpecificProductRow = productRows.some(
-    (entry) => !isGenericProductLabel(entry.product?.name)
-  );
-  if (hasSpecificProductRow) {
-    productRows = productRows.filter(
-      (entry) => !isGenericProductLabel(entry.product?.name)
-    );
-  }
-  const shouldBackfillProducts =
-    productRows.length === 0 ||
-    productRows.every((entry) => isGenericProductLabel(entry.product?.name));
-
-  if (shouldBackfillProducts) {
-    try {
-      const backfilled = await upsertRecommendationProductsFromDiagnosis({
-        recommendationId: recommendation.id,
-        diagnosis: recommendation.diagnosis,
-        crop: recommendation.input.crop,
-      });
-      if (backfilled.length > 0) {
-        productRows = backfilled.map((entry) => ({
-          reason: entry.reason,
-          applicationRate: entry.applicationRate,
-          priority: entry.priority,
-          product: {
-            id: entry.product.id,
-            name: entry.product.name,
-            brand: entry.product.brand,
-            type: entry.product.type,
-          },
-        }));
-      }
-    } catch (error) {
-      console.error("Recommendation product backfill failed (page):", error);
-    }
-  }
-
-  // Format response with all necessary data
-  const recommendedProducts = productRows.map((entry) => ({
-    id: entry.product.id,
-    catalogProductId: entry.product.id,
-    productId: entry.product.id,
-    name: entry.product.name,
-    type: entry.product.type,
-    reason: entry.reason,
-    applicationRate: entry.applicationRate,
-  }));
-
-  return {
-    id: recommendation.id,
-    createdAt: recommendation.createdAt,
-    diagnosis: recommendation.diagnosis,
-    confidence: recommendation.confidence,
-    modelUsed: recommendation.modelUsed,
-    recommendedProducts,
-    input: {
-      id: recommendation.input.id,
-      type: recommendation.input.type,
-      description: recommendation.input.description,
-      imageUrl: recommendation.input.imageUrl,
-      labData: recommendation.input.labData,
-      crop: recommendation.input.crop,
-      location: recommendation.input.location,
-      season: recommendation.input.season,
-      createdAt: recommendation.input.createdAt,
-    },
-    sources: recommendation.sources.map((source) => {
-      const chunk = source.textChunk || source.imageChunk;
-      const sourceDoc = chunk?.source;
-
-      return {
-        id: source.id,
-        chunkId: source.textChunkId || source.imageChunkId,
-        type: source.textChunkId ? "text" : "image",
-        content: source.textChunk?.content || source.imageChunk?.caption,
-        imageUrl: source.imageChunk?.imageUrl,
-        relevanceScore: source.relevanceScore,
-        source: sourceDoc
-          ? {
-              id: sourceDoc.id,
-              title: sourceDoc.title,
-              type: sourceDoc.sourceType,
-              url: sourceDoc.url,
-              publisher: sourceDoc.institution,
-              publishedDate: (sourceDoc.metadata as Record<string, unknown>)?.publishedDate
-                ? new Date((sourceDoc.metadata as Record<string, unknown>).publishedDate as string).toLocaleDateString()
-                : null,
-            }
-          : null,
+      createdAt: string;
+      diagnosis: unknown;
+      confidence: number;
+      modelUsed: string;
+      input: {
+        id: string;
+        type: string;
+        description: string | null;
+        imageUrl: string | null;
+        labData: unknown;
+        crop: string | null;
+        location: string | null;
+        season: string | null;
+        createdAt: string;
       };
-    }),
-  };
+      sources: RecommendationSourceView[];
+      recommendedProducts: Array<{
+        id: string;
+        name: string;
+        brand: string | null;
+        type: string;
+        reason: string | null;
+        applicationRate: string | null;
+        priority: number;
+      }>;
+    }>(`/api/v1/recommendations/${id}`);
+
+    return {
+      id: rec.id,
+      createdAt: rec.createdAt,
+      diagnosis: rec.diagnosis,
+      confidence: rec.confidence,
+      modelUsed: rec.modelUsed,
+      recommendedProducts: rec.recommendedProducts.map((p) => ({
+        id: p.id,
+        catalogProductId: p.id,
+        productId: p.id,
+        name: p.name,
+        type: p.type,
+        reason: p.reason,
+        applicationRate: p.applicationRate,
+      })),
+      input: rec.input,
+      sources: rec.sources,
+    };
+  } catch (err) {
+    if (err instanceof ApiClientError && err.status === 404) {
+      return null;
+    }
+    throw err;
+  }
 }
 
 export default async function RecommendationPage({
