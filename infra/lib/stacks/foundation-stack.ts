@@ -290,7 +290,6 @@ export class FoundationStack extends Stack {
       this,
       'RecommendationPipelineStateMachine',
       {
-        stateMachineName: `${config.projectSlug}-${config.envName}-recommendation-pipeline`,
         definitionBody: sfn.DefinitionBody.fromChainable(pipelineDefinition),
         stateMachineType: sfn.StateMachineType.EXPRESS,
       }
@@ -306,7 +305,6 @@ export class FoundationStack extends Stack {
       this,
       'IngestionPipelineStateMachine',
       {
-        stateMachineName: `${config.projectSlug}-${config.envName}-ingestion-pipeline`,
         definitionBody: sfn.DefinitionBody.fromChainable(ingestionPipelineDefinition),
         stateMachineType: sfn.StateMachineType.EXPRESS,
       }

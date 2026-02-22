@@ -5,9 +5,9 @@
  * on its first run using INSERT ... ON CONFLICT DO NOTHING, so this list can
  * be expanded over time without re-seeding.
  *
- * 30 crops × 20 regions = 600 combinations.
- * At the default batch of 10 per 12-hour run (2 runs/day) the full matrix is
- * covered in ~30 days, then each combination refreshes every 90 days.
+ * 30 crops × 17 regions = 510 combinations (North America only).
+ * At the default batch of 10 per run (48 runs/day at 30-min intervals) the
+ * full matrix is covered in ~2 days, then each combination refreshes every 90 days.
  */
 
 export const CROPS: string[] = [
@@ -67,8 +67,4 @@ export const REGIONS: string[] = [
   // Canada
   'Ontario',
   'Alberta',
-  // International
-  'Queensland Australia',
-  'Maharashtra India',
-  'Mato Grosso Brazil',
 ];

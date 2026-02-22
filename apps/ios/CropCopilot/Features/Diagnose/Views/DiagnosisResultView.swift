@@ -1415,7 +1415,8 @@ struct DiagnosisResultView: View {
     }
 
     private func isNavigableProductId(_ value: String?) -> Bool {
-        normalizeCatalogProductId(value) != nil
+        guard let id = normalizeCatalogProductId(value) else { return false }
+        return UUID(uuidString: id) != nil
     }
 
     private func prettyConditionType(_ value: String) -> String {

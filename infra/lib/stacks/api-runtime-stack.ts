@@ -169,7 +169,7 @@ export class ApiRuntimeStack extends Stack {
       timeout: Duration.seconds(60),
     });
 
-    // Runs every 12 hours — discovers new agricultural URLs via Gemini search grounding
+    // Runs every 30 minutes — discovers new agricultural URLs via Gemini search grounding
     const discoverSourcesWorker = createApiFunction(this, {
       id: 'DiscoverSourcesWorker',
       entry: 'workers/discover-sources.ts',
@@ -537,6 +537,7 @@ function buildApiEnvironment(
     COGNITO_APP_CLIENT_ID: process.env.COGNITO_APP_CLIENT_ID ?? '',
     SUPABASE_URL: supabaseUrl ?? '',
     SUPABASE_ANON_KEY: supabaseAnonKey ?? '',
+    ADMIN_USER_IDS: process.env.ADMIN_USER_IDS ?? '',
   };
 
   return environment;

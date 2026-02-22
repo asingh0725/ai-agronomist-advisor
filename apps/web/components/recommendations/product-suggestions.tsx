@@ -21,9 +21,13 @@ export function ProductSuggestions({ products }: ProductSuggestionsProps) {
     const trimmed = value.trim();
     if (!trimmed) return null;
     const lowered = trimmed.toLowerCase();
-    if (lowered === "null" || lowered === "undefined") {
-      return null;
-    }
+    if (lowered === "null" || lowered === "undefined") return null;
+    // Only navigate to a product detail page if the ID is a real UUID.
+    // Fake IDs like "diag-product-1" generated from diagnosis JSON are not
+    // catalog records and would 404 if used in /products/{id}.
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidPattern.test(trimmed)) return null;
     return trimmed;
   };
 

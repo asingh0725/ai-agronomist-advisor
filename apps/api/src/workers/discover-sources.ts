@@ -1,7 +1,7 @@
 /**
  * Crop × region source discovery worker (EventBridge Lambda)
  *
- * Runs every 12 hours. For each scheduled invocation:
+ * Runs every 30 minutes. For each scheduled invocation:
  *   1. Seeds the CropRegionDiscovery table with all crop × region combinations
  *      (idempotent — ON CONFLICT DO NOTHING)
  *   2. Picks the next DISCOVERY_BATCH_SIZE pending combinations

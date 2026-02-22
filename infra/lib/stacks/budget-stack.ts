@@ -84,7 +84,7 @@ export class BudgetStack extends Stack {
       })),
     });
 
-    new CfnOutput(this, 'BudgetAlertsTopic', {
+    new CfnOutput(this, 'BudgetAlertsTopicArn', {
       value: budgetAlertsTopic.topicArn,
       description: 'SNS topic ARN for budget threshold alerts (us-east-1).',
     });

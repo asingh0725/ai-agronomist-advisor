@@ -280,6 +280,7 @@ async function getRecommendation(id: string) {
       sources: RecommendationSourceView[];
       recommendedProducts: Array<{
         id: string;
+        catalogProductId?: string | null;
         name: string;
         brand: string | null;
         type: string;
@@ -295,10 +296,13 @@ async function getRecommendation(id: string) {
       diagnosis: rec.diagnosis,
       confidence: rec.confidence,
       modelUsed: rec.modelUsed,
-      recommendedProducts: rec.recommendedProducts.map((p) => ({
+      recommendedProducts: (rec.recommendedProducts ?? []).map((p) => ({
         id: p.id,
-        catalogProductId: p.id,
-        productId: p.id,
+        // Prefer the explicit catalogProductId from the API (a real DB UUID).
+        // Fall back to p.id only if catalogProductId is absent — normalizeCatalogId
+        // in product-suggestions.tsx will reject non-UUID strings anyway.
+        catalogProductId: p.catalogProductId ?? p.id,
+        productId: p.catalogProductId ?? p.id,
         name: p.name,
         type: p.type,
         reason: p.reason,
@@ -455,7 +459,7 @@ export default async function RecommendationPage({
                 </div>
               )}
 
-              {recommendation.input.labData && (
+              {!!recommendation.input.labData && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-2">
                     Lab Data
